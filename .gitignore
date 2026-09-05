@@ -1,0 +1,28 @@
+# ---- secrets / env ----
+.env
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# ---- app runtime ----
+.cache/
+.chroma/
+
+# ---- node ----
+node_modules/
+dist/
+.pnpm-store/
+
+# ---- editor / os ----
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- demo / benchmark transient ----
+benchmark/reports/*.tmp
