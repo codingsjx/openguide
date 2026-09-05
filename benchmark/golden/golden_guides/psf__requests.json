@@ -1,0 +1,32 @@
+{
+  "owner": "psf",
+  "repo": "requests",
+  "verified": false,
+  "notes": "示例 golden guide。requests 无独立 CONTRIBUTING.md；开发指引在 README.md 尾部（clone 命令 L65）+ docs/dev/。以下 steps 来自真实 README 命令，但 venv/test 细节需 clone 后人工跑通再 verified:true。",
+  "steps": [
+    {
+      "order": 1,
+      "stage": "A 环境搭建",
+      "title": "克隆仓库（官方推荐命令）",
+      "expected_commands": ["git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git"],
+      "expected_outcome": "本地生成 requests/ 目录",
+      "evidence_sources": ["README.md#L65"]
+    },
+    {
+      "order": 2,
+      "stage": "A 环境搭建",
+      "title": "进入仓库目录",
+      "expected_commands": ["cd requests"],
+      "expected_outcome": "处于 requests 仓库根目录",
+      "evidence_sources": []
+    },
+    {
+      "order": 3,
+      "stage": "B 测试基线",
+      "title": "安装开发依赖并跑测试（需人工核验命令）",
+      "expected_commands": ["python -m pip install -e .[dev]"],
+      "expected_outcome": "pytest 全部通过",
+      "evidence_sources": ["docs/dev/contributing.rst"]
+    }
+  ]
+}

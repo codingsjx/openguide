@@ -1,0 +1,49 @@
+{
+  "name": "openguide benchmark golden repos",
+  "description": "初选 golden 仓库（2026-09-05 由脚本探测，仅作清单；C 需人工复核 build 命令/文档后定稿）。",
+  "criteria_note": "特征覆盖：Python 库 / 脚手架 CLI / 前端库；活跃、文档齐、有 beginner 标签、构建可跑。",
+  "repos": [
+    {
+      "owner": "psf",
+      "repo": "requests",
+      "why": "Python HTTP 库，README 全、CONTRIBUTING 全、pyproject+pytest 标准，最典型的 beginner 入口。build 已人工复核。",
+      "lang": "python",
+      "build": "pyproject.toml",
+      "test_cmd": "pytest",
+      "primary_language": "python"
+    },
+    {
+      "owner": "camelot-dev",
+      "repo": "camelot",
+      "why": "PDF 表格抽取库：pyproject+pytest；有 good-first-issue(1) + help-wanted；用 Python 为主。需人工复核 build。",
+      "lang": "python",
+      "build": "pyproject.toml",
+      "test_cmd": "pytest",
+      "gfi_expected": 1
+    },
+    {
+      "owner": "mochajs",
+      "repo": "mocha",
+      "why": "JS 测试框架：package.json + npm test；README/CONTRIBUTING 全；有 gfi(1)。前端库代表。需人工复核 build。",
+      "lang": "javascript",
+      "build": "package.json",
+      "test_cmd": "npm test"
+    },
+    {
+      "owner": "pallets",
+      "repo": "click",
+      "why": "Python CLI 脚手架：pyproject+pytest；BSD-3-Clause；活跃(pushed 2026-09-02)；README/文档全。cookietemplate 代表。需人工复核 build。",
+      "lang": "python",
+      "build": "pyproject.toml",
+      "test_cmd": "pytest"
+    },
+    {
+      "owner": "cookiecutter",
+      "repo": "cookiecutter",
+      "why": "项目脚手架：python 库，有 gfi + please-help，非 Python-first 但脚手架场景代表。需人工复核 build。",
+      "lang": "python",
+      "build": "pyproject.toml",
+      "test_cmd": "pytest"
+    }
+  ]
+}
