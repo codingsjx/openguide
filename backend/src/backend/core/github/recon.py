@@ -39,6 +39,13 @@ class RawSignals(BaseModel):
     doc_files: list[DocFile] = Field(default_factory=list)
     issues: list[dict] = Field(default_factory=list)
     commits_30d: int = 0
+    file_tree: list[str] = Field(default_factory=list)  # repo-relative file paths
+
+
+# Doc files fetched during enrichment (README/CONTRIBUTING/LICENSE + docs/**).
+_DOC_PATHS = ("README.md", "README.rst", "README", "CONTRIBUTING.md", "CONTRIBUTING",
+              "LICENSE", "LICENSE.md", "LICENSE.txt")
+_MAX_DOC_SIZE = 200_000  # skip absurdly large docs
 
 
 def _age_days(iso: str | None) -> int | None:
@@ -125,4 +132,69 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
         has_license_file=has_license_file,
         issues=issues,
         commits_30d=commits,
+        file_tree=[],
+    )
+
+
+def enrich_docs_and_tree(
+    sig: RawSignals, client: GitHubClient | None = None
+) -> RawSignals:
+    """Second pass: fetch doc file texts and the full file tree.
+
+    Separated from `recon` so the cheap profile path (M0) stays fast and the
+    heavier docs/tree fetch only runs when perspectives/indexing need it.
+    """
+    client = client or GitHubClient()
+    root = sig.root_entries
+    docs_dir_name = root.get("docs")
+
+    doc_files: list[DocFile] = []
+    # Root-level doc candidates + docs/<some path> limited crawl.
+    fetch_paths: list[str] = []
+    for cand in _DOC_PATHS:
+        actual = root.get(cand.lower())
+        if actual:
+            fetch_paths.append(actual)
+
+    # docs/ sub-directory: grab first N text files by shallow listing (limit).
+    if docs_dir_name and sig.has_docs_dir:
+        try:
+            listing = client.get_contents(sig.meta.owner, sig.meta.repo, "docs")
+            if isinstance(listing, list):
+                n = 0
+                for e in listing:
+                    if e.get("type") == "file" and e.get("name", "").endswith(
+                        (".md", ".rst", ".txt")
+                    ):
+                        fetch_paths.append(f"docs/{e['name']}")
+                        n += 1
+                        if n >= 6:
+                            break
+        except GitHubClientError:
+            pass
+
+    for path in fetch_paths:
+        text = client.get_file_text(sig.meta.owner, sig.meta.repo, path)
+        if text is None or len(text) > _MAX_DOC_SIZE:
+            continue
+        doc_files.append(DocFile(path=path, name=path.split("/")[-1], text=text))
+
+    # Full file tree (for V2 architecture perspective).
+    file_tree: list[str] = []
+    try:
+        tree = client.get_git_tree(sig.meta.owner, sig.meta.repo, sig.meta.default_branch)
+        file_tree = [t.get("path", "") for t in tree if t.get("type") == "blob" and t.get("path")]
+    except GitHubClientError:
+        file_tree = []
+
+    return RawSignals(
+        meta=sig.meta,
+        language_bytes=sig.language_bytes,
+        root_entries=sig.root_entries,
+        has_docs_dir=sig.has_docs_dir,
+        has_license_file=sig.has_license_file,
+        doc_files=doc_files,
+        issues=sig.issues,
+        commits_30d=sig.commits_30d,
+        file_tree=file_tree,
     )

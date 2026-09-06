@@ -98,6 +98,22 @@ class GitHubClient:
         )
         return data if isinstance(data, list) else []
 
+    def get_git_tree(self, owner: str, repo: str, ref: str, recursive: bool = True) -> list[dict]:
+        """Full file tree (paths) at a ref via the Git Trees API.
+
+        Covers a repo in one request (truncated flag may apply on very large
+        trees). Used by the architecture-perspective (V2) assembly.
+        """
+        params = {"recursive": "1"} if recursive else {}
+        data = self._cached(
+            f"repos/{owner}/{repo}/git/trees/{ref}",
+            path=f"{owner}/{repo}",
+            params=params,
+        )
+        if not isinstance(data, dict):
+            return []
+        return [t for t in data.get("tree", []) if isinstance(t, dict)]
+
     # -- internals ---------------------------------------------------------
 
     def _get_json(self, url: str, params: dict | None = None) -> dict | list:

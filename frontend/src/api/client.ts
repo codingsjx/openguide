@@ -20,10 +20,30 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+export interface SearchHit {
+  text: string
+  perspective: string
+  score: number
+  meta: Record<string, unknown>
+}
+
+export interface SearchResult {
+  url: string
+  query: string
+  kind: string
+  perspective: string
+  hits: SearchHit[]
+}
+
 export const api = {
   postProfile: (url: string) =>
     request<import('../types/profile').Profile>('/api/profile', {
       method: 'POST',
       body: JSON.stringify({ url }),
+    }),
+  postSearch: (url: string, query: string, kind?: string) =>
+    request<SearchResult>('/api/search', {
+      method: 'POST',
+      body: JSON.stringify({ url, query, kind: kind ?? null }),
     }),
 }

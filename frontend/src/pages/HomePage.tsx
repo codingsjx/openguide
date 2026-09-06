@@ -1,43 +1,46 @@
 import { useState } from 'react'
-import { Button, Card, Input, Space, Typography, message } from 'antd'
-import { RocketOutlined } from '@ant-design/icons'
+import { Button, Card, Tabs, Input, Space, Typography, message } from 'antd'
+import { GithubOutlined, QuestionCircleOutlined, RocketOutlined } from '@ant-design/icons'
 
 import { api } from '../api/client'
 import type { Profile } from '../types/profile'
 import ProfileCard from '../components/ProfileCard'
+import GuidePage from './GuidePage'
 
 const { Title, Paragraph } = Typography
 
 export default function HomePage() {
   const [url, setUrl] = useState('')
+  const [tab, setTab] = useState<'health' | 'guide'>('health')
   const [loading, setLoading] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [submittedUrl, setSubmittedUrl] = useState('')
 
   async function handleSubmit() {
     const trimmed = url.trim()
     if (!trimmed) return
     setLoading(true)
-    setError(null)
     try {
       const p = await api.postProfile(trimmed)
       setProfile(p)
+      setSubmittedUrl(trimmed)
     } catch (e) {
       setProfile(null)
-      setError(e instanceof Error ? e.message : '生成失败')
-      void message.error(error ?? '生成失败')
+      void message.error(e instanceof Error ? e.message : '生成失败')
     } finally {
       setLoading(false)
     }
   }
 
+  const showGuide = Boolean(profile && submittedUrl)
+
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+    <div style={{ maxWidth: 940, margin: '0 auto', padding: '24px 16px' }}>
+      <div style={{ textAlign: 'center', marginBottom: 20 }}>
         <Title level={2} style={{ marginBottom: 4 }}>
           OpenGuide
         </Title>
-        <Paragraph type="secondary" style={{ fontSize: 16 }}>
+        <Paragraph type="secondary" style={{ fontSize: 15 }}>
           输入一个开源仓库 URL，AI 现场生成新手贡献路线图
         </Paragraph>
       </div>
@@ -51,6 +54,7 @@ export default function HomePage() {
             onChange={(e) => setUrl(e.target.value)}
             onPressEnter={handleSubmit}
             disabled={loading}
+            prefix={<GithubOutlined />}
           />
           <Button
             type="primary"
@@ -64,14 +68,36 @@ export default function HomePage() {
         </Space.Compact>
       </Card>
 
-      {profile && (
-        <div style={{ marginTop: 20 }}>
-          <ProfileCard profile={profile} />
-        </div>
+      {showGuide && (
+        <Tabs
+          activeKey={tab}
+          onChange={(k) => setTab(k as 'health' | 'guide')}
+          style={{ marginTop: 16 }}
+          items={[
+            {
+              key: 'health',
+              label: (
+                <Space>
+                  <RocketOutlined /> 仓库体检
+                </Space>
+              ),
+              children: profile ? <ProfileCard profile={profile} /> : null,
+            },
+            {
+              key: 'guide',
+              label: (
+                <Space>
+                  <QuestionCircleOutlined /> 贡献问答
+                </Space>
+              ),
+              children: <GuidePage initialUrl={submittedUrl} />,
+            },
+          ]}
+        />
       )}
 
-      {!profile && !loading && (
-        <div style={{ textAlign: 'center', marginTop: 32 }}>
+      {!showGuide && !loading && (
+        <div style={{ textAlign: 'center', marginTop: 28 }}>
           <Typography.Text type="secondary">
             示例：https://github.com/psf/requests ｜ fastapi/fastapi ｜ vuejs/core
           </Typography.Text>

@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     # Local embedding + vector store settings.
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
     vectorstore_dir: str = ".chroma"
+    # Set USE_CHROMA=false (or 0) in tests/CI to force the hermetic in-memory
+    # fallback and avoid downloading the embedding model.
+    use_chroma: bool = True
+
+    # Embedding dimension used by the hermetic hash fallback (when model absent).
+    embedding_dim: int = 32
 
     # Request tuning.
     github_timeout_s: float = 15.0
