@@ -1,8 +1,9 @@
-"""OpenAI-compatible LLM client facade. Key lives in `.env` only.
+"""LLM settings + client facade.
 
-Uses httpx directly (no heavy SDK); supports structured (JSON) output via a
-`schema` prompt hint. On missing key / failure it raises LLMUnavailable so the
-pipeline can fall back gracefully.
+Credentials are never persisted in code. The backend reads defaults from `.env`
+(Settings), but the frontend can override them at runtime via the settings API
+so each user/demo can bring their own relay Base URL + API key. Overrides are
+kept in-process only (module-level) — never written to disk, never logged.
 """
 
 from __future__ import annotations
@@ -12,17 +13,37 @@ from typing import Any
 
 from backend.config import get_settings
 
+_OVERRIDE_KEY = ""
+_OVERRIDE_BASE = ""
+_OVERRIDE_MODEL = ""
+
 
 class LLMUnavailable(RuntimeError):
     pass
 
 
+def configure_llm(api_key: str = "", base_url: str = "", model: str = "") -> None:
+    """Set in-process overrides (used by the settings API). Empty keeps prior."""
+    global _OVERRIDE_KEY, _OVERRIDE_BASE, _OVERRIDE_MODEL
+    if api_key:
+        _OVERRIDE_KEY = api_key
+    if base_url:
+        _OVERRIDE_BASE = base_url.rstrip("/")
+    if model:
+        _OVERRIDE_MODEL = model
+
+
+def llm_configured() -> bool:
+    s = get_settings()
+    return bool(_OVERRIDE_KEY or s.llm_api_key)
+
+
 class LLMClient:
     def __init__(self) -> None:
         s = get_settings()
-        self._key = s.llm_api_key
-        self._base = s.llm_base_url.rstrip("/")
-        self._model = s.llm_model
+        self._key = _OVERRIDE_KEY or s.llm_api_key
+        self._base = (_OVERRIDE_BASE or s.llm_base_url).rstrip("/")
+        self._model = _OVERRIDE_MODEL or s.llm_model
 
     def available(self) -> bool:
         return bool(self._key)
@@ -36,7 +57,7 @@ class LLMClient:
     ) -> dict[str, Any]:
         """Return parsed JSON object from a chat completion."""
         if not self.available():
-            raise LLMUnavailable("未配置 LLM_API_KEY（请在 .env 设置）")
+            raise LLMUnavailable("未配置 LLM_API_KEY（请在 设置 里填写）")
         import httpx
 
         headers = {"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"}

@@ -16,9 +16,10 @@ class Settings(BaseSettings):
     # GitHub API access. Leave empty to run unauthenticated (rate-limited).
     github_token: str = ""
 
-    # OpenAI-compatible relay endpoint. Key stays in `.env`.
+    # OpenAI-compatible relay endpoint. Key stays in `.env`, but can be
+    # overridden per-session via the settings API (frontend) — never logged.
     llm_api_key: str = ""
-    llm_base_url: str = "https://api.openai.com/v1"
+    llm_base_url: str = "https://api.a6api.com/v1"
     llm_model: str = "gpt-5.5"
 
     # Local embedding + vector store settings.

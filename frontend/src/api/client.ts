@@ -51,4 +51,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url, use_llm: useLlm }),
     }),
+  getLlmConfig: () => request<{ configured: boolean }>('/api/llm-config'),
+  setLlmConfig: (cfg: { api_key: string; base_url: string; model: string }) =>
+    request<{ configured: boolean }>('/api/llm-config', {
+      method: 'POST',
+      body: JSON.stringify(cfg),
+    }),
 }

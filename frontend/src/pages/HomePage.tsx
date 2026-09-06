@@ -6,6 +6,7 @@ import { api } from '../api/client'
 import type { Profile } from '../types/profile'
 import ProfileCard from '../components/ProfileCard'
 import GuideGenerator from '../components/GuideGenerator'
+import LlmSettings from '../components/LlmSettings'
 import GuidePage from './GuidePage'
 
 const { Title, Paragraph } = Typography
@@ -44,6 +45,10 @@ export default function HomePage() {
         <Paragraph type="secondary" style={{ fontSize: 15 }}>
           输入一个开源仓库 URL，AI 现场生成新手贡献路线图
         </Paragraph>
+      </div>
+
+      <div style={{ textAlign: 'right', marginBottom: 8 }}>
+        <LlmSettings />
       </div>
 
       <Card>

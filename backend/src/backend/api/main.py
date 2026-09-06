@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.routes import guide, profile, search
+from backend.api.routes import guide, profile, search, settings
 
 app = FastAPI(
     title="OpenGuide API",
@@ -29,6 +29,7 @@ app.add_middleware(
 app.include_router(profile.router)
 app.include_router(search.router)
 app.include_router(guide.router)
+app.include_router(settings.router)
 
 
 @app.get("/health")
