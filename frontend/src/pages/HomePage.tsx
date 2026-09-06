@@ -1,17 +1,18 @@
 import { useState } from 'react'
 import { Button, Card, Tabs, Input, Space, Typography, message } from 'antd'
-import { GithubOutlined, QuestionCircleOutlined, RocketOutlined } from '@ant-design/icons'
+import { GithubOutlined, QuestionCircleOutlined, RocketOutlined, ThunderboltOutlined } from '@ant-design/icons'
 
 import { api } from '../api/client'
 import type { Profile } from '../types/profile'
 import ProfileCard from '../components/ProfileCard'
+import GuideGenerator from '../components/GuideGenerator'
 import GuidePage from './GuidePage'
 
 const { Title, Paragraph } = Typography
 
 export default function HomePage() {
   const [url, setUrl] = useState('')
-  const [tab, setTab] = useState<'health' | 'guide'>('health')
+  const [tab, setTab] = useState<string>('health')
   const [loading, setLoading] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [submittedUrl, setSubmittedUrl] = useState('')
@@ -35,7 +36,7 @@ export default function HomePage() {
   const showGuide = Boolean(profile && submittedUrl)
 
   return (
-    <div style={{ maxWidth: 940, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 16px' }}>
       <div style={{ textAlign: 'center', marginBottom: 20 }}>
         <Title level={2} style={{ marginBottom: 4 }}>
           OpenGuide
@@ -63,7 +64,7 @@ export default function HomePage() {
             loading={loading}
             onClick={handleSubmit}
           >
-            体检仓库
+            生成新手路线图
           </Button>
         </Space.Compact>
       </Card>
@@ -71,9 +72,18 @@ export default function HomePage() {
       {showGuide && (
         <Tabs
           activeKey={tab}
-          onChange={(k) => setTab(k as 'health' | 'guide')}
+          onChange={setTab}
           style={{ marginTop: 16 }}
           items={[
+            {
+              key: 'guide',
+              label: (
+                <Space>
+                  <ThunderboltOutlined /> 贡献指南
+                </Space>
+              ),
+              children: <GuideGenerator initialUrl={submittedUrl} />,
+            },
             {
               key: 'health',
               label: (
@@ -84,7 +94,7 @@ export default function HomePage() {
               children: profile ? <ProfileCard profile={profile} /> : null,
             },
             {
-              key: 'guide',
+              key: 'ask',
               label: (
                 <Space>
                   <QuestionCircleOutlined /> 贡献问答

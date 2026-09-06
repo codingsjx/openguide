@@ -46,4 +46,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url, query, kind: kind ?? null }),
     }),
+  postGuide: (url: string, useLlm = true) =>
+    request<import('../types/guide').Guide>('/api/guide', {
+      method: 'POST',
+      body: JSON.stringify({ url, use_llm: useLlm }),
+    }),
 }
