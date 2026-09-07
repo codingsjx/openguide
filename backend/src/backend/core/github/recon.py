@@ -156,36 +156,46 @@ def enrich_docs_and_tree(
         if actual:
             fetch_paths.append(actual)
 
-    # docs/ sub-directory: grab first N text files by shallow listing (limit).
-    if docs_dir_name and sig.has_docs_dir:
-        try:
-            listing = client.get_contents(sig.meta.owner, sig.meta.repo, "docs")
-            if isinstance(listing, list):
-                n = 0
-                for e in listing:
-                    if e.get("type") == "file" and e.get("name", "").endswith(
-                        (".md", ".rst", ".txt")
-                    ):
-                        fetch_paths.append(f"docs/{e['name']}")
-                        n += 1
-                        if n >= 6:
-                            break
-        except GitHubClientError:
-            pass
-
-    for path in fetch_paths:
-        text = client.get_file_text(sig.meta.owner, sig.meta.repo, path)
-        if text is None or len(text) > _MAX_DOC_SIZE:
-            continue
-        doc_files.append(DocFile(path=path, name=path.split("/")[-1], text=text))
-
-    # Full file tree (for V2 architecture perspective).
+    # Full file tree: cheap single request, gives us exact doc paths to fetch.
     file_tree: list[str] = []
     try:
         tree = client.get_git_tree(sig.meta.owner, sig.meta.repo, sig.meta.default_branch)
         file_tree = [t.get("path", "") for t in tree if t.get("type") == "blob" and t.get("path")]
     except GitHubClientError:
         file_tree = []
+
+    # Pick key newcomer-relevant docs from the tree (dev/contributing/guide/
+    # installation/tutorial under docs/ or at root), plus a cap of other docs.
+    _TEXT_EXT = (".md", ".rst", ".txt")
+    _KEY_SEGMENTS = ("contribut", "develop", "guide", "install", "setup", "tutorial", "getting", "usage", "workflow")
+    picked: list[str] = []
+    keyed: list[str] = []
+    for p in file_tree:
+        low = p.lower()
+        if not low.endswith(_TEXT_EXT):
+            continue
+        if low.startswith(".") or low.startswith(("node_modules", "vendor", "dist", "build", "static", "assets")):
+            continue
+        segs = low.split("/")
+        # Key if under docs/dev|docs/contribut*|... or filename carries keyword.
+        in_docs = segs[0] == "docs" if segs else False
+        is_key = any(k in low for k in _KEY_SEGMENTS)
+        # Skip docs/__something__/ (api/autodoc/reference) unless it has a keyword.
+        if in_docs and not is_key:
+            continue
+        if len(picked) >= 40:
+            break
+        (keyed if is_key else picked).append(p)
+    fetch_paths.extend(keyed)
+    fetch_paths.extend(picked)
+
+    for path in fetch_paths:
+        if path.lower() in {d.path.lower() for d in doc_files}:
+            continue
+        text = client.get_file_text(sig.meta.owner, sig.meta.repo, path)
+        if text is None or len(text) > _MAX_DOC_SIZE:
+            continue
+        doc_files.append(DocFile(path=path, name=path.split("/")[-1], text=text))
 
     return RawSignals(
         meta=sig.meta,

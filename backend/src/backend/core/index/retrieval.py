@@ -49,8 +49,16 @@ def _guess_kind(query: str) -> str:
 
 
 def retrieve(
-    store: Store, query: str, kind: str | None = None, top_k: int = 5
+    store: Store, query: str, kind: str | None = None, top_k: int = 5, any_perspective: bool = False
 ) -> SearchResult:
+    if any_perspective:
+        # Search across all four perspectives (used by evidence backfill so a
+        # step can find whichever repo file actually backs it).
+        all_hits: list[Hit] = []
+        for p in ("v1", "v2", "v3", "v4"):
+            all_hits.extend(store.query(p, query, top_k=top_k))
+        all_hits.sort(key=lambda h: -h.score)
+        return SearchResult(query=query, kind="any", perspective="v1,v2,v3,v4", hits=all_hits)
     kind = kind or _guess_kind(query)
     perspectives = _KIND_TO_PERSPECTIVES.get(kind, ["v3"])
     hits: list[Hit] = []

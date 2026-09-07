@@ -9,11 +9,15 @@ Perspectives:
 - V2 architecture map     : file tree + top-level package/docstrings + main entry
 - V3 executable path      : build config + scripts/Makefile/workflows + install docs
 - V4 issue slots          : good-first-issue titles/bodies + touched files
+
+Each assembled chunk keeps its *real* repo-relative source (a file path for
+V1/V3 docs, an issue ref like `#12` for V4). That source is what the generator
+cites as evidence, and what the evidence verifier checks against the repo.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from backend.core.github.recon import RawSignals
 
@@ -21,19 +25,17 @@ from backend.core.github.recon import RawSignals
 # we reuse doc_files already fetched during recon).
 _V1_FILES = ("readme.md", "readme.rst", "contributing.md", "contributing")
 _V3_FILES = ("makefile", "dockerfile")
-_V3_ROOT_BUILD = ("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt",
-                  "package.json", "cargo.toml", "go.mod", "gemfile")
 
 
 @dataclass
-class PerspectiveDoc:
-    """One assembled perspective document ready for chunking/indexing."""
+class PerspectiveChunk:
+    """One indexed chunk: text + which repo file/issue it came from."""
 
-    key: str  # v1 | v2 | v3 | v4
-    title: str
+    perspective: str  # v1 | v2 | v3 | v4
     text: str
-    # 0..1 weighting used by the retriever for activate-by-default vs lazy.
-    activate_default: bool
+    # Real repo-relative path (file kind) OR issue ref "#12" (issue kind).
+    source_path: str = ""
+    kind: str = "file"  # file | issue | synthetic
 
 
 def _doc_by_path(sig: RawSignals, name_lower: str) -> str | None:
@@ -43,64 +45,87 @@ def _doc_by_path(sig: RawSignals, name_lower: str) -> str | None:
     return None
 
 
-def _top_level_dirs(file_tree: list[str]) -> list[str]:
-    dirs: set[str] = set()
-    for p in file_tree:
-        parts = p.split("/")
-        if len(parts) >= 2:
-            dirs.add(parts[0])
-    return sorted(dirs)
+def _emit_doc_chunks(perspective: str, path: str, text: str, out: list[PerspectiveChunk]) -> None:
+    """Chunk one doc file and append chunks tagged with that real path."""
+    if not text:
+        return
+    header = f"===== {path} ====="
+    body = text
+    # Keep header on first chunk for provenance.
+    chunks = chunk_text(body, size=700, overlap=80)
+    for i, c in enumerate(chunks):
+        prefix = header if i == 0 else ""
+        out.append(
+            PerspectiveChunk(
+                perspective=perspective,
+                text=(prefix + "\n" + c).strip() if prefix else c,
+                source_path=path,
+                kind="file",
+            )
+        )
 
 
-def assemble_perspectives(sig: RawSignals) -> list[PerspectiveDoc]:
-    docs: list[PerspectiveDoc] = []
+def assemble_perspective_chunks(sig: RawSignals) -> list[PerspectiveChunk]:
+    """Build all perspective chunks, each tagged with a real repo source.
 
-    # ---- V1: entry & conventions ------------------------------------------
-    parts: list[str] = []
+    Returns flat list; the service groups by perspective for upsert.
+    """
+    chunks: list[PerspectiveChunk] = []
+
+    # ---- V1: entry & conventions (per-doc real source) ---------------------
     for name in _V1_FILES:
         text = _doc_by_path(sig, name)
         if text:
-            parts.append(f"===== {name} =====")
-            parts.append(text)
-    if sig.meta.description:
-        parts.insert(0, f"仓库描述: {sig.meta.description}")
-    v1_text = "\n\n".join(parts).strip()
-    docs.append(PerspectiveDoc(key="v1", title="入口与约定",
-                               text=v1_text, activate_default=True))
+            _emit_doc_chunks("v1", name, text, chunks)
+    if sig.meta.description and not chunks:
+        chunks.append(
+            PerspectiveChunk(
+                perspective="v1",
+                text=f"仓库描述: {sig.meta.description}",
+                source_path="",
+                kind="synthetic",
+            )
+        )
 
     # ---- V2: architecture map ---------------------------------------------
-    v2_parts = [f"文件树（{len(sig.file_tree)} 个文件）:"]
     if sig.file_tree:
-        v2_parts.append("\n".join(sig.file_tree[:400]))  # cap long trees
-    v2_parts.append(f"顶层目录: {', '.join(_top_level_dirs(sig.file_tree))}")
-    v2_text = "\n".join(v2_parts).strip()
-    docs.append(PerspectiveDoc(key="v2", title="架构地图",
-                               text=v2_text, activate_default=False))
+        tree_text = "\n".join(sig.file_tree[:400])
+        chunks.append(
+            PerspectiveChunk(
+                perspective="v2",
+                text=f"文件树（{len(sig.file_tree)} 个文件）:\n{tree_text}",
+                source_path="",
+                kind="synthetic",
+            )
+        )
 
-    # ---- V3: executable path ----------------------------------------------
-    v3_parts: list[str] = []
-    for name in _V1_FILES:  # CONTRIBUTING/README often hold runnable steps
-        if name in _V3_FILES:
+    # ---- V3: executable path (real doc source when available) -------------
+    # Any fetched doc that actually carries runnable steps counts as a source:
+    # README / CONTRIBUTING / Makefile / Dockerfile AND key docs like
+    # docs/dev/contributing.rst that got pulled by deep recon. This is what lets
+    # a "how do I run tests" stage find the real file that documents it.
+    _RUN_KEYWORDS = ("install", "setup", "test", "make", "pip", "clone",
+                     "environment", "virtualenv", "venv", "tox", "develop", "usage")
+    v3_paths: list[str] = []
+    for d in sig.doc_files:
+        low = d.path.lower()
+        if low.startswith(".") or low.endswith(("license",)) or "/license" in low:
             continue
-        text = _doc_by_path(sig, name)
-        if text and any(k in text.lower() for k in ("install", "setup", "test", "make", "pip")):
-            v3_parts.append(f"===== {name} =====")
-            v3_parts.append(text)
-    for name in _V3_FILES:
-        text = _doc_by_path(sig, name)
-        if text:
-            v3_parts.append(f"===== {name} =====")
-            v3_parts.append(text)
-    # Build files themselves are code, not prose; the docs that mention them
-    # are more useful. If we have no prose at all, include the build file text.
-    if not v3_parts:
-        v3_parts.append("（该仓库未抓到安装/测试相关文档，需结合 V1/V2 与代码上下文）")
-    docs.append(PerspectiveDoc(key="v3", title="可执行路径",
-                               text="\n\n".join(v3_parts).strip(),
-                               activate_default=True))
+        if any(k in low for k in ("readme", "contribut")):
+            v3_paths.append(d.path)
+            continue
+        if any(k in d.text.lower() for k in _RUN_KEYWORDS):
+            v3_paths.append(d.path)
+    # Dedupe preserving order.
+    seen: set[str] = set()
+    v3_paths = [p for p in v3_paths if not (p in seen or seen.add(p))]
+    for path in v3_paths:
+        for d in sig.doc_files:
+            if d.path == path:
+                _emit_doc_chunks("v3", path, d.text, chunks)
+                break
 
-    # ---- V4: issue slots --------------------------------------------------
-    v4_lines: list[str] = []
+    # ---- V4: issue slots (real issue refs) --------------------------------
     seen = 0
     for iss in sig.issues:
         if iss.get("pull_request"):
@@ -109,24 +134,24 @@ def assemble_perspectives(sig: RawSignals) -> list[PerspectiveDoc]:
         title = iss.get("title", "")
         body = (iss.get("body") or "")[:600]
         labels = ", ".join(l.get("name", "") for l in iss.get("labels", []))
-        state = iss.get("state", "")
         line = f"issue #{num} [{labels}] {title}\n{body}"
-        v4_lines.append(line)
+        chunks.append(
+            PerspectiveChunk(
+                perspective="v4",
+                text=line.strip(),
+                source_path=f"#{num}",
+                kind="issue",
+            )
+        )
         seen += 1
         if seen >= 15:
             break
-    v4_text = "\n\n".join(v4_lines) if v4_lines else "（暂无 good-first-issue / help-wanted）"
-    docs.append(PerspectiveDoc(key="v4", title="可贡献 issue 槽位",
-                               text=v4_text, activate_default=False))
-    return docs
+
+    return chunks
 
 
 def chunk_text(text: str, size: int = 700, overlap: int = 100) -> list[str]:
-    """Simple overlap chunking on paragraph/line boundaries. Deterministic.
-
-    A real embedding store can chunk this way cheaply; keep char-level so it is
-    reproducible offline (no tokeniser dependency in the assembly layer).
-    """
+    """Simple overlap chunking on paragraph/line boundaries. Deterministic."""
     if not text:
         return []
     if len(text) <= size:
@@ -135,7 +160,6 @@ def chunk_text(text: str, size: int = 700, overlap: int = 100) -> list[str]:
     start = 0
     while start < len(text):
         end = min(start + size, len(text))
-        # Try to break on a newline near the boundary to keep chunk semantics.
         if end < len(text):
             nl = text.rfind("\n", start + size // 2, end)
             if nl != -1 and nl > start:
@@ -145,3 +169,35 @@ def chunk_text(text: str, size: int = 700, overlap: int = 100) -> list[str]:
             break
         start = max(start + 1, end - overlap)
     return [c for c in chunks if c]
+
+
+# Keep a small view for callers that want the doc-summary shape.
+@dataclass
+class PerspectiveDoc:
+    key: str
+    title: str
+    text: str
+    activate_default: bool
+    source_path: str = ""
+    kind: str = "file"
+
+
+def assemble_perspectives(sig: RawSignals) -> list[PerspectiveDoc]:
+    """Group perspective chunks into docs (source per chunk retained in text via
+    `===== path =====` header). Legacy convenience wrapper."""
+    from collections import OrderedDict
+
+    groups: "OrderedDict[str, list[str]]" = OrderedDict()
+    for c in assemble_perspective_chunks(sig):
+        groups.setdefault(c.perspective, []).append(c.text)
+    docs: list[PerspectiveDoc] = []
+    for key, texts in groups.items():
+        docs.append(
+            PerspectiveDoc(
+                key=key,
+                title={"v1": "入口与约定", "v2": "架构地图", "v3": "可执行路径", "v4": "可贡献 issue 槽位"}.get(key, key),
+                text="\n\n".join(texts),
+                activate_default=key in ("v1", "v3"),
+            )
+        )
+    return docs

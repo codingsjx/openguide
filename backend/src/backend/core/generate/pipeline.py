@@ -70,6 +70,9 @@ def build_guide(
         steps = _generate_heuristic(sig, index, start_id=step_id)
 
     guide.steps = _verify_and_relabel(sig, steps)
+    # Second pass: try to find a real source for still-missing steps by
+    # re-searching the index with the step's own title/command.
+    guide.steps = _backfill_evidence(sig, index, guide.steps)
     return guide
 
 
@@ -82,7 +85,14 @@ def _build_index(sig: RawSignals) -> RepoIndex:
 def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
     kind = _STAGE_PERSPECTIVES.get(stage, "setup")
     res = index.search(query, kind=kind, top_k=4)
-    return [{"source": h.perspective, "text": h.text} for h in res.hits]
+    out: list[dict] = []
+    for h in res.hits:
+        # Prefer the chunk's real repo source (file path or issue ref) over the
+        # perspective code; fall back to perspective only as a last resort.
+        src = (h.meta or {}).get("source") or h.perspective
+        kind_meta = (h.meta or {}).get("kind") or "file"
+        out.append({"source": src, "text": h.text, "meta_kind": kind_meta})
+    return out
 
 
 def _generate_with_llm(sig, index, client, start_id: int) -> list[GuideStep]:
@@ -169,6 +179,17 @@ def _heuristic_one(sig, stage: str, snippets: list[dict], text: str) -> GuideSte
     expected = (
         f"运行 {cmds[0]} 并确认成功（无报错）" if cmds else "见仓库原文确认成功标志"
     )
+    # Attribute real source from the first snippet when it maps to a file/issue;
+    # perspective codes (v1..v4) are not real sources.
+    ev_source = ""
+    ev_kind = "missing"
+    for s in snippets:
+        src = s.get("source", "")
+        mkind = s.get("meta_kind", "file")
+        if mkind in ("file", "issue") and src and not src.startswith("v"):
+            ev_source = src
+            ev_kind = mkind
+            break
     return GuideStep(
         step_id=0,
         stage=stage,  # type: ignore[arg-type]
@@ -177,14 +198,18 @@ def _heuristic_one(sig, stage: str, snippets: list[dict], text: str) -> GuideSte
         command=cmds[0] if cmds else None,
         expected=expected,
         fail_hints=["如卡住，把报错贴给 OpenGuide 的‘报错了’追问"],
-        # Heuristic fallback deliberately marks evidence missing unless the
-        # snippet source resolves to a real file (handled by verification).
-        evidence=Evidence(kind="missing", source="", quote=""),
+        # Heuristic fallback marks evidence missing only when no real source is
+        # retrievable (无证据不宣称).
+        evidence=Evidence(kind=ev_kind, source=ev_source, quote=""),  # type: ignore[arg-type]
     )
 
 
 def _verify_and_relabel(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]:
-    """Post-check every evidence against the repo; downgrade unverifiable ones."""
+    """Post-check every evidence against the repo; downgrade unverifiable ones.
+
+    Perspective codes (v1..v4) and other non-repo identifiers are not accepted
+    as evidence sources — only real file paths / issue refs we fetched pass.
+    """
     avail = available_sources(sig)
     issue_nums = {i.get("number") for i in sig.issues if i.get("pull_request") is None}
     out: list[GuideStep] = []
@@ -193,8 +218,14 @@ def _verify_and_relabel(sig: RawSignals, steps: list[GuideStep]) -> list[GuideSt
         if ev.kind == "missing":
             out.append(st)
             continue
+        # Reject perspective-code sources outright.
+        if ev.source in {"v1", "v2", "v3", "v4"}:
+            st.evidence = Evidence(kind="missing", source="", quote="")
+            out.append(st)
+            continue
         if ev.kind == "issue":
-            if ev.source.lstrip("#").isdigit() and int(ev.source.lstrip("#")) in issue_nums:
+            num = ev.source.lstrip("#")
+            if num.isdigit() and int(num) in issue_nums:
                 out.append(st)
                 continue
             st.evidence = Evidence(kind="missing", source="", quote="")
@@ -209,5 +240,54 @@ def _verify_and_relabel(sig: RawSignals, steps: list[GuideStep]) -> list[GuideSt
             out.append(st)
             continue
         st.evidence = Evidence(kind="missing", source="", quote="")
+        out.append(st)
+    return out
+
+
+def _backfill_evidence(sig, index: RepoIndex, steps: list[GuideStep]) -> list[GuideStep]:
+    """For missing-evidence steps, search within the *stage-relevant*
+    perspective(s) and attach a real repo source if one is retrievable.
+
+    Precision over recall: the search is scoped to the perspective that stage
+    is generated from (A/B -> v3 可执行路径, C -> v4 issue 槽位, D -> v1 约定),
+    so a backfilled source is the file/issue that actually backs that kind of
+    step — not whatever ranks highest in the whole index. Honest rule: if no
+    real source surfaces, keep missing (无证据不宣称).
+    """
+    if not index:
+        return steps
+    # stage -> perspectives to scope the backfill search to.
+    stage_perspectives = {"A": "setup", "B": "test", "C": "issue", "D": "contribute"}
+    out: list[GuideStep] = []
+    for st in steps:
+        if st.evidence.kind != "missing":
+            out.append(st)
+            continue
+        # Build a retrieval query from title + command.
+        query = " ".join(filter(None, [st.title, st.command or "", st.expected]))
+        if st.stage == "C" or "issue" in (st.title or "").lower():
+            query += " good first issue first contribution"
+        query = query.replace("-", " ").strip()
+        if not query:
+            out.append(st)
+            continue
+        kind = stage_perspectives.get(st.stage, "setup")
+        try:
+            res = index.search(query, kind=kind, top_k=4)
+        except Exception:  # noqa: BLE001 - never let backfill crash generation
+            out.append(st)
+            continue
+        found = None
+        for h in res.hits:
+            meta = h.meta or {}
+            src = meta.get("source") or ""
+            mkind = meta.get("kind") or "file"
+            # Only real file/issue sources count; perspective codes are not.
+            if mkind in ("file", "issue") and src and not src.startswith("v"):
+                found = (src, mkind)
+                break
+        if found:
+            src, mkind = found
+            st.evidence = Evidence(kind=mkind, source=src, quote="")  # type: ignore[arg-type]
         out.append(st)
     return out

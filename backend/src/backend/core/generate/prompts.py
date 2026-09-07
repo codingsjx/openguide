@@ -40,7 +40,10 @@ def build_stage_messages(stage: str, context_snippets: list[dict]) -> list[dict[
     if not context_snippets:
         user.append("（本次未检索到可引用资料）")
     for s in context_snippets:
-        user.append(f"\n--[source: {s['source']}]--\n{s['text'][:1200]}")
+        src = s.get("source", "")
+        # Only real file paths or issue refs are usable as evidence sources.
+        display = src if src and not src.startswith("v") else "（仓库原文，无具体文件）"
+        user.append(f"\n--[source: {display}]--\n{s['text'][:1200]}")
     user.append(
         "\n\n输出 JSON 数组，每个元素字段："
         "step_id(int), stage=该阶段代号, stage_label(中文), title(一句话), "

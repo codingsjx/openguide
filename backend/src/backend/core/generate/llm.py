@@ -54,10 +54,17 @@ class LLMClient:
         *,
         temperature: float = 0.2,
         max_tokens: int = 2048,
+        retries: int = 2,
     ) -> dict[str, Any]:
-        """Return parsed JSON object from a chat completion."""
+        """Return parsed JSON object from a chat completion.
+
+        Retries transient network/timeout errors with backoff so a slow relay
+        doesn't drop an entire stage (which would fall back to heuristic).
+        """
         if not self.available():
             raise LLMUnavailable("未配置 LLM_API_KEY（请在 设置 里填写）")
+        import time
+
         import httpx
 
         headers = {"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"}
@@ -68,19 +75,27 @@ class LLMClient:
             "max_tokens": max_tokens,
             "response_format": {"type": "json_object"},
         }
-        try:
-            resp = httpx.post(
-                f"{self._base}/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=90.0,
-            )
-            resp.raise_for_status()
-        except Exception as exc:  # noqa: BLE001 - network/API errors surfaced
-            raise LLMUnavailable(f"LLM 调用失败: {exc}") from exc
-        data = resp.json()
-        content = data["choices"][0]["message"]["content"]
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError as exc:
-            raise LLMUnavailable(f"LLM 返回非 JSON: {content[:200]}") from exc
+        last_exc: Exception | None = None
+        for attempt in range(retries + 1):
+            try:
+                resp = httpx.post(
+                    f"{self._base}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=300.0,  # generous: stage prompts can be slow on relays
+                )
+                resp.raise_for_status()
+            except Exception as exc:  # noqa: BLE001 - network/API errors surfaced
+                last_exc = exc
+                if attempt < retries:
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+                raise LLMUnavailable(f"LLM 调用失败: {exc}") from exc
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError as exc:
+                # Bad JSON on a late attempt is not worth retrying whole payloads.
+                raise LLMUnavailable(f"LLM 返回非 JSON: {content[:200]}") from exc
+        raise LLMUnavailable(f"LLM 调用失败: {last_exc}")
