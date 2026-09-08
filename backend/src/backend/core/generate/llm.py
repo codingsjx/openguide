@@ -99,3 +99,45 @@ class LLMClient:
                 # Bad JSON on a late attempt is not worth retrying whole payloads.
                 raise LLMUnavailable(f"LLM 返回非 JSON: {content[:200]}") from exc
         raise LLMUnavailable(f"LLM 调用失败: {last_exc}")
+
+    def chat_text(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        temperature: float = 0.2,
+        max_tokens: int = 1024,
+        retries: int = 2,
+    ) -> str:
+        """Return a plain-text completion (for explanations / diagnosis)."""
+        if not self.available():
+            raise LLMUnavailable("未配置 LLM_API_KEY（请在 设置 里填写）")
+        import time
+
+        import httpx
+
+        headers = {"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"}
+        payload: dict[str, Any] = {
+            "model": self._model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        last_exc: Exception | None = None
+        for attempt in range(retries + 1):
+            try:
+                resp = httpx.post(
+                    f"{self._base}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=300.0,
+                )
+                resp.raise_for_status()
+            except Exception as exc:  # noqa: BLE001
+                last_exc = exc
+                if attempt < retries:
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+                raise LLMUnavailable(f"LLM 调用失败: {exc}") from exc
+            data = resp.json()
+            return data["choices"][0]["message"]["content"].strip()
+        raise LLMUnavailable(f"LLM 调用失败: {last_exc}")

@@ -21,6 +21,7 @@ export interface Guide {
   repo_url: string
   owner: string
   repo: string
+  default_branch: string
   unsuitable: boolean
   reasons: string[]
   steps: GuideStep[]

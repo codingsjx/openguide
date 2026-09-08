@@ -57,4 +57,18 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(cfg),
     }),
+  postFollowup: (payload: {
+    url: string
+    intent: 'granular' | 'explain' | 'diagnose'
+    step: Record<string, unknown>
+    query?: string
+    log_text?: string
+  }) =>
+    request<{ intent: string; text: string; sub_steps: unknown[]; sources: string[] }>(
+      '/api/followup',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+    ),
 }

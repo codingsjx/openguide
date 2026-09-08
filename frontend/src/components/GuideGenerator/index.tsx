@@ -4,7 +4,7 @@ import { ThunderboltOutlined } from '@ant-design/icons'
 
 import { api } from '../../api/client'
 import type { Guide } from '../../types/guide'
-import GuideDisplay from '../GuideDisplay'
+import GuideWizard from '../GuideWizard'
 
 const { Title, Paragraph } = Typography
 
@@ -64,7 +64,7 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
             {guide.unsuitable && <Tag color="red">暂不建议贡献</Tag>}
             <Tag>{guide.steps.length} 步</Tag>
           </Space>
-          <GuideDisplay guide={guide} />
+          <GuideWizard guide={guide} url={guide.repo_url} />
         </div>
       )}
     </div>

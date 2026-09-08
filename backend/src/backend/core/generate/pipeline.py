@@ -47,6 +47,7 @@ def build_guide(
         repo_url=repo_url,
         owner=profile.owner,
         repo=profile.repo,
+        default_branch=profile.default_branch,
         unsuitable=(suitability == "avoid"),
         reasons=reasons,
     )

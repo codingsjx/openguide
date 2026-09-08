@@ -32,6 +32,7 @@ class Guide(BaseModel):
     repo_url: str
     owner: str = ""
     repo: str = ""
+    default_branch: str = "main"
     unsuitable: bool = False
     reasons: list[str] = Field(default_factory=list)
     steps: list[GuideStep] = Field(default_factory=list)
