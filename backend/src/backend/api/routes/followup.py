@@ -74,4 +74,11 @@ def follow_up(req: FollowupRequest) -> dict:
     else:
         r = diagnose(idx, step, req.log_text, LLMClient())
 
-    return r.model_dump()
+    # FollowupResult is a dataclass, not a Pydantic model, so it has no
+    # model_dump(); serialise its GuideStep sub-steps explicitly.
+    return {
+        "intent": r.intent,
+        "text": r.text,
+        "sub_steps": [s.model_dump() for s in r.sub_steps],
+        "sources": r.sources,
+    }
