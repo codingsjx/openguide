@@ -10,7 +10,8 @@
       "lang": "python",
       "build": "pyproject.toml",
       "test_cmd": "pytest",
-      "primary_language": "python"
+      "primary_language": "python",
+      "verified": true
     },
     {
       "owner": "camelot-dev",
@@ -35,7 +36,8 @@
       "why": "Python CLI 脚手架：pyproject+pytest；BSD-3-Clause；活跃(pushed 2026-09-02)；README/文档全。cookietemplate 代表。需人工复核 build。",
       "lang": "python",
       "build": "pyproject.toml",
-      "test_cmd": "pytest"
+      "test_cmd": "pytest",
+      "verified": true
     },
     {
       "owner": "cookiecutter",
@@ -43,7 +45,8 @@
       "why": "项目脚手架：python 库，有 gfi + please-help，非 Python-first 但脚手架场景代表。需人工复核 build。",
       "lang": "python",
       "build": "pyproject.toml",
-      "test_cmd": "pytest"
+      "test_cmd": "pytest",
+      "verified": true
     }
   ]
 }

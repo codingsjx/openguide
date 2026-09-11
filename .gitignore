@@ -26,3 +26,10 @@ Thumbs.db
 
 # ---- demo / benchmark transient ----
 benchmark/reports/*.tmp
+
+# ---- local golden verification workspace (cloned repos + venv) ----
+_golden_work/
+
+# ---- local dev server logs ----
+_backend.log
+_frontend.log

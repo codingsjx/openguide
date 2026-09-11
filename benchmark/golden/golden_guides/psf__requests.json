@@ -1,8 +1,7 @@
 {
   "owner": "psf",
   "repo": "requests",
-  "verified": false,
-  "notes": "示例 golden guide。requests 无独立 CONTRIBUTING.md；开发指引在 README.md 尾部（clone 命令 L65）+ docs/dev/。以下 steps 来自真实 README 命令，但 venv/test 细节需 clone 后人工跑通再 verified:true。",
+  "notes": "A/B 阶段已于 2026-09-09 在干净 venv(Python 3.13) 真实跑通：629 passed, 2 failed, 3 skipped, 1 xfailed。2 个失败为环境相关（doesnotexist.google.com 连接测试 + TLS 证书 bundle 测试），非代码问题。C/D 阶段基于 docs/dev/contributing.rst 整理，未实际走通 PR（requests 处于 feature freeze，功能改动不接，文档贡献始终欢迎）。",
   "steps": [
     {
       "order": 1,
@@ -15,18 +14,34 @@
     {
       "order": 2,
       "stage": "A 环境搭建",
-      "title": "进入仓库目录",
-      "expected_commands": ["cd requests"],
-      "expected_outcome": "处于 requests 仓库根目录",
-      "evidence_sources": []
+      "title": "创建虚拟环境并安装开发依赖",
+      "expected_commands": ["python -m pip install -r requirements-dev.txt"],
+      "expected_outcome": "成功安装 requests(editable) 及 pytest 等测试依赖，无报错",
+      "evidence_sources": ["Makefile#L2", "requirements-dev.txt#L1"]
     },
     {
       "order": 3,
       "stage": "B 测试基线",
-      "title": "安装开发依赖并跑测试（需人工核验命令）",
-      "expected_commands": ["python -m pip install -e .[dev]"],
-      "expected_outcome": "pytest 全部通过",
-      "evidence_sources": ["docs/dev/contributing.rst"]
+      "title": "运行测试套件",
+      "expected_commands": ["python -m pytest tests"],
+      "expected_outcome": "629 passed, 2 failed, 3 skipped, 1 xfailed（2 个 failed 为网络/TLS 环境相关，非代码问题）",
+      "evidence_sources": ["Makefile#L4"]
+    },
+    {
+      "order": 4,
+      "stage": "C 选 issue",
+      "title": "选择首个贡献方向（文档优先）",
+      "expected_commands": [],
+      "expected_outcome": "选定一个文档改进点；requests 处于 feature freeze，功能改动不接，但文档贡献始终欢迎",
+      "evidence_sources": ["docs/dev/contributing.rst#L120", "docs/dev/contributing.rst#L153"]
+    },
+    {
+      "order": 5,
+      "stage": "D 首 PR",
+      "title": "按贡献清单提交 PR",
+      "expected_commands": [],
+      "expected_outcome": "Fork → 跑测试 → 写测试 → 改动 → 再跑测试 → 提交 PR 到 main 分支",
+      "evidence_sources": ["docs/dev/contributing.rst#L70"]
     }
   ]
 }

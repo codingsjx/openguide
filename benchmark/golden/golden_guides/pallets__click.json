@@ -1,0 +1,47 @@
+{
+  "owner": "pallets",
+  "repo": "click",
+  "notes": "A/B 阶段已于 2026-09-10 在仓库内用 uv 真实跑通：uv sync（默认组装 dev+pre-commit+tests+typing）成功，uv run pytest 得 1981 passed, 102 skipped, 1 xfailed。click 无本地 CONTRIBUTING，开发环境与贡献流程统一走 Pallets 官方文档（docs/contributing.md 只作索引）；issue/PR 流程以 palletsprojects.com/contributing 为准，C/D 阶段据此整理，未实际走通 PR。",
+  "steps": [
+    {
+      "order": 1,
+      "stage": "A 环境搭建",
+      "title": "克隆仓库",
+      "expected_commands": ["git clone https://github.com/pallets/click.git"],
+      "expected_outcome": "本地生成 click/ 目录（README 无特殊 clone 命令，标准 clone 即可）",
+      "evidence_sources": []
+    },
+    {
+      "order": 2,
+      "stage": "A 环境搭建",
+      "title": "安装开发环境",
+      "expected_commands": ["uv sync"],
+      "expected_outcome": "安装 dev/pre-commit/tests/typing 依赖组，无报错",
+      "evidence_sources": ["pyproject.toml#L25", "pyproject.toml#L81"]
+    },
+    {
+      "order": 3,
+      "stage": "B 测试基线",
+      "title": "运行测试套件",
+      "expected_commands": ["uv run pytest -q"],
+      "expected_outcome": "1981 passed, 102 skipped, 1 xfailed",
+      "evidence_sources": ["pyproject.toml#L48", "pyproject.toml#L84"]
+    },
+    {
+      "order": 4,
+      "stage": "C 选 issue",
+      "title": "了解贡献入口",
+      "expected_commands": [],
+      "expected_outcome": "click 无本地 good-first-issue 标签，贡献流程统一见 Pallets 官方文档",
+      "evidence_sources": ["docs/contributing.md#L3"]
+    },
+    {
+      "order": 5,
+      "stage": "D 首 PR",
+      "title": "按 Pallets 流程提交 PR",
+      "expected_commands": [],
+      "expected_outcome": "fork → branch → commit → PR，流程见 palletsprojects.com/contributing",
+      "evidence_sources": ["docs/contributing.md#L3"]
+    }
+  ]
+}
