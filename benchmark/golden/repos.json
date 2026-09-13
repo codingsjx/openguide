@@ -28,7 +28,8 @@
       "why": "JS 测试框架：package.json + npm test；README/CONTRIBUTING 全；有 gfi(1)。前端库代表。需人工复核 build。",
       "lang": "javascript",
       "build": "package.json",
-      "test_cmd": "npm test"
+      "test_cmd": "npm test",
+      "verified": true
     },
     {
       "owner": "pallets",
