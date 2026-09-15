@@ -26,6 +26,8 @@ Thumbs.db
 
 # ---- demo / benchmark transient ----
 benchmark/reports/*.tmp
+benchmark/reports/
+_run_cache/
 
 # ---- local golden verification workspace (cloned repos + venv) ----
 _golden_work/

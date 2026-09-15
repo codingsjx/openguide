@@ -11,6 +11,7 @@
       "build": "pyproject.toml",
       "test_cmd": "pytest",
       "primary_language": "python",
+      "env_dir": "reqvenv",
       "verified": true
     },
     {
@@ -29,6 +30,7 @@
       "lang": "javascript",
       "build": "package.json",
       "test_cmd": "npm test",
+      "env_dir": "mocha/node_modules",
       "verified": true
     },
     {
@@ -38,6 +40,7 @@
       "lang": "python",
       "build": "pyproject.toml",
       "test_cmd": "pytest",
+      "env_dir": "click/.venv",
       "verified": true
     },
     {
@@ -47,6 +50,7 @@
       "lang": "python",
       "build": "pyproject.toml",
       "test_cmd": "pytest",
+      "env_dir": "cookiecutter/.venv",
       "verified": true
     }
   ]
