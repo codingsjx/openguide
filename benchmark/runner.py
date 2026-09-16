@@ -20,11 +20,13 @@ def _run(mod: str) -> int:
 
 
 def main() -> int:
+    # L2-L4 live in <pkg>/runner.py; their package __init__ is empty, so the
+    # bare package name would silently run nothing.
     codes = [
         _run("benchmark.l1_smoke"),
-        _run("benchmark.l2_golden"),
-        _run("benchmark.l3_ablation"),
-        _run("benchmark.l4_contribution"),
+        _run("benchmark.l2_golden.runner"),
+        _run("benchmark.l3_ablation.runner"),
+        _run("benchmark.l4_contribution.runner"),
     ]
     failed = sum(1 for c in codes if c != 0)
     print(f"\n评测完成：4 模块中 {failed} 个未通过")
