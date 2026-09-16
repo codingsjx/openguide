@@ -1,16 +1,21 @@
 """Verify the *generated* guide against both the golden reference AND a real
-execution environment — the full four-metric quality score for OpenGuide's output.
+execution environment — the full five-metric quality score for OpenGuide's output.
 
-This script measures what the *product* produces: it calls the backend guide
-generator, then scores the result on four dimensions:
+This module serves two entry points:
 
+1. CLI (``python benchmark/verify_generated_guide.py ...``): evaluate one or more
+   repos end-to-end and print a report.
+2. Library: ``evaluate_repo(owner, repo)`` is imported by L2/L3 so the official
+   evaluation runners reuse this exact pipeline (no duplicate logic, no drift).
+
+Metrics scored (see benchmark/metrics.py):
 - step_coverage  : 步骤完整率 — did the generated steps cover the golden steps?
 - evidence_hit   : 证据命中率 — does each command's evidence resolve to a real file?
 - command_correct: 命令正确率 — does each command match the golden reference for its stage?
 - command_exec   : 命令可执行率 — does each command actually run in a fresh clone?
 - assert_rate    : 有据断言率 — how many steps carry non-missing evidence?
 
-Zero manual prep: the script clones the repo, detects its language, provisions
+Zero manual prep: the pipeline clones the repo, detects its language, provisions
 the environment, runs every generated command, and reports per-repo + total
 rates with per-command error reasons.
 
@@ -49,7 +54,7 @@ _DEFAULT_REPOS = [
     "mochajs/mocha",
 ]
 
-# Commands that the script itself has already performed during setup, so
+# Commands that the harness itself has already performed during setup, so
 # re-running them inside an already-cloned workdir would falsely fail (e.g.
 # `git clone` fails because the destination already exists). These are marked
 # "handled by the harness" and excluded from the command_exec denominator —
@@ -204,6 +209,92 @@ def find_golden(owner: str, repo: str):
     return None
 
 
+def evaluate_repo(owner: str, repo: str) -> dict:
+    """Run the full evaluation pipeline for one repo and return a plain dict.
+
+    The returned dict is the shared contract between this CLI, L2 and L3:
+
+    - ``ok``: bool — whether generation + clone succeeded (commands may still fail).
+    - ``error``: str — reason for early failure (empty when ok).
+    - ``n_gen_steps`` / ``n_gen_commands``: int.
+    - ``command_exec_rate``: float — real exec rate (commands that exit 0).
+    - ``failed_commands``: list[dict] — command + exit + tail for each failure.
+    - ``golden_found``: bool — whether a golden guide exists for scoring.
+    - ``metrics``: MetricsResult | None — the other four dimensions (None when
+      there is no golden reference).
+    """
+    from benchmark.metrics import compute
+
+    cache = CACHE_DIR / f"{owner}__{repo}"
+    repo_dir = cache / "repo"
+    repo_dir.mkdir(parents=True, exist_ok=True)
+
+    out: dict = {
+        "owner": owner,
+        "repo": repo,
+        "ok": False,
+        "error": "",
+        "n_gen_steps": 0,
+        "n_gen_commands": 0,
+        "command_exec_rate": 0.0,
+        "failed_commands": [],
+        "golden_found": False,
+        "metrics": None,
+    }
+
+    # 1. Generate the guide.
+    try:
+        guide = generate_guide(owner, repo)
+    except Exception as exc:  # noqa: BLE001
+        out["error"] = str(exc)
+        return out
+    out["n_gen_steps"] = len(guide.steps)
+
+    # 2. Clone + provision environment.
+    if not (repo_dir / ".git").exists():
+        clone_repo(owner, repo, repo_dir)
+    if not (repo_dir / ".git").exists():
+        out["error"] = "clone 失败"
+        return out
+
+    lang = detect_lang(repo_dir)
+    extra_path = provision_env(repo_dir, lang, cache)
+    available_paths = collect_paths(repo_dir)
+
+    # 3. Run every command (command_exec).
+    repo_ok = repo_total = 0
+    for s in guide.steps:
+        cmd = s.command
+        if not cmd or not cmd.strip():
+            continue
+        if any(cmd.strip().startswith(p) for p in _HARNESS_HANDLED_PREFIXES):
+            continue
+        repo_total += 1
+        rc, tail = run_command(cmd, repo_dir, extra_path)
+        ok = rc == 0
+        repo_ok += ok
+        if not ok:
+            out["failed_commands"].append(
+                {"step_id": s.step_id, "stage": s.stage, "title": s.title,
+                 "command": cmd, "exit": rc, "tail": tail}
+            )
+    exec_rate = (repo_ok / repo_total) if repo_total else 0.0
+    out["n_gen_commands"] = repo_total
+    out["command_exec_rate"] = exec_rate
+
+    # 4. Score the other four metrics against golden (if present).
+    golden = find_golden(owner, repo)
+    if golden is not None:
+        out["golden_found"] = True
+        gen = to_generated_guide(guide)
+        m = compute(golden, gen, available_paths=available_paths)
+        m.command_exec = exec_rate  # fill the real exec rate into the metric
+        out["metrics"] = m
+
+    out["ok"] = True
+    return out
+
+
 def main() -> int:
     _load_backend_env()
     try:
@@ -223,105 +314,48 @@ def main() -> int:
             print("缓存目录不存在，无需清理")
         return 0
 
-    from benchmark.metrics import compute
-
     repo_args = args or _DEFAULT_REPOS
-    all_results: list[dict] = []
+    per_repo: list[dict] = []
     grand_total = grand_passed = 0
-    per_repo_metrics: list[dict] = []
 
     for arg in repo_args:
         owner, repo = parse_repo_arg(arg)
-        key = f"{owner}__{repo}"
-        cache = CACHE_DIR / key
-        repo_dir = cache / "repo"
-        repo_dir.mkdir(parents=True, exist_ok=True)
-
         print(f"\n{'='*70}\n{owner}/{repo}\n{'='*70}")
 
-        # 1. Generate the guide.
-        try:
-            guide = generate_guide(owner, repo)
-        except Exception as exc:  # noqa: BLE001
-            print(f"  [生成失败] {exc}")
+        r = evaluate_repo(owner, repo)
+        if not r["ok"]:
+            print(f"  [失败] {r['error']}")
             continue
 
-        steps = guide.steps
-        print(f"  生成步骤 {len(steps)} 个；其中 unsuitable={guide.unsuitable}")
+        grand_total += r["n_gen_commands"]
+        grand_passed += r["n_gen_commands"] - len(r["failed_commands"])
 
-        # 2. Clone + provision environment.
-        if not (repo_dir / ".git").exists():
-            print("  clone 仓库...")
-            clone_repo(owner, repo, repo_dir)
-        else:
-            print("  （复用已缓存的 clone）")
-
-        if not (repo_dir / ".git").exists():
-            print("  [clone 失败，跳过]")
-            continue
-
-        lang = detect_lang(repo_dir)
-        print(f"  识别语言: {lang}")
-        extra_path = provision_env(repo_dir, lang, cache)
-        available_paths = collect_paths(repo_dir)
-
-        # 3. Run every command in the generated steps (command_exec).
-        repo_ok = repo_total = 0
-        exec_details: list[dict] = []
-        for s in steps:
-            cmd = s.command
-            if not cmd or not cmd.strip():
-                continue
-            if any(cmd.strip().startswith(p) for p in _HARNESS_HANDLED_PREFIXES):
-                print(f"  [代劳] {s.title}: {cmd}  (环境初始化命令，脚本已代执行，不实测)")
-                continue
-            repo_total += 1
-            rc, tail = run_command(cmd, repo_dir, extra_path)
-            ok = rc == 0
-            repo_ok += ok
-            if not ok:
-                exec_details.append(
-                    {"step_id": s.step_id, "stage": s.stage, "title": s.title,
-                     "command": cmd, "exit": rc, "tail": tail}
-                )
-        exec_rate = (repo_ok / repo_total) if repo_total else 0.0
-        grand_total += repo_total
-        grand_passed += repo_ok
-
-        # 4. Score the other three metrics against golden (if present).
-        golden = find_golden(owner, repo)
-        m = None
-        if golden is not None:
-            gen = to_generated_guide(guide)
-            m = compute(golden, gen, available_paths=available_paths)
-
-        # 5. Print per-repo summary.
+        m = r["metrics"]
         if m is not None:
             print(f"  步骤完整率 {m.step_coverage:.0%} | 证据命中率 {m.evidence_hit:.0%} | "
-                  f"命令正确率 {m.command_correct:.0%} | 命令可执行率 {exec_rate:.0%} | "
+                  f"命令正确率 {m.command_correct:.0%} | 命令可执行率 {r['command_exec_rate']:.0%} | "
                   f"有据断言率 {m.assert_rate:.0%}")
         else:
-            print(f"  （无 golden 参照，仅命令可执行率 {exec_rate:.0%}）")
+            print(f"  （无 golden 参照，仅命令可执行率 {r['command_exec_rate']:.0%}）")
 
-        # Wrong / unexecuted commands detail.
-        if exec_details:
+        if r["failed_commands"]:
             print("  失败命令:")
-            for d in exec_details:
+            for d in r["failed_commands"]:
                 print(f"    ✗ [{d['stage']}] {d['title']}: {d['command']}  (exit={d['exit']})")
                 for line in d["tail"].splitlines()[-4:]:
                     print(f"        ↳ {line}")
 
-        per_repo_metrics.append(
+        per_repo.append(
             {
                 "repo": f"{owner}/{repo}",
-                "n_gen_steps": len(steps),
-                "n_gen_commands": repo_total,
+                "n_gen_steps": r["n_gen_steps"],
+                "n_gen_commands": r["n_gen_commands"],
                 "step_coverage": m.step_coverage if m else None,
                 "evidence_hit": m.evidence_hit if m else None,
                 "command_correct": m.command_correct if m else None,
-                "command_exec": exec_rate,
+                "command_exec": r["command_exec_rate"],
                 "assert_rate": m.assert_rate if m else None,
-                "failed_commands": exec_details,
+                "failed_commands": r["failed_commands"],
             }
         )
 
@@ -336,7 +370,7 @@ def main() -> int:
         "total_commands": grand_total,
         "passed_commands": grand_passed,
         "command_exec_rate": grand_rate,
-        "per_repo": per_repo_metrics,
+        "per_repo": per_repo,
     }
     out = REPORTS_DIR / f"guide_quality_{ts}.json"
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

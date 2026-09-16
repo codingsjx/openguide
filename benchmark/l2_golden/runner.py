@@ -1,13 +1,13 @@
-"""L2 golden-evaluation runner (skeleton).
+"""L2 golden-evaluation runner.
 
-Pipeline: for each golden repo → build profile → (M1/M2 待接入: 生成指南) →
-score with benchmark.metrics → append jsonl + summary.
+Pipeline: for each golden repo → call the real backend generator → score the
+generated guide against the golden reference with the full five metrics →
+append jsonl + summary.
 
-The actual guide generation lands in M1/M2; until then the runner exercises the
-score/metrics pipeline against a *synthetic* generated guide so the metrics
-machinery itself is testable and the output format is fixed.
+Reuses ``benchmark.verify_generated_guide.evaluate_repo`` so L2, the CLI script
+and L3 all run the exact same pipeline (no duplicate logic, no drift).
 
-Run:  uv run python -m benchmark.l2_golden
+Run:  uv run python -m benchmark.l2_golden.runner
 """
 
 from __future__ import annotations
@@ -15,38 +15,23 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from benchmark.golden.schema import GoldenStep, iter_golden_guides  # noqa: E402
-from benchmark.metrics import compute  # noqa: E402
-from benchmark.report import human_summary, write_summary  # noqa: E402
-from benchmark.schema import GeneratedGuide, GenEvidence, GenStep  # noqa: E402
-
-
-def _synthetic_generated(owner: str, repo: str) -> GeneratedGuide:
-    """Placeholder: produce a minimal generated guide for pipeline testing.
-
-    Replaced in M2 by the real guide generator.
-    """
-    return GeneratedGuide(
-        repo_url=f"https://github.com/{owner}/{repo}",
-        stages=[
-            GenStep(
-                step_id=1,
-                stage="A 环境搭建",
-                title="安装开发依赖",
-                command="pip install -e .[dev]",
-                expected="成功安装 dev 依赖",
-                fail_hints=["权限错误加 --user"],
-                evidence=GenEvidence(kind="file", source="CONTRIBUTING.md#L22", quote="..."),
-            )
-        ],
-    )
+from benchmark.golden.schema import iter_golden_guides  # noqa: E402
+from benchmark.report import append_result, human_summary, write_summary  # noqa: E402
+from benchmark.verify_generated_guide import evaluate_repo, _load_backend_env  # noqa: E402
 
 
 def main() -> int:
+    _load_backend_env()
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        pass
+
     guides = iter_golden_guides()
     print(f"golden guides 加载: {len(guides)}")
     if not guides:
@@ -55,13 +40,24 @@ def main() -> int:
 
     results = []
     for g in guides:
-        gen = _synthetic_generated(g.owner, g.repo)
-        res = compute(g, gen, available_paths=set())
-        results.append(res)
-        print(f"- {g.owner}/{g.repo}: coverage={res.step_coverage:.0%} "
-              f"evidence={res.evidence_hit:.0%} assert={res.assert_rate:.0%}")
+        print(f"\n{'='*70}\n{g.owner}/{g.repo}\n{'='*70}")
+        r = evaluate_repo(g.owner, g.repo)
+        if not r["ok"]:
+            print(f"  [失败] {r['error']}")
+            continue
+        m = r["metrics"]
+        if m is None:
+            print("  （无 golden 参照，跳过）")
+            continue
+        results.append(m)
+        print(f"  步骤完整率 {m.step_coverage:.0%} | 证据命中率 {m.evidence_hit:.0%} | "
+              f"命令正确率 {m.command_correct:.0%} | 命令可执行率 {m.command_exec:.0%} | "
+              f"有据断言率 {m.assert_rate:.0%}")
+        append_result(f"{g.owner}/{g.repo}", m, "l2")
+
     print("\nL2 汇总:")
     print(human_summary(results))
+    write_summary(results, "l2")
     return 0
 
 

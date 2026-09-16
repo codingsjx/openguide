@@ -47,5 +47,6 @@ def human_summary(results: list[MetricsResult]) -> str:
         f"仓库数 {s['n_repos']} | golden 步骤 {s['total_golden_steps']} | "
         f"生成步骤 {s['total_gen_steps']}\n"
         f"步骤完整率 {s['step_coverage']:.0%} | 证据命中率 {s['evidence_hit']:.0%} | "
-        f"命令可执行率 {s['command_exec']:.0%} | 有据断言率 {s['assert_rate']:.0%}"
+        f"命令正确率 {s['command_correct']:.0%} | 命令可执行率 {s['command_exec']:.0%} | "
+        f"有据断言率 {s['assert_rate']:.0%}"
     )
