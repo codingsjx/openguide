@@ -1,0 +1,47 @@
+{
+  "owner": "camelot-dev",
+  "repo": "camelot",
+  "notes": "A/B 阶段已于 2026-09-21 在仓库内用 uv 真实跑通：uv venv --python 3.13 + uv pip install -e \".[dev]\" 成功；uv run pytest 得 294 passed, 31 skipped, 2 xfailed, 1 xpassed（40s）。31 skipped 全部来自 conftest.py 的 skip_on_windows/skip_pdftopng——Windows 无 ghostscript 系统二进制，官方 CI 在 windows 上也靠 choco 装 gs 才能跑全量（见 .github/workflows/tests.yml#L161）；默认 pdfium 后端是纯 wheel 无系统依赖，故无 gs 也能跑过全部核心测试。注意 docs/dev/contributing.rst#L114 写的 `python setup.py test` 已过时（仓库已无 setup.py，改用 pyproject + nox），真实可跑命令是 pytest（noxfile.py 官方 tests session 也是 coverage run -m pytest）。C/D 阶段据文档整理，未实际走通 PR。",
+  "steps": [
+    {
+      "order": 1,
+      "stage": "A 环境搭建",
+      "title": "克隆仓库",
+      "expected_commands": ["git clone https://github.com/camelot-dev/camelot.git"],
+      "expected_outcome": "本地生成 camelot/ 目录",
+      "evidence_sources": ["README.md#L131"]
+    },
+    {
+      "order": 2,
+      "stage": "A 环境搭建",
+      "title": "安装开发依赖",
+      "expected_commands": ["uv pip install \".\"", "pip install \".[dev]\""],
+      "expected_outcome": "安装 camelot-py 及其 dev 依赖（pytest/nox/ghostscript 绑定等），无报错；默认 pdfium 后端随 wheel 自带，无系统依赖",
+      "evidence_sources": ["README.md#L133", "docs/dev/contributing.rst#L42"]
+    },
+    {
+      "order": 3,
+      "stage": "B 测试基线",
+      "title": "运行测试套件",
+      "expected_commands": ["uv run pytest -q"],
+      "expected_outcome": "294 passed, 31 skipped, 2 xfailed, 1 xpassed（无 ghostscript 时 skip 的 31 项为 Windows 上的 gs 后端用例，属预期）",
+      "evidence_sources": ["noxfile.py#L189", "docs/dev/contributing.rst#L109"]
+    },
+    {
+      "order": 4,
+      "stage": "C 选 issue",
+      "title": "挑一个 good-first-issue / help-wanted",
+      "expected_commands": [],
+      "expected_outcome": "从 GitHub 上 good-first-issue 或 help-wanted 标签里选一个入门 issue；找不到可联系维护者",
+      "evidence_sources": ["docs/dev/contributing.rst#L28", "docs/dev/contributing.rst#L30"]
+    },
+    {
+      "order": 5,
+      "stage": "D 首 PR",
+      "title": "Fork → 分支 → 提交 → push → 提 PR",
+      "expected_commands": ["git checkout -b my-feature", "git push -u origin my-feature"],
+      "expected_outcome": "从 fork clone，建 feature 分支，commit 后 push 到 fork，再提 PR；标题前缀 [WIP] 或 [MRG]",
+      "evidence_sources": ["docs/dev/contributing.rst#L54", "docs/dev/contributing.rst#L62", "docs/dev/contributing.rst#L75"]
+    }
+  ]
+}

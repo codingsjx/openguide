@@ -17,10 +17,13 @@
     {
       "owner": "camelot-dev",
       "repo": "camelot",
-      "why": "PDF 表格抽取库：pyproject+pytest；有 good-first-issue(1) + help-wanted；用 Python 为主。需人工复核 build。",
+      "why": "PDF 表格抽取库：pyproject+pytest；有 good-first-issue + help-wanted。默认 pdfium 后端纯 wheel 无系统依赖，uv 可跑通核心测试（294 passed）。build 已复核。",
       "lang": "python",
       "build": "pyproject.toml",
       "test_cmd": "pytest",
+      "primary_language": "python",
+      "env_dir": "camelot/.venv",
+      "verified": true,
       "gfi_expected": 1
     },
     {
