@@ -1,7 +1,7 @@
 {
   "owner": "pallets",
   "repo": "click",
-  "notes": "A/B 阶段已于 2026-09-10 在仓库内用 uv 真实跑通：uv sync（默认组装 dev+pre-commit+tests+typing）成功，uv run pytest 得 1981 passed, 102 skipped, 1 xfailed。click 无本地 CONTRIBUTING，开发环境与贡献流程统一走 Pallets 官方文档（docs/contributing.md 只作索引）；issue/PR 流程以 palletsprojects.com/contributing 为准，C/D 阶段据此整理，未实际走通 PR。",
+  "notes": "A/B 阶段已于 2026-09-10 在仓库内用 uv 真实跑通：uv sync（默认组装 dev+pre-commit+tests+typing）成功，uv run pytest 得 1981 passed, 102 skipped, 1 xfailed。click 无本地 CONTRIBUTING，开发环境与贡献流程统一走 Pallets 官方文档（docs/contributing.md 只作索引）；issue/PR 流程以 palletsprojects.com/contributing 为准，C/D 阶段据此整理，未实际走通 PR。已由 C 人工复核（2026-09-22）。",
   "steps": [
     {
       "order": 1,

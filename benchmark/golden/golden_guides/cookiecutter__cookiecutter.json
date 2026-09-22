@@ -1,7 +1,7 @@
 {
   "owner": "cookiecutter",
   "repo": "cookiecutter",
-  "notes": "A/B 阶段已于 2026-09-10 在仓库内真实跑通：uv run --python 3.13 --group test -- pytest -q 得 377 passed, 6 skipped, 覆盖率 100%（pytest-cov 自动开启）。官方推荐流程见 CONTRIBUTING.md（fork→clone→pip install -e .→pip install --group dev→just lint/just test-all）；本机无 just/uv dev 组，改用 pyproject 的 test 依赖组直接跑 pytest，命令等价。C/D 阶段据 CONTRIBUTING 整理，未实际走通 PR。",
+  "notes": "A/B 阶段已于 2026-09-10 在仓库内真实跑通：uv run --python 3.13 --group test -- pytest -q 得 377 passed, 6 skipped, 覆盖率 100%（pytest-cov 自动开启）。官方推荐流程见 CONTRIBUTING.md（fork→clone→pip install -e .→pip install --group dev→just lint/just test-all）；本机无 just/uv dev 组，改用 pyproject 的 test 依赖组直接跑 pytest，命令等价。C/D 阶段据 CONTRIBUTING 整理，未实际走通 PR。已由 C 人工复核（2026-09-22）。",
   "steps": [
     {
       "order": 1,

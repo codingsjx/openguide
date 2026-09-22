@@ -1,7 +1,7 @@
 {
   "owner": "camelot-dev",
   "repo": "camelot",
-  "notes": "A/B 阶段已于 2026-09-21 在仓库内用 uv 真实跑通：uv venv --python 3.13 + uv pip install -e \".[dev]\" 成功；uv run pytest 得 294 passed, 31 skipped, 2 xfailed, 1 xpassed（40s）。31 skipped 全部来自 conftest.py 的 skip_on_windows/skip_pdftopng——Windows 无 ghostscript 系统二进制，官方 CI 在 windows 上也靠 choco 装 gs 才能跑全量（见 .github/workflows/tests.yml#L161）；默认 pdfium 后端是纯 wheel 无系统依赖，故无 gs 也能跑过全部核心测试。注意 docs/dev/contributing.rst#L114 写的 `python setup.py test` 已过时（仓库已无 setup.py，改用 pyproject + nox），真实可跑命令是 pytest（noxfile.py 官方 tests session 也是 coverage run -m pytest）。C/D 阶段据文档整理，未实际走通 PR。",
+  "notes": "A/B 阶段已于 2026-09-21 在仓库内用 uv 真实跑通：uv venv --python 3.13 + uv pip install -e \".[dev]\" 成功；uv run pytest 得 294 passed, 31 skipped, 2 xfailed, 1 xpassed（40s）。31 skipped 全部来自 conftest.py 的 skip_on_windows/skip_pdftopng——Windows 无 ghostscript 系统二进制，官方 CI 在 windows 上也靠 choco 装 gs 才能跑全量（见 .github/workflows/tests.yml#L161）；默认 pdfium 后端是纯 wheel 无系统依赖，故无 gs 也能跑过全部核心测试。注意 docs/dev/contributing.rst#L114 写的 `python setup.py test` 已过时（仓库已无 setup.py，改用 pyproject + nox），真实可跑命令是 pytest（noxfile.py 官方 tests session 也是 coverage run -m pytest）。C/D 阶段据文档整理，未实际走通 PR。已由 C 人工复核（2026-09-22）。",
   "steps": [
     {
       "order": 1,

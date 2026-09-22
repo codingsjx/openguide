@@ -1,7 +1,7 @@
 {
   "owner": "psf",
   "repo": "requests",
-  "notes": "A/B 阶段已于 2026-09-09 在干净 venv(Python 3.13) 真实跑通：629 passed, 2 failed, 3 skipped, 1 xfailed。2 个失败为环境相关（doesnotexist.google.com 连接测试 + TLS 证书 bundle 测试），非代码问题。C/D 阶段基于 docs/dev/contributing.rst 整理，未实际走通 PR（requests 处于 feature freeze，功能改动不接，文档贡献始终欢迎）。",
+  "notes": "A/B 阶段已于 2026-09-09 在干净 venv(Python 3.13) 真实跑通：629 passed, 2 failed, 3 skipped, 1 xfailed。2 个失败为环境相关（doesnotexist.google.com 连接测试 + TLS 证书 bundle 测试），非代码问题。C/D 阶段基于 docs/dev/contributing.rst 整理，未实际走通 PR（requests 处于 feature freeze，功能改动不接，文档贡献始终欢迎）。已由 C 人工复核（2026-09-22）。",
   "steps": [
     {
       "order": 1,
