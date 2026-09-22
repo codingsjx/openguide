@@ -17,7 +17,7 @@
       "title": "创建虚拟环境并安装开发依赖",
       "expected_commands": ["python -m pip install -r requirements-dev.txt"],
       "expected_outcome": "成功安装 requests(editable) 及 pytest 等测试依赖，无报错",
-      "evidence_sources": ["Makefile#L2", "requirements-dev.txt#L1"]
+      "evidence_sources": ["Makefile#L3", "requirements-dev.txt#L1"]
     },
     {
       "order": 3,
@@ -25,7 +25,7 @@
       "title": "运行测试套件",
       "expected_commands": ["python -m pytest tests"],
       "expected_outcome": "629 passed, 2 failed, 3 skipped, 1 xfailed（2 个 failed 为网络/TLS 环境相关，非代码问题）",
-      "evidence_sources": ["Makefile#L4"]
+      "evidence_sources": ["Makefile#L5"]
     },
     {
       "order": 4,
@@ -33,7 +33,7 @@
       "title": "选择首个贡献方向（文档优先）",
       "expected_commands": [],
       "expected_outcome": "选定一个文档改进点；requests 处于 feature freeze，功能改动不接，但文档贡献始终欢迎",
-      "evidence_sources": ["docs/dev/contributing.rst#L120", "docs/dev/contributing.rst#L153"]
+      "evidence_sources": ["docs/dev/contributing.rst#L120", "docs/dev/contributing.rst#L155"]
     },
     {
       "order": 5,
@@ -41,7 +41,7 @@
       "title": "按贡献清单提交 PR",
       "expected_commands": [],
       "expected_outcome": "Fork → 跑测试 → 写测试 → 改动 → 再跑测试 → 提交 PR 到 main 分支",
-      "evidence_sources": ["docs/dev/contributing.rst#L70"]
+      "evidence_sources": ["docs/dev/contributing.rst#L70", "docs/dev/contributing.rst#L79"]
     }
   ]
 }

@@ -49,7 +49,7 @@
       "title": "提交 PR",
       "expected_commands": [],
       "expected_outcome": "commit 前跑 npm test，push 到 fork，创建 PR，等待 CI 通过",
-      "evidence_sources": [".github/CONTRIBUTING.md#L107", ".github/CONTRIBUTING.md#L125"]
+      "evidence_sources": [".github/CONTRIBUTING.md#L107", ".github/CONTRIBUTING.md#L123", ".github/CONTRIBUTING.md#L125"]
     }
   ]
 }

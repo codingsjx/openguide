@@ -33,7 +33,7 @@
       "title": "选择首个贡献（文档或 bugfix）",
       "expected_commands": [],
       "expected_outcome": "选定一个改动点；文档改进始终欢迎，PR 需附带测试",
-      "evidence_sources": ["CONTRIBUTING.md#L128"]
+      "evidence_sources": ["CONTRIBUTING.md#L46", "CONTRIBUTING.md#L128"]
     },
     {
       "order": 5,

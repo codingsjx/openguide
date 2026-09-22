@@ -17,7 +17,7 @@
       "title": "安装开发依赖",
       "expected_commands": ["uv pip install \".\"", "pip install \".[dev]\""],
       "expected_outcome": "安装 camelot-py 及其 dev 依赖（pytest/nox/ghostscript 绑定等），无报错；默认 pdfium 后端随 wheel 自带，无系统依赖",
-      "evidence_sources": ["README.md#L133", "docs/dev/contributing.rst#L42"]
+      "evidence_sources": ["README.md#L133", "docs/dev/contributing.rst#L42", "README.md#L98"]
     },
     {
       "order": 3,
@@ -41,7 +41,7 @@
       "title": "Fork → 分支 → 提交 → push → 提 PR",
       "expected_commands": ["git checkout -b my-feature", "git push -u origin my-feature"],
       "expected_outcome": "从 fork clone，建 feature 分支，commit 后 push 到 fork，再提 PR；标题前缀 [WIP] 或 [MRG]",
-      "evidence_sources": ["docs/dev/contributing.rst#L54", "docs/dev/contributing.rst#L62", "docs/dev/contributing.rst#L75"]
+      "evidence_sources": ["docs/dev/contributing.rst#L54", "docs/dev/contributing.rst#L62", "docs/dev/contributing.rst#L75", "docs/dev/contributing.rst#L105"]
     }
   ]
 }
