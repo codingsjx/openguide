@@ -28,6 +28,10 @@ from benchmark.schema import GeneratedGuide
 
 _MISSING_KINDS = {"missing", "unknown"}
 
+# Issue refs: "#42" | "issues/42" | "pull/42" | a full github issue URL.
+_ISSUE_URL_RE = re.compile(r"github\.com/[^/]+/[^/]+/issues/(\d{1,6})")
+_ISSUE_PATH_RE = re.compile(r"^(?:issues|pull)/(\d{1,6})$")
+
 
 def _norm(s: str) -> str:
     """Lowercase, strip punctuation/backticks and collapse whitespace."""
@@ -72,13 +76,51 @@ def _step_matches(g_step, gen_steps) -> bool:
     return False
 
 
-def _evidence_valid(ev_source: str, available_paths: set[str]) -> bool:
-    """Check evidence.source 'path#L' resolves to a known repo file (ignore L)."""
-    if not ev_source or ev_source.startswith(("http", "issue", "#", "https://github.com")):
+def _path_in_repo(path: str, available_paths: set[str]) -> bool:
+    """Exact repo-relative path lookup (case-insensitive).
+
+    Deliberately NOT a prefix match: `docs/whatever.md` must not count as "hit"
+    merely because a `docs` directory exists somewhere in the tree. A fabricated
+    filename should fail to resolve, so 无证据不宣称 is actually measurable.
+    """
+    p = path.lstrip("/").lower()
+    if not p:
         return False
-    path = ev_source.split("#", 1)[0].lstrip("/")
-    # Heuristic: known root file/dir prefix. Exact match preferred.
-    return any(path == p or path.startswith(p + "/") for p in available_paths)
+    # Both sides are normalised: callers may hand us real on-disk paths, which
+    # carry the repo's own casing (Makefile vs makefile).
+    normalised = {a.lower() for a in available_paths}
+    if p in normalised:
+        return True
+    # Tolerate a leading-dot difference ("/.github/x" vs ".github/x").
+    return p.lstrip(".") in normalised
+
+
+def _evidence_valid(ev_source: str, available_paths: set[str], issue_numbers: set[str] | None = None) -> bool:
+    """Does evidence.source resolve to something real in the repo?
+
+    Accepts BOTH kinds the pipeline can emit:
+    - a repo file path "path#L22"  -> must exist exactly in available_paths
+    - an issue reference "#42" / "issues/42" / a github issue URL -> must be a
+      real issue number we listed during recon (V4 chunks are anchored this way,
+      so excluding them made every issue-backed step unscoreable).
+    """
+    src = (ev_source or "").strip()
+    if not src:
+        return False
+    issue_numbers = issue_numbers or set()
+
+    m = _ISSUE_URL_RE.search(src)
+    if m:
+        return m.group(1) in issue_numbers
+    if src.startswith("#") and src[1:].isdigit():
+        return src[1:] in issue_numbers
+    m2 = _ISSUE_PATH_RE.match(src.split("#", 1)[0].strip("/"))
+    if m2:
+        return m2.group(1) in issue_numbers
+
+    if src.startswith(("http://", "https://")):
+        return False  # a bare URL is not a verifiable in-repo source
+    return _path_in_repo(src.split("#", 1)[0], available_paths)
 
 
 def _command_matches_stage(gen_cmd: str, golden_commands: list[str]) -> bool:
@@ -121,6 +163,7 @@ def compute(
     golden: GoldenGuide,
     generated: GeneratedGuide,
     available_paths: set[str] | None = None,
+    issue_numbers: set[str] | None = None,
 ) -> MetricsResult:
     available_paths = available_paths or set()
     r = MetricsResult(n_golden=len(golden.steps), n_gen=len(generated.stages))
@@ -130,11 +173,18 @@ def compute(
     covered = sum(1 for gs in golden.steps if _step_matches(gs, generated.stages))
     r.step_coverage = covered / len(golden.steps)
 
-    # Evidence hit across generated command steps (those carrying a command).
-    cmd_steps = [s for s in generated.stages if s.command]
-    if cmd_steps:
-        hits = sum(1 for s in cmd_steps if _evidence_valid(s.evidence.source, available_paths))
-        r.evidence_hit = hits / len(cmd_steps)
+    # Evidence hit across ALL generated steps, not just command-carrying ones.
+    # The C (选 issue) / D (首 PR) stages carry no command but are exactly where
+    # evidence matters most — excluding them made the 证据命中率 blind to the
+    # steps most prone to fabrication. Steps with no evidence at all score as
+    # misses rather than being dropped from the denominator.
+    if generated.stages:
+        hits = sum(
+            1
+            for s in generated.stages
+            if _evidence_valid(s.evidence.source, available_paths, issue_numbers)
+        )
+        r.evidence_hit = hits / len(generated.stages)
 
     # Assert rate: non-missing evidence across all generated steps.
     if generated.stages:
@@ -143,14 +193,16 @@ def compute(
         )
         r.assert_rate = with_evidence / len(generated.stages)
 
-    # Command executable: for python repos we cannot truly run here; report as
-    # 0% with the missing list, so L3/offline runner can fill from a real shell.
+    # Command executable: the real rate is measured by the runner (which has a
+    # shell + a clone) and injected via `m.command_exec = exec_rate`. Here we
+    # only collect commands that cannot be executed because they are empty.
     for s in generated.stages:
         if s.command and not s.command.strip():
             r.missing_commands.append(s.title)
 
     # Command correctness: does each generated command match the golden
     # reference command for its stage? Build a stage -> reference-commands map.
+    cmd_steps = [s for s in generated.stages if s.command]
     ref_by_stage: dict[str, list[str]] = {}
     for gs in golden.steps:
         ref_by_stage.setdefault(gs.stage.split()[0], []).extend(gs.expected_commands)

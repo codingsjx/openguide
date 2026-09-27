@@ -43,10 +43,6 @@ sys.path.insert(0, str(ROOT / "backend" / "src"))
 CACHE_DIR = ROOT / "_run_cache"
 REPORTS_DIR = ROOT / "benchmark" / "reports"
 
-# Node install dir, appended to PATH so npm/node resolve regardless of the
-# parent shell's environment.
-NODE_DIR = Path(r"C:\Users\Lenovo\node\node-v24.21.0-win-x64")
-
 _DEFAULT_REPOS = [
     "psf/requests",
     "pallets/click",
@@ -62,6 +58,15 @@ _DEFAULT_REPOS = [
 _HARNESS_HANDLED_PREFIXES = (
     "git clone",
     "cd ",
+)
+
+# Node install dirs, appended to PATH so npm/node resolve regardless of the
+# parent shell's environment. Tried in order; first that exists wins.
+_NODE_CANDIDATES = (
+    Path(r"C:\Users\Lenovo\node\node-v24.21.0-win-x64"),
+    Path(r"C:\Program Files\nodejs"),
+    Path(r"C:\Program Files (x86)\nodejs"),
+    Path.home() / "AppData" / "Roaming" / "npm",
 )
 
 
@@ -137,8 +142,9 @@ def provision_env(repo_dir: Path, lang: str, cache: Path) -> str | None:
                 timeout=300,
             )
         return str(venv / "Scripts")
-    if NODE_DIR.exists():
-        return str(NODE_DIR)
+    for candidate in _NODE_CANDIDATES:
+        if candidate.exists():
+            return str(candidate)
     return None
 
 
@@ -207,6 +213,13 @@ def find_golden(owner: str, repo: str):
         if g.owner == owner and g.repo == repo:
             return g
     return None
+
+
+def known_issue_numbers() -> dict[str, set[str]]:
+    """Re-exported for callers that only import from this module."""
+    from benchmark.golden.schema import known_issue_numbers as _k
+
+    return _k()
 
 
 def evaluate_repo(owner: str, repo: str) -> dict:
@@ -287,7 +300,8 @@ def evaluate_repo(owner: str, repo: str) -> dict:
     if golden is not None:
         out["golden_found"] = True
         gen = to_generated_guide(guide)
-        m = compute(golden, gen, available_paths=available_paths)
+        issue_nums = known_issue_numbers().get(f"{owner}/{repo}", set())
+        m = compute(golden, gen, available_paths=available_paths, issue_numbers=issue_nums)
         m.command_exec = exec_rate  # fill the real exec rate into the metric
         out["metrics"] = m
 

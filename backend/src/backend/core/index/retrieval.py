@@ -8,6 +8,7 @@ show evidence.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from backend.core.index.vectorstore import Hit, Store
@@ -22,6 +23,26 @@ _KIND_TO_PERSPECTIVES = {
     "why": ["v1", "v2"],    # 原理解释
 }
 
+_ASCII_WORD = re.compile(r"[A-Za-z]+")
+
+
+def _contains_any(text: str, *keywords: str) -> bool:
+    """Keyword match with sane boundaries.
+
+    ASCII keywords are matched on word boundaries so short tokens like "pr" do
+    not fire inside unrelated words ("improve"/"spring"/"progress"), which sent
+    questions to the wrong perspective and produced wrong answers. CJK keywords
+    are matched as plain substrings (word boundaries do not apply cleanly).
+    """
+    low = text.lower()
+    for kw in keywords:
+        if kw and _ASCII_WORD.fullmatch(kw):
+            if re.search(rf"(?<![a-z0-9]){re.escape(kw)}(?![a-z0-9])", low):
+                return True
+        elif kw.lower() in low:
+            return True
+    return False
+
 
 @dataclass
 class SearchResult:
@@ -33,17 +54,30 @@ class SearchResult:
 
 def _guess_kind(query: str) -> str:
     q = query.lower()
-    if any(k in q for k in ("setup", "install", "env", "搭建", "环境", "安装", "跑起来", "get started", "venv")):
+    if _contains_any(
+        q,
+        "setup", "set up", "install", "installation", "installing",
+        "environment", "env", "venv", "get started", "getting started",
+        "quickstart", "quick start",
+        "搭建", "环境", "安装", "跑起来",
+    ):
         return "setup"
-    if any(k in q for k in ("test", "pytest", "测试", "跑测试", "npm test")):
+    if _contains_any(q, "test", "tests", "testing", "pytest", "npm test",
+                     "测试", "跑测试", "单元测试"):
         return "test"
-    if any(k in q for k in ("contribute", "contribution", "贡献", "pr", "pull request", "fork", "协议", "license")):
+    if _contains_any(q, "contribute", "contribution", "contributing",
+                     "pr", "pull request", "fork", "license",
+                     "贡献", "协议", "提交 pr", "提交pr"):
         return "contribute"
-    if any(k in q for k in ("architecture", "structure", "目录", "架构", "模块", "module", "which file", "哪个文件", "code")):
+    if _contains_any(q, "architecture", "arch", "structure", "directory",
+                     "module", "which file", "where is",
+                     "目录", "架构", "模块", "哪个文件", "代码", "文件结构"):
         return "arch"
-    if any(k in q for k in ("issue", "good first", "first contribution", "任务", "pick")):
+    if _contains_any(q, "issue", "issues", "good first", "first contribution",
+                     "任务", "pick", "认领", "选题"):
         return "issue"
-    if any(k in q for k in ("why", "原理", "为什么", "意思")):
+    if _contains_any(q, "why", "reason", "meaning",
+                     "原理", "为什么", "意思", "什么用"):
         return "why"
     return "setup"  # default to the beginner-most common need
 

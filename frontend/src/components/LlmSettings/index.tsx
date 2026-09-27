@@ -5,7 +5,7 @@ import { ApiOutlined } from '@ant-design/icons'
 import { api } from '../../api/client'
 
 const DEFAULTS = {
-  base: 'https://api.a6api.com/v1',
+  base: 'https://api.openai.com/v1',
   model: 'gpt-5.5',
 }
 
@@ -71,15 +71,15 @@ export default function LlmSettings() {
             <Input.Password placeholder="sk-..." />
           </Form.Item>
           <Form.Item name="base_url" label="Base URL" initialValue={DEFAULTS.base}>
-            <Input placeholder="https://api.a6api.com/v1" />
+            <Input placeholder="https://api.openai.com/v1" />
           </Form.Item>
           <Form.Item name="model" label="模型" initialValue={DEFAULTS.model}>
             <Input placeholder="gpt-5.5" />
           </Form.Item>
         </Form>
         <Space direction="vertical" size={4}>
-          <span style={{ color: '#888' }}>默认中转：https://api.a6api.com/v1（模型含 gpt-5.5 / claude-opus-5 / deepseek 等）</span>
-          <span style={{ color: '#888' }}>官方直连亦可（如 https://api.deepseek.com/v1 + deepseek-chat）。</span>
+          <span style={{ color: '#888' }}>任何 OpenAI 兼容端点均可：官方直连（https://api.openai.com/v1），或你自选的第三方中转。</span>
+          <span style={{ color: '#888' }}>使用第三方中转时，请遵循其服务条款；相关说明见 docs/third_party_disclosure.md。</span>
         </Space>
       </Modal>
     </div>

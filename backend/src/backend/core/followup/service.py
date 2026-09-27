@@ -1,7 +1,7 @@
 """Three follow-up interactions (module 4) — the "向导陪你走完" layer.
 
 Three intents, each resolved against the repo's perspective index + optional LLM:
-- granular : "这步太粗" → re-retrieve V3 for finer sub-steps
+- granular : "这步太粗" → re-retrieve the stage-relevant perspective for finer sub-steps
 - explain  : "看不懂为什么" → retrieve V1/V2 to explain the *why*
 - diagnose : "报错了" → local rules first, then LLM locates the file to blame
 
@@ -11,6 +11,7 @@ frontend can append it to the current step.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from backend.core.generate.llm import LLMClient, LLMUnavailable
@@ -23,6 +24,17 @@ _DIAGNOSE_SYSTEM = (
     "不要编造文件路径，只能引用提供的仓库资料。"
 )
 
+# Which retrieval kind backs each stage's step. Stage D must NOT be answered
+# with setup snippets — that was the "贡献回答不对" bug in the 这步太粗 follow-up.
+_STAGE_TO_KIND = {
+    "A": "setup",
+    "B": "test",
+    "C": "issue",
+    "D": "contribute",
+}
+
+_HEADER_LINE = re.compile(r"^===== .+ =====\s*$")
+
 
 @dataclass
 class FollowupResult:
@@ -32,20 +44,42 @@ class FollowupResult:
     sources: list[str] = field(default_factory=list)
 
 
-def _top_snippets(index: RepoIndex, query: str, kind: str | None, top_k: int = 4) -> list[str]:
+def _clean_snippet(text: str) -> str:
+    """Drop `===== path =====` provenance headers for a readable answer."""
+    lines = [ln for ln in text.splitlines() if not _HEADER_LINE.match(ln.strip())]
+    cleaned = "\n".join(lines).strip()
+    return cleaned or text
+
+
+def _top_snippets(index: RepoIndex, query: str, kind: str | None, top_k: int = 4) -> list[dict]:
     try:
         res = index.search(query, kind=kind, top_k=top_k)
     except Exception:  # noqa: BLE001
         return []
-    return [h.text for h in res.hits]
+    return [
+        {
+            "text": _clean_snippet(h.text),
+            "source": (h.meta or {}).get("source") or "",
+        }
+        for h in res.hits
+    ]
+
+
+def _format_snippets(snips: list[dict]) -> str:
+    return "\n".join(f"- {s['text'].strip()}" for s in snips)
 
 
 def granular(index: RepoIndex, step: GuideStep, query: str = "") -> FollowupResult:
-    """细化当前步骤：重新检索 V3，取更具体的命令片段。"""
+    """细化当前步骤：按步骤所在阶段检索对应视角，取更具体的命令片段。"""
     q = query or f"{step.title} {step.command or ''}"
-    snips = _top_snippets(index, q, kind="setup", top_k=5)
-    text = "\n".join(f"- {s.strip()}" for s in snips) if snips else "（没有检索到更细的步骤，见原始出处）"
-    return FollowupResult(intent="granular", text=text, sources=[])
+    kind = _STAGE_TO_KIND.get(step.stage, "setup")
+    snips = _top_snippets(index, q, kind=kind, top_k=5)
+    text = _format_snippets(snips) if snips else "（没有检索到更细的步骤，见原始出处）"
+    return FollowupResult(
+        intent="granular",
+        text=text,
+        sources=[s["source"] for s in snips if s["source"]],
+    )
 
 
 def explain(index: RepoIndex, step: GuideStep, query: str = "") -> FollowupResult:
@@ -54,8 +88,12 @@ def explain(index: RepoIndex, step: GuideStep, query: str = "") -> FollowupResul
     snips = _top_snippets(index, q, kind="why", top_k=4)
     if not snips:
         snips = _top_snippets(index, q, kind=None, top_k=4)
-    text = "\n".join(f"- {s.strip()}" for s in snips) if snips else "（未找到该步骤的背景说明）"
-    return FollowupResult(intent="explain", text=text, sources=[])
+    text = _format_snippets(snips) if snips else "（未找到该步骤的背景说明）"
+    return FollowupResult(
+        intent="explain",
+        text=text,
+        sources=[s["source"] for s in snips if s["source"]],
+    )
 
 
 def diagnose(index: RepoIndex, step: GuideStep, log_text: str, client: LLMClient | None = None) -> FollowupResult:
@@ -64,18 +102,19 @@ def diagnose(index: RepoIndex, step: GuideStep, log_text: str, client: LLMClient
     rule_hits = _local_rules(log_text)
     # 2. Retrieve repo context for the LLM to ground on.
     ctx = _top_snippets(index, f"{step.title} {log_text[:200]}", kind=None, top_k=3)
+    ctx_text = "\n".join(s["text"] for s in ctx[:3])
     if not rule_hits and not client:
         return FollowupResult(intent="diagnose", text="（未命中本地规则，且未配置 LLM）", sources=[])
 
     if client and client.available() and ctx:
         try:
-            user = f"步骤：{step.title}\n命令：{step.command or '无'}\n报错日志：\n{log_text[:1500]}\n\n仓库上下文：\n" + "\n".join(ctx[:3])
+            user = f"步骤：{step.title}\n命令：{step.command or '无'}\n报错日志：\n{log_text[:1500]}\n\n仓库上下文：\n{ctx_text}"
             reply = client.chat_text([{"role": "system", "content": _DIAGNOSE_SYSTEM},
                                       {"role": "user", "content": user}])
             return FollowupResult(
                 intent="diagnose",
                 text="\n".join(rule_hits + [reply]),
-                sources=[],
+                sources=[s["source"] for s in ctx if s["source"]],
             )
         except LLMUnavailable:
             pass

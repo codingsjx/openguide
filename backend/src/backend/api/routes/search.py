@@ -7,6 +7,8 @@ evidence-backed chunks. Indexing is idempotent; repeated calls reuse the cache.
 
 from __future__ import annotations
 
+import re
+
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException
 
@@ -18,6 +20,8 @@ from backend.core.index.service import RepoIndex
 from backend.core.index.vectorstore import Hit
 
 router = APIRouter(prefix="/api", tags=["search"])
+
+_HEADER_LINE = re.compile(r"^===== .+ =====\s*$")
 
 
 class SearchRequest(BaseModel):
@@ -41,8 +45,18 @@ class SearchOut(BaseModel):
     hits: list[HitOut]
 
 
+def _clean_hit_text(text: str) -> str:
+    """Strip `===== path =====` provenance headers from the displayed excerpt.
+
+    The real source path is already carried in meta.source, so the Q&A answer
+    reads as a clean excerpt instead of benchmark-looking headers.
+    """
+    lines = [ln for ln in text.splitlines() if not _HEADER_LINE.match(ln.strip())]
+    return "\n".join(lines).strip() or text
+
+
 def _hit_to_out(h: Hit) -> HitOut:
-    return HitOut(text=h.text, perspective=h.perspective, score=round(h.score, 4), meta=h.meta)
+    return HitOut(text=_clean_hit_text(h.text), perspective=h.perspective, score=round(h.score, 4), meta=h.meta)
 
 
 @router.post("/search", response_model=SearchOut)

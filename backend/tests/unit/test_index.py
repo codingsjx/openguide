@@ -89,3 +89,34 @@ def test_repo_index_issue_kind_returns_v4():
     idx.index(make_signals())
     res = idx.search("good first issue for new contributor", kind="issue")
     assert any("issue #1" in h.text for h in res.hits)
+
+
+def test_guess_kind_uses_word_boundaries():
+    # 回归：短词 "pr" 不应命中 "improve"/"progress" 等无关单词，否则问题会
+    # 被错误路由到「贡献流程」视角，答非所问。
+    assert _guess_kind("how do I improve this repo") != "contribute"
+    assert _guess_kind("make a PR") == "contribute"
+    assert _guess_kind("open a pull request") == "contribute"
+
+
+def test_fallback_matches_chinese_query():
+    from backend.core.github.models import DocFile
+
+    sig = RawSignals(
+        meta=RepoMeta(owner="o", repo="cn", stars=5, default_branch="main", pushed_at=""),
+        language_bytes={"python": 100},
+        root_entries={"readme.md": "README.md"},
+        doc_files=[
+            DocFile(
+                path="README.md",
+                name="README.md",
+                text="安装依赖：pip install -e .[dev]。运行测试：pytest。",
+            )
+        ],
+        file_tree=["README.md"],
+    )
+    idx = RepoIndex("o", "cn")
+    idx.index(sig)
+    res = idx.search("怎么安装依赖", kind="setup")
+    assert res.hits, "中文查询也应命中证据片段"
+    assert any("安装" in h.text for h in res.hits)

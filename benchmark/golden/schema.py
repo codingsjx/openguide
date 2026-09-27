@@ -57,6 +57,22 @@ def iter_repo_manifest() -> list[dict]:
     return data.get("repos", [])
 
 
+def known_issue_numbers() -> dict[str, set[str]]:
+    """Real issue numbers per "owner/repo", from the manifest.
+
+    Golden-guide steps may cite issues as ``#12``. To score such evidence as a
+    HIT we must check it against issues that actually exist, so this reads the
+    manifest's optional ``issue_numbers`` list. Repos that list none simply have
+    no scoreable issue evidence (a fabricated number then fails, as it should).
+    """
+    out: dict[str, set[str]] = {}
+    for repo in iter_repo_manifest():
+        nums = repo.get("issue_numbers") or []
+        if nums:
+            out[f"{repo.get('owner')}/{repo.get('repo')}"] = {str(n) for n in nums}
+    return out
+
+
 def json_load(p: Path) -> dict:
     import json
 

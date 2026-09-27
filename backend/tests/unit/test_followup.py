@@ -70,3 +70,13 @@ def test_diagnose_without_llm_uses_rules():
     r = diagnose(idx, _step(), "ModuleNotFoundError: No module named 'x'", client=None)
     assert r.intent == "diagnose"
     assert r.text
+
+
+def test_granular_stage_d_uses_contribute_perspective():
+    # 回归：Stage D（首个 PR）的「这步太粗」不应再用环境搭建视角回答。
+    idx = make_index()
+    step = _step(stage="D", stage_label="首次 PR 路径", title="提交首个 PR",
+                 command="git push origin HEAD")
+    r = granular(idx, step)
+    assert r.intent == "granular"
+    assert r.text

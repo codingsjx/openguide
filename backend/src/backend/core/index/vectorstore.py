@@ -10,10 +10,15 @@ this module so tests and constrained envs are hermetic.
 
 from __future__ import annotations
 
+import math
+import re
 from dataclasses import dataclass
 
 from backend.config import get_settings
 from backend.core.index.embedder import get_embedder
+
+_CJK_RE = re.compile(r"[\u4e00-\u9fff]+")
+_WORD_RE = re.compile(r"[a-z0-9]+")
 
 
 @dataclass
@@ -22,6 +27,22 @@ class Hit:
     perspective: str
     score: float
     meta: dict
+
+
+def _tokens(text: str) -> set[str]:
+    """Deterministic token set: ascii words + CJK bigrams.
+
+    Plain whitespace splitting cannot match Chinese queries against doc text
+    (no spaces), so CJK segments are also emitted as bigrams to keep the
+    hermetic fallback useful for Chinese newcomers.
+    """
+    s = text.lower()
+    out = set(_WORD_RE.findall(s))
+    for seg in _CJK_RE.findall(s):
+        out.add(seg)
+        if len(seg) > 1:
+            out.update(seg[i : i + 2] for i in range(len(seg) - 1))
+    return out
 
 
 class Store:
@@ -131,16 +152,27 @@ class Store:
         rows = self._rows.get(perspective, [])
         if not rows:
             return []
-        # Token-overlap similarity (deterministic, hermetic for tests).
-        q = set(query_text.lower().split())
-        scored = []
+        q = _tokens(query_text)
+        if not q:
+            return []
+        # Document frequency: rarer query tokens should weigh more so a focused
+        # snippet ("Run pytest.") beats a long generic README intro that merely
+        # shares stopwords. Deterministic, hermetic for tests/CI.
+        n = len(rows)
+        df: dict[str, int] = {}
         for r in rows:
-            words = set(r["text"].lower().split())
-            inter = len(q & words)
-            if inter:
-                scored.append((inter, r))
+            for t in _tokens(r["text"]):
+                df[t] = df.get(t, 0) + 1
+        scored: list[tuple[float, dict]] = []
+        for r in rows:
+            d = _tokens(r["text"])
+            inter = q & d
+            if not inter:
+                continue
+            weight = sum(math.log1p(n / (df.get(t, 0) + 1)) for t in inter)
+            scored.append((weight, r))
         scored.sort(key=lambda x: -x[0])
         return [
-            Hit(text=r["text"], perspective=perspective, score=float(s), meta=r["meta"])
+            Hit(text=r["text"], perspective=perspective, score=round(float(s), 4), meta=r["meta"])
             for s, r in scored[:top_k]
         ]

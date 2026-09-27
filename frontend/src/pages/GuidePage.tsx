@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Card, Divider, Input, List, Space, Tag, Typography, message } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 
@@ -27,6 +27,16 @@ export default function GuidePage({ initialUrl }: { initialUrl: string }) {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<SearchResult | null>(null)
+  const lastUrlRef = useRef(initialUrl)
+
+  // 顶部换成另一个仓库时，同步地址并清掉上一个仓库的检索结果。
+  useEffect(() => {
+    if (initialUrl && initialUrl !== lastUrlRef.current) {
+      lastUrlRef.current = initialUrl
+      setUrl(initialUrl)
+      setResult(null)
+    }
+  }, [initialUrl])
 
   async function handleSearch() {
     const u = url.trim()
@@ -78,24 +88,27 @@ export default function GuidePage({ initialUrl }: { initialUrl: string }) {
           <Divider>检索结果（{result.hits.length}）</Divider>
           <List
             dataSource={result.hits}
-            renderItem={(h: SearchHit, i: number) => (
-              <List.Item>
-                <List.Item.Meta
-                  title={
-                    <Space>
-                      <Text strong>#{i + 1}</Text>
-                      <Tag>{PERSPECTIVE_LABEL[h.perspective] ?? h.perspective}</Tag>
-                      <Text type="secondary">score {h.score}</Text>
-                    </Space>
-                  }
-                  description={
-                    <Text type="secondary" style={{ whiteSpace: 'pre-wrap' }}>
-                      {h.text.length > 320 ? h.text.slice(0, 320) + '…' : h.text}
-                    </Text>
-                  }
-                />
-              </List.Item>
-            )}
+            renderItem={(h: SearchHit, i: number) => {
+              const source = typeof h.meta?.source === 'string' ? h.meta.source : ''
+              return (
+                <List.Item>
+                  <List.Item.Meta
+                    title={
+                      <Space wrap>
+                        <Text strong>#{i + 1}</Text>
+                        <Tag>{PERSPECTIVE_LABEL[h.perspective] ?? h.perspective}</Tag>
+                        {source && <Tag color="cyan">来源: {source}</Tag>}
+                      </Space>
+                    }
+                    description={
+                      <Text type="secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                        {h.text.length > 320 ? h.text.slice(0, 320) + '…' : h.text}
+                      </Text>
+                    }
+                  />
+                </List.Item>
+              )
+            }}
           />
         </>
       )}

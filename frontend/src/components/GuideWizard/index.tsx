@@ -269,9 +269,9 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
   }
 
   return (
-    <div style={{ display: 'flex', gap: 16, marginTop: 16, alignItems: 'flex-start' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 16, alignItems: 'flex-start' }}>
       {/* Main column: steps + current card */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 280 }}>
         <Steps
           current={current}
           onChange={setCurrent}
@@ -358,7 +358,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
       </div>
 
       {/* Right rail: evidence panel */}
-      <div style={{ width: 260, flexShrink: 0 }}>
+      <div style={{ width: 260, flexShrink: 0, maxWidth: '100%' }}>
         <EvidencePanel guide={guide} step={step} />
       </div>
     </div>

@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: 后端测试（Python 3.12）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安装依赖
+        # 测试与 L1 烟测默认走 hermetic 路径（backend/conftest.py 设
+        # USE_CHROMA=false），因此不安装 chromadb / sentence-transformers，
+        # CI 不下载任何嵌入模型。
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q fastapi "uvicorn[standard]" httpx pydantic pydantic-settings pytest
+      - name: 运行单元测试
+        run: python -m pytest backend/tests -q
+      - name: 校验 uv.lock 与 pyproject 一致
+        run: |
+          python -m pip install -q uv
+          cd backend && python -m uv lock --check
+      - name: L1 链路烟测（离线，无密钥）
+        # 只验证 URL→画像→决策树→索引→生成→schema→证据 链路通，
+        # 不产出任何质量数字（口径红线见 benchmark/README.md）。
+        run: python -m benchmark.l1_smoke
+
+  frontend:
+    name: 前端类型检查与构建（Node 24）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: 类型检查与生产构建
+        run: pnpm build
+
+  secret-scan:
+    name: 密钥扫描
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 扫描提交内容中的密钥特征
+        run: |
+          if grep -rInE 'sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_|AKIA[0-9A-Z]{16}|xox[baprs]-' \
+               --exclude-dir=.git --exclude-dir=node_modules --exclude=pnpm-lock.yaml . ; then
+            echo "::error::检测到疑似密钥，禁止提交"
+            exit 1
+          fi
+          echo "未发现疑似密钥"

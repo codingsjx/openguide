@@ -1,4 +1,4 @@
-import { Card, Col, Progress, Row, Statistic, Tag, Tooltip, Typography } from 'antd'
+import { Card, Col, Progress, Row, Statistic, Tag, Typography } from 'antd'
 import {
   BranchesOutlined,
   CheckCircleOutlined,
@@ -21,7 +21,7 @@ const SUIT_COLOR: Record<string, string> = {
 export default function ProfileCard({ profile }: { profile: Profile }) {
   const langs = Object.entries(profile.languages)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
+    .slice(0, 6)
     .map(([name, frac]) => ({ name, pct: Math.round(frac * 100) }))
   const build = profile.build
   const hasBuildInfo = Boolean(build?.tool || build?.test_cmd)
@@ -84,31 +84,31 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
 
       {langs.length > 0 && (
         <>
-          <Text strong style={{ display: 'block', margin: '12px 0 4px' }}>
+          <Text strong style={{ display: 'block', margin: '16px 0 4px' }}>
             语言构成
           </Text>
-          <Row>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
             {langs.map((l) => (
-              <Col span={8} key={l.name}>
-                <Tooltip title={`${l.name}: ${l.pct}%`}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ width: 90, whiteSpace: 'nowrap' }} ellipsis>
-                      {l.name}
-                    </Text>
-                    <Progress
-                      percent={l.pct}
-                      size={{ height: 8, width: undefined }}
-                      style={{ flex: 1 }}
-                    />
-                  </div>
-                </Tooltip>
-              </Col>
+              <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Text
+                  ellipsis
+                  style={{ width: 140, flexShrink: 0, textAlign: 'right', color: '#4c6662' }}
+                >
+                  {l.name}
+                </Text>
+                <Progress
+                  percent={l.pct}
+                  size={{ height: 10 }}
+                  strokeColor="#168b78"
+                  style={{ flex: 1, minWidth: 120, margin: 0 }}
+                />
+              </div>
             ))}
-          </Row>
+          </div>
         </>
       )}
 
-      <div style={{ marginTop: 14 }}>
+      <div style={{ marginTop: 16 }}>
         <Text strong>构建与测试</Text>
         <div
           style={{
