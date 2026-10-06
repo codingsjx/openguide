@@ -12,6 +12,7 @@ Run:  uv run python -m benchmark.l2_golden.runner
 
 from __future__ import annotations
 
+import argparse
 import sys
 import time
 from pathlib import Path
@@ -26,6 +27,11 @@ from benchmark.verify_generated_guide import evaluate_repo, _load_backend_env  #
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="L2 黄金评估：对 golden 仓库跑真实生成并评分")
+    parser.add_argument("--repos", action="append", default=None,
+                        help="限定 owner/repo，可重复；默认跑全部 golden 仓库")
+    args = parser.parse_args()
+
     _load_backend_env()
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -34,6 +40,9 @@ def main() -> int:
         pass
 
     guides = iter_golden_guides()
+    if args.repos:
+        want = set(args.repos)
+        guides = [g for g in guides if f"{g.owner}/{g.repo}" in want]
     print(f"golden guides 加载: {len(guides)}")
     if not guides:
         print("（尚无人工 golden guide，L2 未评分。请 C 填充 benchmark/golden/golden_guides/*.json）")

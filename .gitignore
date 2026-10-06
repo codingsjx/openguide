@@ -25,8 +25,11 @@ dist/
 Thumbs.db
 
 # ---- demo / benchmark transient ----
+# 评测报告是提交包证据（任务书 §6.2），要能入库；只忽略临时产物与测试脚手架。
 benchmark/reports/*.tmp
-benchmark/reports/
+benchmark/reports/_unit_test/
+benchmark/reports/_l4_test/
+benchmark/reports/_provision_test/
 _run_cache/
 
 # ---- local golden verification workspace (cloned repos + venv) ----

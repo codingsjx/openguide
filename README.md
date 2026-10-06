@@ -42,7 +42,7 @@ docker compose up --build
 ```bash
 cd backend
 uv sync                        # 按 uv.lock 安装依赖
-uv run pytest tests/ -q        # 72 个单测
+uv run pytest tests/ -q        # 68 个单测（评测体系另有 14 个：pytest benchmark/tests）
 uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -105,9 +105,20 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 
 ## 文档
 
-- [docs/task_book.md](docs/task_book.md) — 任务书（选题论证 / 技术方案 / 里程碑）
-- [docs/team_roles.md](docs/team_roles.md) — 分工与每周清单
+**面向评审**
+
+- [docs/submission.md](docs/submission.md) — **作品说明**（选题论证 / 系统设计 / 验证证据 / 路线图）
+- [docs/demo_script.md](docs/demo_script.md) — 现场演示脚本（3 个真实仓库 + 兜底方案）
+- [docs/video_script.md](docs/video_script.md) — 演示视频分镜脚本
+- [docs/cold_start_checklist.md](docs/cold_start_checklist.md) — 提交包冷启动演练记录（7/7 通过）
+- [docs/privacy_and_license.md](docs/privacy_and_license.md) — 隐私与授权说明
+- [docs/evaluation_report.md](docs/evaluation_report.md) — **评测报告**（L2/L3 实测数字与归因）
+- [benchmark/README.md](benchmark/README.md) — 评测方法论与口径红线
+
+**开发与协作**
+
+- [docs/task_book.md](docs/task_book.md) — 任务书（选题论证 / 技术方案 / 里程碑进度）
+- [docs/team_roles.md](docs/team_roles.md) — 分工与进度快照
 - [docs/code_outline.md](docs/code_outline.md) — 代码大纲与接口约定
 - [docs/third_party_disclosure.md](docs/third_party_disclosure.md) — 第三方资源与许可披露
-- [docs/demo_script.md](docs/demo_script.md) — 现场演示脚本（3 个真实仓库 + 兜底方案）
-- [docs/changelog.md](docs/changelog.md) — 变更记录（合并修复与验证口径）
+- [docs/changelog.md](docs/changelog.md) — 变更记录（含修复根因与验证口径）

@@ -1,0 +1,12 @@
+{
+  "step_coverage": 0.533,
+  "evidence_hit": 0.75,
+  "command_exec": 0.233,
+  "command_correct": 0.667,
+  "assert_rate": 0.85,
+  "n_repos": 5,
+  "total_golden_steps": 26,
+  "total_gen_steps": 20,
+  "elapsed_s_mean": 41.86,
+  "elapsed_s_total": 209.29
+}

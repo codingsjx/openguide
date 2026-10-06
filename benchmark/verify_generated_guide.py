@@ -60,6 +60,13 @@ _HARNESS_HANDLED_PREFIXES = (
     "cd ",
 )
 
+# Per-command timeout for command_exec. Override with OG_CMD_TIMEOUT.
+# Heavy aggregate test suites (mocha's `npm test` runs lint + node + browser
+# tests) can legitimately exceed this; that is recorded as a failure with
+# "(超时)" so the report distinguishes "command is wrong" from "command is too
+# heavy to verify here".
+_CMD_TIMEOUT_S = int(os.environ.get("OG_CMD_TIMEOUT", "900"))
+
 # Node install dirs, appended to PATH so npm/node resolve regardless of the
 # parent shell's environment. Tried in order; first that exists wins.
 _NODE_CANDIDATES = (
@@ -114,38 +121,158 @@ def detect_lang(repo_dir: Path) -> str:
     return "unknown"
 
 
+class CloneError(RuntimeError):
+    """git clone failed. Carries the real git stderr, not just "clone 失败"."""
+
+
 def clone_repo(owner: str, repo: str, dest: Path) -> None:
+    """Shallow-clone a repo, raising CloneError with git's own message on failure.
+
+    Previously the subprocess result was discarded, so any failure surfaced as a
+    bare "clone 失败" with no cause — unhelpful when a demo machine has no git,
+    no network, or a proxy in the way. Surfacing git's stderr makes the failure
+    self-diagnosing.
+    """
     url = f"https://github.com/{owner}/{repo}.git"
-    subprocess.run(
-        ["git", "clone", "--depth", "1", url, str(dest)],
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=600,
-    )
+    try:
+        proc = subprocess.run(
+            ["git", "clone", "--depth", "1", url, str(dest)],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=600,
+        )
+    except FileNotFoundError as exc:
+        raise CloneError("未找到 git 可执行文件（请安装 git 并加入 PATH）") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise CloneError(f"git clone 超时（>600s）: {url}") from exc
+
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout or "").strip()
+        if len(detail) > 500:
+            detail = detail[:500] + "…"
+        raise CloneError(f"git clone 失败 (exit {proc.returncode}): {detail or '无输出'}")
+
+
+def _run_quiet(args, cwd: Path, timeout: int = 900, shell: bool = False) -> int:
+    """Run a setup command, swallowing output. Returns the exit code (-1 on error)."""
+    try:
+        proc = subprocess.run(
+            args,
+            cwd=str(cwd),
+            check=False,
+            shell=shell,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+        )
+        return proc.returncode
+    except Exception:  # noqa: BLE001 - provisioning is best-effort
+        return -1
+
+
+def _npm_exe() -> str | None:
+    """Resolve npm to a full path.
+
+    On Windows npm is ``npm.cmd``; passing the bare name "npm" to subprocess
+    fails because CreateProcess does not resolve PATHEXT. The failure was
+    silently swallowed and a "provisioned" marker was still written, so
+    dependency installation was permanently skipped — and every npm-based
+    command failed with "not recognized". Resolving the real path fixes it.
+    """
+    return shutil.which("npm") or shutil.which("npm.cmd")
+
+
+def _install_python_deps(repo_dir: Path, py: Path) -> bool:
+    """Best-effort install of the project + its dev extras into the repo's venv.
+
+    Needed because commands like `tox r -e random` only work once the project's
+    dev dependencies exist. Without this, every dependency-bearing command fails
+    with "not recognized", and command_exec would measure "is the tool
+    preinstalled on this machine" rather than "does the guide's command work".
+    """
+    def pip(*args: str, timeout: int = 900) -> bool:
+        # NOTE: must return the result — an earlier version declared `-> None`
+        # and dropped it, so every `== 0` check was False, the "provisioned"
+        # marker was never written, and deps were reinstalled on every run.
+        return _run_quiet(
+            [str(py), "-m", "pip", "install", "--disable-pip-version-check", *args],
+            cwd=repo_dir,
+            timeout=timeout,
+        ) == 0
+
+    ok = pip("-q", "--upgrade", "pip", timeout=300)
+    for req in ("requirements-dev.txt", "requirements_dev.txt", "dev-requirements.txt"):
+        if (repo_dir / req).exists():
+            ok = pip("-q", "-r", req) or ok
+            break
+    if (repo_dir / "pyproject.toml").exists() or (repo_dir / "setup.py").exists():
+        # `.[dev]` carries the test runner for most projects; plain `.` is the
+        # fallback for projects that declare no extras.
+        ok = pip("-q", "-e", ".[dev]") or ok
+        ok = pip("-q", "-e", ".") or ok
+    elif (repo_dir / "requirements.txt").exists():
+        ok = pip("-q", "-r", "requirements.txt") or ok
+    # Some projects only document a tox-based workflow; install the runner so
+    # `tox ...` commands are actually executable rather than "not recognized".
+    ok = pip("-q", "tox") or ok
+    return ok
+
+
+def _install_node_deps(repo_dir: Path, node_dir: Path | None) -> bool:
+    """Best-effort `npm ci` / `npm install` so `npm test` has its dev deps."""
+    if not (repo_dir / "package.json").exists():
+        return False
+    npm = _npm_exe()
+    if not npm:
+        return False
+    env_path = os.environ.get("PATH", "")
+    if node_dir:
+        os.environ["PATH"] = str(node_dir) + os.pathsep + env_path
+    try:
+        if (repo_dir / "package-lock.json").exists():
+            return _run_quiet([npm, "ci", "--no-audit", "--no-fund"], cwd=repo_dir) == 0
+        return _run_quiet([npm, "install", "--no-audit", "--no-fund"], cwd=repo_dir) == 0
+    finally:
+        os.environ["PATH"] = env_path
 
 
 def provision_env(repo_dir: Path, lang: str, cache: Path) -> str | None:
-    """Create an environment and return an extra PATH prefix (venv Scripts)."""
+    """Create an environment, install deps (best-effort), return a PATH prefix.
+
+    Set ``OG_SKIP_PROVISION=1`` to skip dependency installation (fast runs where
+    command_exec is not the focus).
+    """
+    skip_deps = os.environ.get("OG_SKIP_PROVISION") == "1"
+
     if lang == "python":
         venv = cache / "venv"
-        if not (venv / "Scripts" / "python.exe").exists():
-            subprocess.run(
-                [sys.executable, "-m", "venv", str(venv)],
-                check=False,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=300,
-            )
-        return str(venv / "Scripts")
-    for candidate in _NODE_CANDIDATES:
-        if candidate.exists():
-            return str(candidate)
-    return None
+        py = venv / "Scripts" / "python.exe"
+        if not py.exists():
+            py = venv / "bin" / "python"
+        if not py.exists():
+            _run_quiet([sys.executable, "-m", "venv", str(venv)], cwd=cache, timeout=300)
+            py = venv / "Scripts" / "python.exe"
+            if not py.exists():
+                py = venv / "bin" / "python"
+        marker = cache / ".og_python_deps"
+        if py.exists() and not skip_deps and not marker.exists():
+            # Only mark on success: a transient failure must not permanently
+            # disable provisioning for this repo.
+            if _install_python_deps(repo_dir, py):
+                marker.write_text("1", encoding="utf-8")
+        return str(py.parent) if py.exists() else None
+
+    node_dir = next((c for c in _NODE_CANDIDATES if c.exists()), None)
+    marker = cache / ".og_node_deps"
+    if not skip_deps and not marker.exists():
+        if _install_node_deps(repo_dir, node_dir):
+            marker.write_text("1", encoding="utf-8")
+    return str(node_dir) if node_dir else None
 
 
 def run_command(cmd: str, workdir: Path, extra_path: str | None) -> tuple[int, str]:
@@ -162,12 +289,12 @@ def run_command(cmd: str, workdir: Path, extra_path: str | None) -> tuple[int, s
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=900,
+            timeout=_CMD_TIMEOUT_S,
         )
         tail = ((proc.stdout or "") + (proc.stderr or "")).strip()
         return proc.returncode, tail[-600:]
     except subprocess.TimeoutExpired:
-        return -1, "(超时 >900s)"
+        return -1, f"(超时 >{_CMD_TIMEOUT_S}s)"
     except Exception as exc:  # noqa: BLE001
         return -1, f"(执行异常: {exc})"
 
@@ -265,9 +392,13 @@ def evaluate_repo(owner: str, repo: str) -> dict:
 
     # 2. Clone + provision environment.
     if not (repo_dir / ".git").exists():
-        clone_repo(owner, repo, repo_dir)
+        try:
+            clone_repo(owner, repo, repo_dir)
+        except CloneError as exc:
+            out["error"] = str(exc)
+            return out
     if not (repo_dir / ".git").exists():
-        out["error"] = "clone 失败"
+        out["error"] = f"clone 后仍未出现 .git 目录: {repo_dir}"
         return out
 
     lang = detect_lang(repo_dir)

@@ -54,6 +54,25 @@ uv run python -m benchmark.l4_contribution.runner  # L4
 - [x] 延迟指标：L2/L3 报告记录单仓库耗时（`elapsed_s` / `elapsed_s_mean`）
 - [ ] L4 填真实 PR/commit 链接（`l4_contribution/records.json`，见下）
 
+## 环境准备（command_exec 的前提）
+
+`command_exec` 只有在命令**真能跑**时才有意义，因此 L2/L3 会为每个仓库准备独立环境：
+
+| 语言 | 动作 |
+|---|---|
+| Python | 建 venv，尝试 `pip install -r requirements-dev.txt`、`pip install -e .[dev]` / `-e .`，并补装 `tox` |
+| JavaScript | 解析 `npm` 全路径后执行 `npm ci`（有 lock）或 `npm install` |
+
+| 环境变量 | 作用 |
+|---|---|
+| `OG_CMD_TIMEOUT` | 单条命令超时秒数（默认 900）。超时记为失败并标注 `(超时 >Ns)` |
+| `OG_SKIP_PROVISION=1` | 跳过依赖安装（快速跑批，此时 `command_exec` 仅供参考） |
+
+准备标记（`.og_python_deps` / `.og_node_deps`）**仅在安装成功时写入**，
+避免一次瞬时失败永久禁用该仓库的环境准备。
+
+> 重跑前若想强制重新准备环境，删掉对应 `_run_cache/<owner>__<repo>/.og_*_deps` 即可。
+
 ## 口径提醒
 
 - **L1 不产出质量数字**：它只证明链路通，任何"质量"结论必须来自 L2 且可回溯到人工复核过的仓库集。

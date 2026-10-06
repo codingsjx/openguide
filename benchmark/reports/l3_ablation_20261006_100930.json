@@ -1,0 +1,118 @@
+{
+  "run": "l3_ablation",
+  "ts": "20261006_100930",
+  "baseline_arm": "naive-single-shot(fake)",
+  "baseline_is_fake": true,
+  "layered_llm": false,
+  "repos": [
+    {
+      "repo": "camelot-dev/camelot",
+      "naive": {
+        "step_coverage": 0.4,
+        "evidence_hit": 0.0,
+        "command_correct": 1.0,
+        "assert_rate": 1.0
+      },
+      "layered": {
+        "step_coverage": 0.6,
+        "evidence_hit": 1.0,
+        "command_correct": 1.0,
+        "assert_rate": 1.0
+      },
+      "naive_elapsed_s": 0.0,
+      "layered_elapsed_s": 0.04
+    },
+    {
+      "repo": "cookiecutter/cookiecutter",
+      "naive": {
+        "step_coverage": 0.6,
+        "evidence_hit": 0.25,
+        "command_correct": 1.0,
+        "assert_rate": 1.0
+      },
+      "layered": {
+        "step_coverage": 0.6,
+        "evidence_hit": 0.75,
+        "command_correct": 0.6666666666666666,
+        "assert_rate": 0.75
+      },
+      "naive_elapsed_s": 0.0,
+      "layered_elapsed_s": 0.01
+    },
+    {
+      "repo": "mochajs/mocha",
+      "naive": {
+        "step_coverage": 0.16666666666666666,
+        "evidence_hit": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 1.0
+      },
+      "layered": {
+        "step_coverage": 0.6666666666666666,
+        "evidence_hit": 1.0,
+        "command_correct": 1.0,
+        "assert_rate": 1.0
+      },
+      "naive_elapsed_s": 0.0,
+      "layered_elapsed_s": 0.01
+    },
+    {
+      "repo": "pallets/click",
+      "naive": {
+        "step_coverage": 0.2,
+        "evidence_hit": 0.25,
+        "command_correct": 0.5,
+        "assert_rate": 1.0
+      },
+      "layered": {
+        "step_coverage": 0.2,
+        "evidence_hit": 0.75,
+        "command_correct": 0.0,
+        "assert_rate": 0.75
+      },
+      "naive_elapsed_s": 0.0,
+      "layered_elapsed_s": 0.0
+    },
+    {
+      "repo": "psf/requests",
+      "naive": {
+        "step_coverage": 0.2,
+        "evidence_hit": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 1.0
+      },
+      "layered": {
+        "step_coverage": 0.6,
+        "evidence_hit": 0.75,
+        "command_correct": 0.6666666666666666,
+        "assert_rate": 0.75
+      },
+      "naive_elapsed_s": 0.0,
+      "layered_elapsed_s": 0.01
+    }
+  ],
+  "naive_summary": {
+    "step_coverage": 0.313,
+    "evidence_hit": 0.1,
+    "command_exec": 0.0,
+    "command_correct": 0.5,
+    "assert_rate": 1.0,
+    "n_repos": 5,
+    "total_golden_steps": 26,
+    "total_gen_steps": 20,
+    "elapsed_s_mean": 0.0,
+    "elapsed_s_total": 0.0
+  },
+  "layered_summary": {
+    "step_coverage": 0.533,
+    "evidence_hit": 0.85,
+    "command_exec": 0.0,
+    "command_correct": 0.667,
+    "assert_rate": 0.85,
+    "n_repos": 5,
+    "total_golden_steps": 26,
+    "total_gen_steps": 20,
+    "elapsed_s_mean": 0.01,
+    "elapsed_s_total": 0.07
+  }
+}

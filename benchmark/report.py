@@ -27,7 +27,7 @@ def append_result(repo_key: str, result: MetricsResult, run_tag: str) -> None:
         "repo": repo_key,
         **asdict(result),
     }
-    with (_REPORTS_DIR / f"l2_{run_tag}.jsonl").open("a", encoding="utf-8") as fh:
+    with (_REPORTS_DIR / f"{run_tag}_results.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(line, ensure_ascii=False) + "\n")
 
 
