@@ -150,7 +150,7 @@ GitHub 仓库 URL
 | **L3 消融** | `python -m benchmark.l3_ablation.runner` | 同批仓库对比「朴素单次生成」vs「分层四视角管线」，含耗时 | 是（同基准防漂移） |
 | **L4 真实贡献** | `python -m benchmark.l4_contribution.runner` | 用本产品实际提交 PR 的记录 | 记录，非评分 |
 
-### 5.2 五个指标（`benchmark/metrics.py`，规则化、确定性）
+### 5.1 五个指标（`benchmark/metrics.py`，规则化、确定性）
 
 | 指标 | 含义 |
 |---|---|
@@ -162,7 +162,7 @@ GitHub 仓库 URL
 
 另记录 **单仓库生成耗时**（`elapsed_s`），用于回答"分层管线多换来了什么、多花了多少时间"。
 
-### 5.1 实测结果（2026-10-06，无 LLM Key 的确定性路径）
+### 5.2 实测结果（2026-10-06，无 LLM Key 的确定性路径）
 
 完整归因与复现方式见 **[`evaluation_report.md`](evaluation_report.md)**。
 
@@ -311,5 +311,7 @@ cd frontend && pnpm install && pnpm dev     # http://127.0.0.1:5173
 | [`privacy_and_license.md`](privacy_and_license.md) | 隐私与授权说明 |
 | [`cold_start_checklist.md`](cold_start_checklist.md) | 提交包冷启动演练记录 |
 | [`evaluation_report.md`](evaluation_report.md) | 评测报告（L2/L3 实测数字与归因） |
+| [`../output/pdf/OpenGuide-作品说明.pdf`](../output/pdf/OpenGuide-作品说明.pdf) | 本说明的 PDF 版本（提交用） |
+| [`../tools/render_submission_pdf.py`](../tools/render_submission_pdf.py) | PDF 生成脚本（改完 Markdown 后重新生成） |
 | [`changelog.md`](changelog.md) | 变更记录（含修复根因与验证口径） |
 | [`../benchmark/README.md`](../benchmark/README.md) | 评测方法论与口径红线 |

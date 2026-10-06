@@ -108,6 +108,7 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 **面向评审**
 
 - [docs/submission.md](docs/submission.md) — **作品说明**（选题论证 / 系统设计 / 验证证据 / 路线图）
+- [output/pdf/OpenGuide-作品说明.pdf](output/pdf/OpenGuide-作品说明.pdf) — 作品说明 PDF（提交用，由 `tools/render_submission_pdf.py` 从 Markdown 生成）
 - [docs/demo_script.md](docs/demo_script.md) — 现场演示脚本（3 个真实仓库 + 兜底方案）
 - [docs/video_script.md](docs/video_script.md) — 演示视频分镜脚本
 - [docs/cold_start_checklist.md](docs/cold_start_checklist.md) — 提交包冷启动演练记录（7/7 通过）
