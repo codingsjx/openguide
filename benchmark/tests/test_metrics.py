@@ -62,3 +62,23 @@ def test_summary_merge():
     r = compute(golden, gen)
     s = merge_summary([r])
     assert "step_coverage" in s
+
+
+def test_merge_summary_reports_latency():
+    """延迟（成本）指标：L3 消融需要展示分层管线多花了多少时间。"""
+    from benchmark.metrics import MetricsResult, merge_summary
+
+    rows = [
+        MetricsResult(n_golden=4, n_gen=4, step_coverage=0.5, elapsed_s=1.5),
+        MetricsResult(n_golden=4, n_gen=4, step_coverage=1.0, elapsed_s=2.5),
+    ]
+    agg = merge_summary(rows)
+    assert agg["elapsed_s_mean"] == 2.0
+    assert agg["elapsed_s_total"] == 4.0
+
+
+def test_elapsed_defaults_to_zero():
+    """未计时的路径不应炸，且默认 0 表示"未测量"。"""
+    from benchmark.metrics import MetricsResult
+
+    assert MetricsResult().elapsed_s == 0.0

@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from backend.core.github.models import RepoMeta
 from backend.core.github.recon import RawSignals
-from backend.core.index.perspectives import assemble_perspectives, chunk_text
+from backend.core.index.perspectives import (
+    assemble_perspective_chunks,
+    assemble_perspectives,
+    chunk_text,
+)
 from backend.core.index.retrieval import _guess_kind
 from backend.core.index.service import RepoIndex
 
@@ -120,3 +124,48 @@ def test_fallback_matches_chinese_query():
     res = idx.search("怎么安装依赖", kind="setup")
     assert res.hits, "中文查询也应命中证据片段"
     assert any("安装" in h.text for h in res.hits)
+
+
+def test_v3_excludes_narrative_docs_without_commands():
+    # 回归：V3 是"可执行路径"，纯叙述文档（没有一条命令）不应进入 V3，
+    # 否则它靠篇幅挤掉真正含命令的 Makefile，导致"怎么跑测试"答不出来。
+    from backend.core.github.models import DocFile
+
+    sig = RawSignals(
+        meta=RepoMeta(owner="o", repo="r2", stars=5, default_branch="main", pushed_at=""),
+        language_bytes={"python": 100},
+        root_entries={"readme.md": "README.md", "makefile": "Makefile"},
+        doc_files=[
+            DocFile(path="README.md", name="README.md",
+                    text="# R2\n\nInstall:\n\n```\npip install -e .\n```\n"),
+            DocFile(path="Makefile", name="Makefile",
+                    text="test:\n\tpytest tests\n"),
+            DocFile(path="docs/dev/contributing.rst", name="contributing.rst",
+                    text="Contributor guide.\n\nPlease write tests for your change and "
+                         "open a pull request. No commands are shown here at all.\n"),
+        ],
+        file_tree=["README.md", "Makefile", "docs/dev/contributing.rst"],
+    )
+    chunks = assemble_perspective_chunks(sig)
+    v3_sources = {c.source_path for c in chunks if c.perspective == "v3"}
+    assert "Makefile" in v3_sources, "含命令的 Makefile 必须进入 V3"
+    assert "README.md" in v3_sources, "含命令的 README 必须进入 V3"
+    assert "docs/dev/contributing.rst" not in v3_sources, "无命令的叙述文档不应进入 V3"
+
+
+def test_v3_excludes_changelog():
+    from backend.core.github.models import DocFile
+
+    sig = RawSignals(
+        meta=RepoMeta(owner="o", repo="r3", stars=5, default_branch="main", pushed_at=""),
+        language_bytes={"python": 100},
+        root_entries={"readme.md": "README.md"},
+        doc_files=[
+            DocFile(path="README.md", name="README.md", text="pip install x\n"),
+            DocFile(path="HISTORY.md", name="HISTORY.md",
+                    text="# 1.0\n\nChanged the install path. See usage notes.\n" * 50),
+        ],
+        file_tree=["README.md", "HISTORY.md"],
+    )
+    v3_sources = {c.source_path for c in assemble_perspective_chunks(sig) if c.perspective == "v3"}
+    assert "HISTORY.md" not in v3_sources, "changelog 不应进入可执行路径视角"

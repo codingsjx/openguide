@@ -46,10 +46,27 @@ uv run python -m benchmark.l4_contribution.runner  # L4
 
 ## 待办
 
-- [x] golden_guides/*.json：4/5 完成（requests / click / cookiecutter / mocha）
-- [ ] C 人工复核上述 4 个仓库的 build/test_cmd（guide 已写，待人类过一遍才算 verified）
-- [ ] camelot 暂缓（依赖 ghostscript + OpenCV，Windows 上代价高）
-- [x] L2 接入真实生成器（`python -m benchmark.l2_golden.runner` 跑出五维度真数字）
+- [x] golden_guides/*.json：5/5 完成（requests / click / cookiecutter / mocha / camelot）
+- [x] 5 个仓库的 build/test_cmd 已人工复核并标 `verified: true`
 - [x] L1 烟测（`l1_smoke.py`）
-- [ ] M2 后：l3 接 baseline+layered 生成器
-- [ ] M5：l4 填真实 PR/commit
+- [x] L2 接入真实生成器（`python -m benchmark.l2_golden.runner` 跑出五维度真数字）
+- [x] L3 接 baseline + layered 生成器（`l3_ablation/`，含 `--provider auto` 走真实模型）
+- [x] 延迟指标：L2/L3 报告记录单仓库耗时（`elapsed_s` / `elapsed_s_mean`）
+- [ ] L4 填真实 PR/commit 链接（`l4_contribution/records.json`，见下）
+
+## 口径提醒
+
+- **L1 不产出质量数字**：它只证明链路通，任何"质量"结论必须来自 L2 且可回溯到人工复核过的仓库集。
+- **fake 臂不算模型质量**：L3 的 `--provider fake` 是确定性替身，只用于证明指标能检出「无据断言」，
+  报告里标了 `baseline_is_fake`，不得当作模型对比数字引用。
+- **L4 为空时 `benchmark.runner` 会报未通过**：这是有意设计——没有真实贡献就不算闭环。
+  填入 `l4_contribution/records.json` 后即通过。
+
+## 如何补 L4 记录
+
+```python
+from benchmark.l4_contribution.runner import add_record
+add_record("owner", "repo", "pr", "https://github.com/owner/repo/pull/123", "用本产品走通的文档改进")
+```
+
+再跑 `python -m benchmark.l4_contribution.runner` 应打印记录并返回 0。

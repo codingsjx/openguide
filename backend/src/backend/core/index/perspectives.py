@@ -17,6 +17,7 @@ cites as evidence, and what the evidence verifier checks against the repo.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from backend.core.github.recon import RawSignals
@@ -25,6 +26,47 @@ from backend.core.github.recon import RawSignals
 # we reuse doc_files already fetched during recon).
 _V1_FILES = ("readme.md", "readme.rst", "contributing.md", "contributing")
 _V3_FILES = ("makefile", "dockerfile")
+
+# Changelog-ish docs are NOT executable-path material: a release history may
+# happen to contain the words "install"/"usage", but it never tells a newcomer
+# how to build or test the project. Left in V3 they dominate retrieval by sheer
+# size (psf/requests' HISTORY.md alone was 109 of 131 V3 chunks, drowning out
+# docs/user/install.rst), so they are excluded by filename.
+_V3_EXCLUDED_STEMS = {
+    "history", "changelog", "changes", "change", "news", "releases", "release",
+    "release-notes", "releasenotes", "authors", "contributors", "thanks",
+    "license", "licence", "copying", "notice", "migration", "upgrading",
+}
+
+
+def _is_changelog_like(path: str) -> bool:
+    """True for history/changelog/license-style docs (not runnable guidance)."""
+    name = path.replace("\\", "/").rsplit("/", 1)[-1].lower()
+    stem = name.rsplit(".", 1)[0]
+    return stem in _V3_EXCLUDED_STEMS
+
+
+# A line that looks like a runnable command. V3 ("executable path") is defined by
+# *commands*, so a doc only belongs there if it actually contains one. Before
+# this gate, any file whose name contained "contribut" went into V3 regardless,
+# so a purely narrative contributing guide (psf/requests' docs/dev/contributing.rst
+# has zero commands) contributed 11 chunks and pushed the Makefile — which holds
+# the real `python -m pytest tests` — out of the top-k. The test step then came
+# back empty.
+_COMMAND_LINE_RE = re.compile(
+    r"^(?:\$|>)?\s*(?:pip|pip3|python|python3|uv|poetry|conda|virtualenv|npm|npx|"
+    r"pnpm|yarn|cargo|go|make|git|docker|pytest|tox|nox|jest|vitest|mocha|rspec|"
+    r"bundle|gem|composer|gh|gradle|mvn)\b"
+)
+
+
+def _has_commands(text: str) -> bool:
+    """True if the doc actually contains a runnable command line."""
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped and _COMMAND_LINE_RE.match(stripped):
+            return True
+    return False
 
 
 @dataclass
@@ -38,10 +80,29 @@ class PerspectiveChunk:
     kind: str = "file"  # file | issue | synthetic
 
 
-def _doc_by_path(sig: RawSignals, name_lower: str) -> str | None:
+_BUILD_FILE_NAMES = {
+    "makefile", "gnumakefile", "pyproject.toml", "package.json", "tox.ini",
+    "setup.cfg", "setup.py", "cargo.toml", "go.mod", "gemfile", "composer.json",
+    "requirements.txt", "requirements-dev.txt", "dockerfile", "justfile",
+}
+
+
+def _is_build_file(path: str) -> bool:
+    """True for files whose purpose is to declare build/test commands."""
+    return path.replace("\\", "/").rsplit("/", 1)[-1].lower() in _BUILD_FILE_NAMES
+
+
+def _doc_by_path(sig: RawSignals, name_lower: str) -> tuple[str, str] | None:
+    """Return (real repo path, text) for a doc, preserving the file's true case.
+
+    Callers used to pass the lower-cased seed name straight into the evidence
+    source, so a guide could cite `readme.md` when the repo actually ships
+    `README.md` — the frontend then built a 404 "打开原始出处" link. Returning
+    the real path keeps evidence resolvable.
+    """
     for f in sig.doc_files:
         if f.path.lower() == name_lower or f.name.lower() == name_lower:
-            return f.text
+            return f.path, f.text
     return None
 
 
@@ -74,9 +135,10 @@ def assemble_perspective_chunks(sig: RawSignals) -> list[PerspectiveChunk]:
 
     # ---- V1: entry & conventions (per-doc real source) ---------------------
     for name in _V1_FILES:
-        text = _doc_by_path(sig, name)
-        if text:
-            _emit_doc_chunks("v1", name, text, chunks)
+        hit = _doc_by_path(sig, name)
+        if hit:
+            real_path, text = hit
+            _emit_doc_chunks("v1", real_path, text, chunks)
     if sig.meta.description and not chunks:
         chunks.append(
             PerspectiveChunk(
@@ -111,10 +173,19 @@ def assemble_perspective_chunks(sig: RawSignals) -> list[PerspectiveChunk]:
         low = d.path.lower()
         if low.startswith(".") or low.endswith(("license",)) or "/license" in low:
             continue
-        if any(k in low for k in ("readme", "contribut")):
-            v3_paths.append(d.path)
+        if _is_changelog_like(d.path):
             continue
-        if any(k in d.text.lower() for k in _RUN_KEYWORDS):
+        # V3 is the *executable path*: a doc earns its place by containing a
+        # command (README / install guide / Makefile), or by being a build file
+        # whose whole purpose is to declare commands (even if our prefix list
+        # does not recognise every tool it uses).
+        if _has_commands(d.text) or _is_build_file(d.path):
+            v3_paths.append(d.path)
+        elif any(k in d.text.lower() for k in _RUN_KEYWORDS) and any(
+            k in low for k in ("readme", "install", "setup", "getting", "usage")
+        ):
+            # Prose "how to install/use" docs still help even without a fenced
+            # command block (they often spell steps out in prose).
             v3_paths.append(d.path)
     # Dedupe preserving order.
     seen: set[str] = set()

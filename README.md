@@ -18,6 +18,23 @@
 
 **为什么不是「clone 全文 → LLM 写总结」**：规模失配（数千文件塞不进上下文）、信息类型失配（「如何搭环境」分散在 README/CONTRIBUTING/docs/workflow 里）、能力前提失配（新手卡住不会定位问题，指南必须带预期结果与失败分支）。四视角重组正是针对这三点。
 
+## 一键部署（Docker Compose，评审冷启动推荐）
+
+```bash
+cp .env.example .env          # 可选：填 GITHUB_TOKEN / LLM_API_KEY；不填也能跑
+docker compose up --build
+```
+
+浏览器打开 http://127.0.0.1:5173 即可。前端由 nginx 提供静态站点并把 `/api`
+反向代理到后端容器（同源，无需 CORS / 额外配置）。
+
+- 默认 `USE_CHROMA=false`：走**确定性检索**，零模型下载、秒级启动，适合离线评审。
+  需要本地向量检索时在 `.env` 里设 `USE_CHROMA=true`（首次会下载嵌入模型）。
+- 向量库与 GitHub 响应缓存挂在命名卷上，重启不丢、不重抓。
+- 详细演示流程见 [docs/demo_script.md](docs/demo_script.md)。
+
+---
+
 ## 本机运行（后端）
 
 需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。
@@ -25,7 +42,7 @@
 ```bash
 cd backend
 uv sync                        # 按 uv.lock 安装依赖
-uv run pytest tests/ -q        # 56 个单测
+uv run pytest tests/ -q        # 72 个单测
 uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -92,4 +109,5 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 - [docs/team_roles.md](docs/team_roles.md) — 分工与每周清单
 - [docs/code_outline.md](docs/code_outline.md) — 代码大纲与接口约定
 - [docs/third_party_disclosure.md](docs/third_party_disclosure.md) — 第三方资源与许可披露
+- [docs/demo_script.md](docs/demo_script.md) — 现场演示脚本（3 个真实仓库 + 兜底方案）
 - [docs/changelog.md](docs/changelog.md) — 变更记录（合并修复与验证口径）

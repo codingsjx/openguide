@@ -1,0 +1,49 @@
+# OpenGuide 一键部署：backend(FastAPI) + frontend(nginx 静态站 + /api 反代)
+#
+# 用法（评审冷启动）：
+#   1. cp .env.example .env      # 可选：填 GITHUB_TOKEN / LLM_API_KEY
+#   2. docker compose up --build
+#   3. 浏览器打开 http://127.0.0.1:5173
+#
+# 变量从同目录的 .env 自动读取（Compose 原生支持），未填则用下方默认值。
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_MODEL: ${LLM_MODEL:-gpt-5.5}
+      # true  = 本地向量检索（首次会下载嵌入模型，约数百 MB）
+      # false = 确定性 token 重叠检索，零下载、秒级启动（演示/离线评审推荐）
+      USE_CHROMA: ${USE_CHROMA:-false}
+      VECTORSTORE_DIR: /app/.chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      # 持久化向量库与 GitHub 响应缓存，重启不必重抓/重建索引。
+      - chroma_data:/app/.chroma
+      - github_cache:/app/.cache
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      # 与 README 里的开发地址保持一致，评审按文档访问即可。
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+  github_cache:

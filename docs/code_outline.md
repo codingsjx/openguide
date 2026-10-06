@@ -10,100 +10,85 @@
 
 ```
 openguide/
-├── docs/                    # 文档
-│   ├── task_book.md         # 任务书（技术方案）
-│   ├── team_roles.md        # 团队分工执行表
-│   └── api_contract.md      # (待建) 接口约定：Profile/GuideStep/检索/追问 schema
-├── backend/                 # FastAPI 后端（A 主责）
-│   ├── app/
-│   │   ├── main.py          # FastAPI 入口，挂载路由
-│   │   ├── config.py        # 读取 .env：GITHUB_TOKEN / LLM_API_KEY / 向量库路径
-│   │   ├── api/             # HTTP 层
-│   │   │   ├── routes/
-│   │   │   │   ├── profile.py     # POST /api/profile
-│   │   │   │   ├── guide.py       # POST /api/guide
-│   │   │   │   ├── search.py      # POST /api/search
-│   │   │   │   └── followup.py    # POST /api/followup
-│   │   │   └── deps.py            # 依赖注入（复用缓存/客户端实例）
-│   │   ├── core/            # 业务管线（四段）
-│   │   │   ├── github/
-│   │   │   │   ├── client.py      # GitHub API 封装 + 缓存 + 限流/未授权处理
-│   │   │   │   └── models.py      # 仓库元数据/issue/文档数据模型
-│   │   │   ├── profile/
-│   │   │   │   ├── schema.py      # Profile Pydantic schema（§2，全局约定）
-│   │   │   │   └── builder.py     # 画像构建：抓取→聚合→画像 JSON
-│   │   │   ├── index/            # 模块 2：分层视角化索引
-│   │   │   │   ├── perspectives.py # V1-V4 视角文档组装（内容来源路由）
-│   │   │   │   ├── compress.py     # 视角压缩重写（LLM 聚合跨文件步骤）
-│   │   │   │   ├── embedder.py     # sentence-transformers 封装
-│   │   │   │   ├── vectorstore.py  # chromadb 封装（四索引独立 collection）
-│   │   │   │   └── retrieval.py    # 分层检索：按需激活（默认 V1+V3）
-│   │   │   ├── decide/
-│   │   │   │   └── decider.py     # 决策树：适不适合新手 + 流程分支（纯规则，可单测）
-│   │   │   ├── generate/         # 模块 3：结构化生成
-│   │   │   │   ├── schemas.py     # GuideStep/Guide/Evidence Pydantic（§3，全局约定）
-│   │   │   │   ├── llm.py         # OpenAI 兼容客户端封装（Key 只在 .env）
-│   │   │   │   ├── prompts.py     # Stage A-D prompt 模板
-│   │   │   │   ├── evidence.py    # 证据锚点校验（无证据不宣称，§4）
-│   │   │   │   └── pipeline.py    # Stage A-D 编排
-│   │   │   ├── followup/
-│   │   │   │   ├── granular.py    # "这步太粗"：重检索 V3 出子步骤
-│   │   │   │   ├── explain.py     # "看不懂为什么"：检索 V1/V2 解释原理
-│   │   │   │   └── diagnose.py    # "报错了"：本地规则预判 + LLM 定位
-│   │   │   └── treeparse/         # （可选加分）tree-sitter 符号表
-│   │   │       └── symbols.py     # V2 升级为调用图
-│   │   └── utils/
-│   │       ├── cache.py           # 磁盘/内存缓存（规避 GitHub 限流）
-│   │       └── logging.py
-│   ├── tests/              # pytest（A 写核心，C 补评测脚本）
-│   │   ├── unit/                  # decider / evidence / schema 纯逻辑
-│   │   ├── integration/           # 全链路（本地 fixture 仓库）
-│   │   ├── fixtures/
-│   │   │   └── repos/             # 本地小仓库样例（供 L1 烟测，不宣称质量）
-│   │   └── conftest.py
-│   ├── requirements.txt           # 依赖锁定
-│   ├── .env.example               # 不含真实 Key
-│   └── Dockerfile
-├── frontend/               # React + Vite + antd（B 主责）
-│   ├── src/
-│   │   ├── main.tsx / App.tsx     # 路由（Home / Profile / Guide）
+├── docs/                       # 文档
+│   ├── task_book.md            # 任务书（选题论证 / 技术方案 / 里程碑）
+│   ├── team_roles.md           # 团队分工执行表
+│   ├── code_outline.md         # 本文件：代码大纲与接口约定
+│   ├── demo_script.md          # 现场演示脚本（3 个真实仓库 + 兜底）
+│   ├── third_party_disclosure.md  # 第三方资源与许可披露
+│   └── changelog.md            # 变更记录（修复与验证口径）
+├── backend/                    # FastAPI 后端（A 主责）
+│   ├── src/backend/
+│   │   ├── config.py           # 读取 .env：GITHUB_TOKEN / LLM_* / 向量库路径
 │   │   ├── api/
-│   │   │   └── client.ts          # fetch 封装（对应 §5 API）
+│   │   │   ├── main.py         # FastAPI 入口，挂载路由 + CORS
+│   │   │   └── routes/
+│   │   │       ├── profile.py  # POST /api/profile
+│   │   │       ├── search.py   # POST /api/search
+│   │   │       ├── guide.py    # POST /api/guide
+│   │   │       ├── followup.py # POST /api/followup
+│   │   │       └── settings.py # GET/POST /api/llm-config
+│   │   ├── core/
+│   │   │   ├── github/         # 仓库勘探（M0）
+│   │   │   │   ├── client.py   # GitHub API 封装 + 磁盘缓存 + 限流处理
+│   │   │   │   ├── recon.py    # 信号采集 + 文档/文件树深度抓取
+│   │   │   │   ├── models.py   # RepoMeta / DocFile
+│   │   │   │   └── parse.py    # URL → (owner, repo)
+│   │   │   ├── profile/        # 画像 schema 与构建
+│   │   │   │   ├── schema.py   # Profile（§2 全局约定）
+│   │   │   │   ├── builder.py  # RawSignals → Profile
+│   │   │   │   └── service.py  # URL → Profile
+│   │   │   ├── index/          # 四视角分层索引（M1，技术差异点核心）
+│   │   │   │   ├── perspectives.py # V1-V4 视角文档组装
+│   │   │   │   ├── embedder.py     # 嵌入模型封装
+│   │   │   │   ├── vectorstore.py  # 向量库封装 + 确定性回退检索
+│   │   │   │   ├── retrieval.py    # 意图 → 视角路由
+│   │   │   │   └── service.py      # RepoIndex（索引 + 检索入口）
+│   │   │   ├── decide/
+│   │   │   │   └── decider.py  # 决策树：适不适合新手（纯规则，可单测）
+│   │   │   ├── generate/       # 结构化生成（M2）
+│   │   │   │   ├── schemas.py  # Guide/GuideStep/Evidence（§3 全局约定）
+│   │   │   │   ├── llm.py      # [OI] 兼容客户端 + 会话内配置
+│   │   │   │   ├── prompts.py  # Stage A-D prompt 模板
+│   │   │   │   ├── evidence.py # 证据锚点校验（无证据不宣称）
+│   │   │   │   └── pipeline.py # Stage A-D 编排 + 启发式回退
+│   │   │   ├── followup/
+│   │   │   │   └── service.py  # 三步追问：granular / explain / diagnose
+│   │   │   └── treeparse/      # （预留）tree-sitter 符号表
+│   │   └── utils/cache.py      # 磁盘缓存（规避 GitHub 限流）
+│   ├── tests/                  # pytest（默认离线、无密钥）
+│   ├── pyproject.toml / uv.lock
+│   ├── Dockerfile
+│   └── .env.example
+├── frontend/                   # React + Vite + antd（B 主责）
+│   ├── src/
+│   │   ├── App.tsx / main.tsx
+│   │   ├── api/client.ts       # fetch 封装（对应 §5 API）
 │   │   ├── pages/
-│   │   │   ├── HomePage.tsx       # 输入仓库 URL
-│   │   │   ├── ProfilePage.tsx    # 体检卡（画像 JSON 渲染）
-│   │   │   └── GuidePage.tsx      # 向导分步主流程
+│   │   │   ├── HomePage.tsx    # 首页：地址输入 + 结果标签页
+│   │   │   └── GuidePage.tsx   # 贡献问答检索
 │   │   ├── components/
-│   │   │   ├── Wizard/            # 向导容器：步骤态管理、第 n/4 前进逻辑
-│   │   │   ├── GuideStep/         # Step 卡片渲染（command/expected/fail_hints）
-│   │   │   ├── EvidencePanel/     # 证据面板：当前步骤引用实时亮起 + 原始出处跳转
-│   │   │   ├── FollowupBar/       # 三步追问入口 + 会话
-│   │   │   ├── ProfileCard/       # 体检卡可视化（语言/license/gfi/活跃度）
-│   │   │   └── CodeBlock/         # 命令块 + 复制按钮
-│   │   ├── types/                 # 前端 TS 类型（镜像后端 schema）
-│   │   │   ├── profile.ts
-│   │   │   └── guide.ts
-│   │   ├── hooks/                 # useGuide / useFollowup 等
-│   │   └── styles/
-│   ├── package.json
-│   ├── pnpm-lock.yaml
+│   │   │   ├── ProfileCard/    # 体检卡（语言/构建/gfi/活跃度）
+│   │   │   ├── GuideGenerator/ # 生成贡献指南（AI / 本地规则）
+│   │   │   ├── GuideWizard/    # 分步向导 + 三步追问 + 证据面板
+│   │   │   └── LlmSettings/    # 会话内 LLM 配置
+│   │   └── types/              # profile.ts / guide.ts（镜像后端 schema）
+│   ├── package.json / pnpm-lock.yaml
 │   ├── vite.config.ts
-│   └── Dockerfile
-├── benchmark/              # 评测与材料（C 主责）
-│   ├── runner.py           # 评测运行器：scraper/索引/生成/证据校验 脚本化后端
-│   ├── golden/
-│   │   ├── repos.json            # 3-5 个 golden 仓库清单
-│   │   └── golden_guides/        # 人工标准上手指南（L2 标注，jsonl）
-│   ├── l1_smoke.py         # L1 烟测（固定本地仓库，只验链路）
-│   ├── l2_golden.py        # L2 黄金评估（步骤完整率/命令可执行率/证据命中率）
-│   ├── l3_ablation.py      # L3 消融（朴素 baseline vs 分层管线，同仓库同基准）
-│   ├── l4_contribution.py  # L4 真实 PR 记录（链接/commit）
-│   ├── reports/            # 输出 jsonl + 汇总报告（提交包证据）
-│   └── README.md           # 评测口径：只报人工复核集，样例不宣称质量
-├── docker-compose.yml      # backend + frontend + (可选)embedding 缓存卷
-├── .env.example            # 顶层示例（backend/.env.example 同步）
-├── .gitignore              # 排除 .env、chroma 数据、node_modules、评测临时产物
-└── README.md               # 作品说明 + 冷启动步骤（评审入口）
+│   ├── Dockerfile / nginx.conf
+│   └── index.html
+├── benchmark/                  # 评测与材料（C 主责）
+│   ├── golden/                 # golden 仓库清单 + 人工标准指南
+│   ├── l1_smoke.py             # L1 链路烟测（不产出质量数字）
+│   ├── l2_golden/runner.py     # L2 黄金评估
+│   ├── l3_ablation/            # L3 消融（naive baseline vs 分层管线）
+│   ├── l4_contribution/        # L4 真实贡献记录
+│   ├── metrics.py / report.py  # 指标定义与报告落盘
+│   └── README.md               # 评测口径（只报人工复核集）
+├── docker-compose.yml          # backend + frontend 一键部署
+├── .env.example                # 顶层示例（与 backend/.env.example 同步）
+├── .github/workflows/ci.yml    # CI：后端测试 / 前端构建 / 密钥扫描
+└── README.md                   # 作品说明 + 冷启动步骤（评审入口）
 ```
 
 ---

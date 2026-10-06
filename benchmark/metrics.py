@@ -15,6 +15,11 @@ Definitions:
                    "semantic correctness" dimension (跑对没有，而非只是跑得动)
 - assert_rate    : fraction of generated steps with a non-empty `evidence`,
                    i.e. NOT the "missing/unknown" fallback
+
+`elapsed_s` is wall-clock generation time for the repo, recorded by the runner
+(not by `compute`). It is what backs the "成本/延迟" column of the L3 ablation:
+the layered pipeline does more work per repo, so the comparison must show the
+latency it costs, not just the quality it buys.
 """
 
 from __future__ import annotations
@@ -157,6 +162,7 @@ class MetricsResult:
     command_correct: float = 0.0
     assert_rate: float = 1.0  # if no steps, treat as no assertions
     missing_commands: list[str] = field(default_factory=list)
+    elapsed_s: float = 0.0  # wall-clock generation time, filled by the runner
 
 
 def compute(
@@ -228,4 +234,7 @@ def merge_summary(results: list[MetricsResult]) -> dict:
     agg["n_repos"] = len(results)
     agg["total_golden_steps"] = sum(r.n_golden for r in results)
     agg["total_gen_steps"] = sum(r.n_gen for r in results)
+    # Latency: per-repo mean (comparable across arms) + total (cost of the run).
+    agg["elapsed_s_mean"] = round(sum(r.elapsed_s for r in results) / len(results), 2)
+    agg["elapsed_s_total"] = round(sum(r.elapsed_s for r in results), 2)
     return agg

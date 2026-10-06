@@ -27,6 +27,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -106,6 +107,15 @@ def _compare_block(result: dict) -> str:
         nv, lv = n.get(attr, 0.0), l.get(attr, 0.0)
         lines.append(f"{label:<14}{nv:>9.0%}{lv:>10.0%}{lv - nv:>+10.0%}")
     lines.append(f"{'仓库数':<14}{n.get('n_repos', 0):>10}{l.get('n_repos', 0):>10}")
+    # Latency (成本/延迟): the layered arm does strictly more work per repo, so
+    # the report must state what that costs in wall-clock time, not only the
+    # quality it buys.
+    if "elapsed_s_mean" in n or "elapsed_s_mean" in l:
+        lines.append(
+            f"{'单仓库耗时(s)':<12}{n.get('elapsed_s_mean', 0.0):>10.2f}"
+            f"{l.get('elapsed_s_mean', 0.0):>10.2f}"
+            f"{l.get('elapsed_s_mean', 0.0) - n.get('elapsed_s_mean', 0.0):>+10.2f}"
+        )
     return "\n".join(lines)
 
 
@@ -152,18 +162,33 @@ def main() -> int:
             print(f"  [跳过] 抓取失败：{exc}")
             continue
 
-        naive = _score(g, arm.generate(g.owner, g.repo, sig), sig)
-        layered = _score(g, layered_arm.generate(g.owner, g.repo, sig), sig)
+        # Time each arm separately: generation latency is the "成本" half of the
+        # ablation claim (quality bought per second spent).
+        t0 = time.perf_counter()
+        naive_guide = arm.generate(g.owner, g.repo, sig)
+        naive_elapsed = time.perf_counter() - t0
+
+        t0 = time.perf_counter()
+        layered_guide = layered_arm.generate(g.owner, g.repo, sig)
+        layered_elapsed = time.perf_counter() - t0
+
+        naive = _score(g, naive_guide, sig)
+        layered = _score(g, layered_guide, sig)
+        naive.elapsed_s = round(naive_elapsed, 2)
+        layered.elapsed_s = round(layered_elapsed, 2)
         naive_rows.append(naive)
         layered_rows.append(layered)
 
         print(f"  {'指标':<12}{'naive':>10}{'layered':>10}")
         for label, attr in _METRIC_LABELS:
             print(f"  {label:<12}{getattr(naive, attr):>9.0%}{getattr(layered, attr):>10.0%}")
+        print(f"  {'耗时(s)':<11}{naive_elapsed:>10.2f}{layered_elapsed:>10.2f}")
         per_repo.append({
             "repo": key,
             "naive": {k: getattr(naive, k) for _, k in _METRIC_LABELS},
             "layered": {k: getattr(layered, k) for _, k in _METRIC_LABELS},
+            "naive_elapsed_s": naive.elapsed_s,
+            "layered_elapsed_s": layered.elapsed_s,
         })
 
     if not per_repo:

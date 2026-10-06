@@ -20,6 +20,27 @@ from backend.core.index.embedder import get_embedder
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]+")
 _WORD_RE = re.compile(r"[a-z0-9]+")
 
+# A line that looks like a runnable command. Used to give V3 (executable path)
+# chunks a ranking boost: that perspective exists to answer "how do I run
+# this", so a chunk that actually contains `pytest`/`make test`/`pip install`
+# should outrank prose *about* testing. Without this, long narrative docs
+# (contributing guides, changelogs) crowded out the Makefile that held the real
+# command, and the guide came back with an empty test step.
+_COMMAND_LINE_RE = re.compile(
+    r"^(?:\$|>)?\s*(?:pip|pip3|python|python3|uv|poetry|conda|virtualenv|npm|npx|"
+    r"pnpm|yarn|cargo|go|make|git|docker|pytest|tox|nox|jest|vitest|mocha|rspec|"
+    r"bundle|gem|composer|gh|gradle|mvn)\b"
+)
+
+
+def _looks_runnable(text: str) -> bool:
+    """True if any line of the chunk looks like a shell command."""
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped and _COMMAND_LINE_RE.match(stripped):
+            return True
+    return False
+
 
 @dataclass
 class Hit:
@@ -163,6 +184,8 @@ class Store:
         for r in rows:
             for t in _tokens(r["text"]):
                 df[t] = df.get(t, 0) + 1
+        # V3 = executable path, so favour chunks that actually carry a command.
+        runnable_boost = perspective == "v3"
         scored: list[tuple[float, dict]] = []
         for r in rows:
             d = _tokens(r["text"])
@@ -170,6 +193,8 @@ class Store:
             if not inter:
                 continue
             weight = sum(math.log1p(n / (df.get(t, 0) + 1)) for t in inter)
+            if runnable_boost and _looks_runnable(r["text"]):
+                weight *= 1.6
             scored.append((weight, r))
         scored.sort(key=lambda x: -x[0])
         return [

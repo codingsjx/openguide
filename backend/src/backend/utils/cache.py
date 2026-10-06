@@ -6,7 +6,9 @@ dev servers via a lock.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import threading
 import time
 from pathlib import Path
@@ -14,9 +16,23 @@ from pathlib import Path
 _cache_lock = threading.Lock()
 _cache_dir = Path(".cache")
 
+# Only characters that are safe in a filename on every platform we target.
+# The previous scheme only replaced "/" and ":", so keys like
+# `github::repos/o/r?state=open` kept their "?" — an ILLEGAL filename character
+# on Windows. Every write then raised OSError, which `set` swallowed, so the
+# whole cache silently did nothing on Windows: every run re-hit the GitHub API
+# and burned the rate limit (the cause of mid-run 403s in multi-repo runs).
+_UNSAFE = re.compile(r"[^A-Za-z0-9._-]")
+_MAX_STEM = 100
+
 
 def _path(key: str) -> Path:
-    return _cache_dir / f"{key.replace('/', '__').replace(':', '_')}.json"
+    safe = _UNSAFE.sub("_", key)
+    if len(safe) > _MAX_STEM:
+        # Keep the name bounded (Windows path limits) without losing uniqueness.
+        digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
+        safe = f"{safe[:_MAX_STEM]}_{digest}"
+    return _cache_dir / f"{safe}.json"
 
 
 def get(key: str, ttl_s: int) -> dict | None:

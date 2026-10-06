@@ -150,6 +150,19 @@ _TITLES = {
     "D": "提交首个 PR",
 }
 
+# Stage -> command families that actually belong to that stage. The heuristic
+# generator used to take the *first* command it found in the retrieved text, so
+# a single README containing both `pip install ...` and `pytest` made stages
+# A/B/D all emit the same install command (B should run tests, D should be
+# git/PR). We now only accept a command whose family matches the stage, and
+# fall back to no command rather than mis-attributing one (无证据不宣称).
+_STAGE_CMD_PATTERNS = {
+    "A": r"^(pip|uv|poetry|conda|python -m (pip|venv)|virtualenv|npm|pnpm|yarn|cargo|go|bundle|gem|composer)\b",
+    "B": r"^(pytest|tox|nox|python -m pytest|python -m unittest|npm (test|run test)|pnpm (test|run test)|yarn (test|run test)|cargo test|go test|make (test|check)|bundle exec rspec)\b",
+    "C": r"^(gh issue|git (log|branch))\b",
+    "D": r"^(git (checkout|switch|add|commit|push|clone|remote|branch)|gh (pr|repo|fork))\b",
+}
+
 
 def _heuristic_one(sig, stage: str, snippets: list[dict], text: str) -> GuideStep | None:
     """Deterministic fallback: honest steps + a real command if one is found.
@@ -161,36 +174,59 @@ def _heuristic_one(sig, stage: str, snippets: list[dict], text: str) -> GuideSte
     """
     import re
 
-    cmds: list[str] = []
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        stripped = re.sub(r"^[$>]\s*", "", line).strip()
-        # Match command prefixes as they actually appear in docs.
-        if re.match(r"^(pip|python|python3|npm|npx|yarn|pnpm|cargo|make|git|docker|go)\b", stripped):
-            cleaned = stripped.split("```")[0].strip()
-            if cleaned and len(cleaned) < 140:
-                cmds.append(cleaned)
-        if len(cmds) >= 2:
-            break
+    _CMD_PREFIX = re.compile(
+        r"^(pip|python|python3|npm|npx|yarn|pnpm|cargo|make|git|docker|go|uv|poetry|"
+        r"pytest|tox|nox|jest|vitest|mocha|rspec|gradle|mvn|"
+        r"gh|bundle|gem|composer|virtualenv|conda)\b"
+    )
+    stage_re = _STAGE_CMD_PATTERNS.get(stage)
+
+    # Scan per snippet so each command keeps the *real* file it came from. A
+    # flat scan used to pair stage B's `pytest` with whatever file ranked first
+    # (often a CONTRIBUTING.md that contains no test command), which broke the
+    # 无证据不宣称 contract: the cited source did not actually back the command.
+    chosen: tuple[str, str, str] | None = None  # (command, source, kind)
     seen: set[str] = set()
-    cmds = [c for c in cmds if not (c in seen or seen.add(c))]
+    for sn in snippets:
+        src = sn.get("source", "")
+        mkind = sn.get("meta_kind", "file")
+        if not src or src.startswith("v") or mkind not in ("file", "issue"):
+            continue
+        for line in sn["text"].splitlines():
+            stripped = re.sub(r"^[$>]\s*", "", line.strip()).strip()
+            if not stripped or not _CMD_PREFIX.match(stripped):
+                continue
+            cleaned = stripped.split("```")[0].strip()
+            if not cleaned or len(cleaned) >= 140 or cleaned in seen:
+                continue
+            seen.add(cleaned)
+            if stage_re and not re.match(stage_re, cleaned):
+                continue
+            chosen = (cleaned, src, mkind)
+            break
+        if chosen:
+            break
+
+    # With no stage-appropriate command, fall back to the best real source for
+    # the step (so C/D still carry a verifiable provenance) but leave the
+    # command empty rather than mis-attributing an unrelated one.
+    ev_source = ""
+    ev_kind = "missing"
+    if chosen:
+        cmds = [chosen[0]]
+        ev_source, ev_kind = chosen[1], chosen[2]
+    else:
+        cmds = []
+        for sn in snippets:
+            src = sn.get("source", "")
+            mkind = sn.get("meta_kind", "file")
+            if mkind in ("file", "issue") and src and not src.startswith("v"):
+                ev_source, ev_kind = src, mkind
+                break
 
     expected = (
         f"运行 {cmds[0]} 并确认成功（无报错）" if cmds else "见仓库原文确认成功标志"
     )
-    # Attribute real source from the first snippet when it maps to a file/issue;
-    # perspective codes (v1..v4) are not real sources.
-    ev_source = ""
-    ev_kind = "missing"
-    for s in snippets:
-        src = s.get("source", "")
-        mkind = s.get("meta_kind", "file")
-        if mkind in ("file", "issue") and src and not src.startswith("v"):
-            ev_source = src
-            ev_kind = mkind
-            break
     return GuideStep(
         step_id=0,
         stage=stage,  # type: ignore[arg-type]

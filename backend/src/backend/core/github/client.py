@@ -58,7 +58,27 @@ class GitHubClient:
         )
 
     def get_file_text(self, owner: str, repo: str, path: str, ref: str | None = None) -> str | None:
-        """Download a single file's text content (max 1MB via raw)."""
+        """Download a single file's text content (max 1MB via raw).
+
+        Cached on disk like every other call. It previously bypassed the cache
+        entirely, so every recon/enrich re-downloaded each doc file and burned
+        the (unauthenticated) rate limit — which is what made multi-repo runs
+        fail with 403 halfway through. A 404 is cached too, so a missing
+        optional file is not re-probed on every run.
+        """
+        key = f"github:file::{owner}/{repo}::{path}?ref={ref or ''}"
+        hit = cache.get(key, self._ttl)
+        if isinstance(hit, dict) and "text" in hit:
+            return hit["text"]
+
+        text = self._download_file_text(owner, repo, path, ref)
+        cache.set(key, {"text": text})
+        return text
+
+    def _download_file_text(
+        self, owner: str, repo: str, path: str, ref: str | None = None
+    ) -> str | None:
+        """Uncached single-file fetch. Returns None on 404, raises otherwise."""
         try:
             res = self._client.get(
                 f"/repos/{owner}/{repo}/contents/{path}",

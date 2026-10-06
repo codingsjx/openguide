@@ -13,6 +13,7 @@ Run:  uv run python -m benchmark.l2_golden.runner
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -41,7 +42,9 @@ def main() -> int:
     results = []
     for g in guides:
         print(f"\n{'='*70}\n{g.owner}/{g.repo}\n{'='*70}")
+        t0 = time.perf_counter()
         r = evaluate_repo(g.owner, g.repo)
+        elapsed = time.perf_counter() - t0
         if not r["ok"]:
             print(f"  [失败] {r['error']}")
             continue
@@ -49,10 +52,11 @@ def main() -> int:
         if m is None:
             print("  （无 golden 参照，跳过）")
             continue
+        m.elapsed_s = round(elapsed, 2)
         results.append(m)
         print(f"  步骤完整率 {m.step_coverage:.0%} | 证据命中率 {m.evidence_hit:.0%} | "
               f"命令正确率 {m.command_correct:.0%} | 命令可执行率 {m.command_exec:.0%} | "
-              f"有据断言率 {m.assert_rate:.0%}")
+              f"有据断言率 {m.assert_rate:.0%} | 耗时 {m.elapsed_s:.1f}s")
         append_result(f"{g.owner}/{g.repo}", m, "l2")
 
     print("\nL2 汇总:")

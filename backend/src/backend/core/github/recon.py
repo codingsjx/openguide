@@ -45,6 +45,17 @@ class RawSignals(BaseModel):
 # Doc files fetched during enrichment (README/CONTRIBUTING/LICENSE + docs/**).
 _DOC_PATHS = ("README.md", "README.rst", "README", "CONTRIBUTING.md", "CONTRIBUTING",
               "LICENSE", "LICENSE.md", "LICENSE.txt")
+
+# Build/config files at the repo root. They are where the *real* install and
+# test commands usually live (a Makefile `test:` target, a package.json
+# `scripts.test`, a pyproject `[tool.pytest]`), so they must be fetched as text —
+# otherwise "how do I run the tests" has nothing to ground on. They are small
+# and are only used as V3 (executable path) material.
+_BUILD_FILES = ("Makefile", "makefile", "GNUmakefile", "pyproject.toml",
+                "package.json", "tox.ini", "setup.cfg", "setup.py",
+                "Cargo.toml", "go.mod", "Gemfile", "composer.json",
+                "requirements.txt", "requirements-dev.txt")
+
 _MAX_DOC_SIZE = 200_000  # skip absurdly large docs
 
 
@@ -152,6 +163,13 @@ def enrich_docs_and_tree(
     # Root-level doc candidates + docs/<some path> limited crawl.
     fetch_paths: list[str] = []
     for cand in _DOC_PATHS:
+        actual = root.get(cand.lower())
+        if actual:
+            fetch_paths.append(actual)
+
+    # Build/config files: small, and the only place some repos state how to run
+    # the test suite (Makefile / package.json / pyproject).
+    for cand in _BUILD_FILES:
         actual = root.get(cand.lower())
         if actual:
             fetch_paths.append(actual)
