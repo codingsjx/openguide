@@ -16,7 +16,7 @@ Two execution modes:
 from __future__ import annotations
 
 from backend.core.decide.decider import decide
-from backend.core.generate.evidence import available_sources, resolve_evidence_source
+from backend.core.generate.evidence import resolve_evidence_source
 from backend.core.generate.llm import LLMClient, LLMUnavailable
 from backend.core.generate.prompts import build_stage_messages, step_from_llm_json
 from backend.core.generate.schemas import Evidence, Guide, GuideStep
@@ -247,8 +247,6 @@ def _verify_and_relabel(sig: RawSignals, steps: list[GuideStep]) -> list[GuideSt
     Perspective codes (v1..v4) and other non-repo identifiers are not accepted
     as evidence sources — only real file paths / issue refs we fetched pass.
     """
-    avail = available_sources(sig)
-    issue_nums = {i.get("number") for i in sig.issues if i.get("pull_request") is None}
     out: list[GuideStep] = []
     for st in steps:
         ev = st.evidence
@@ -260,23 +258,15 @@ def _verify_and_relabel(sig: RawSignals, steps: list[GuideStep]) -> list[GuideSt
             st.evidence = Evidence(kind="missing", source="", quote="")
             out.append(st)
             continue
-        if ev.kind == "issue":
-            num = ev.source.lstrip("#")
-            if num.isdigit() and int(num) in issue_nums:
-                out.append(st)
-                continue
+        resolved = resolve_evidence_source(ev.source, sig)
+        if resolved.kind == ev.kind:
+            st.evidence = Evidence(
+                kind=resolved.kind,
+                source=resolved.source,
+                quote=ev.quote,
+            )
+        else:
             st.evidence = Evidence(kind="missing", source="", quote="")
-            out.append(st)
-            continue
-        # file: check source path exists in what we fetched.
-        norm = ev.source.split("#", 1)[0].lower().strip("/")
-        blob = __import__("re").search(r"blob/[^/]+/(.+)", ev.source.lower())
-        if blob:
-            norm = blob.group(1).split("#", 1)[0]
-        if norm in avail or any(norm.startswith(p + "/") for p in avail):
-            out.append(st)
-            continue
-        st.evidence = Evidence(kind="missing", source="", quote="")
         out.append(st)
     return out
 

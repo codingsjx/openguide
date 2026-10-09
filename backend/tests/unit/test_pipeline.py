@@ -87,6 +87,22 @@ def test_evidence_verify_downgrades_fake_issue():
     assert out[0].evidence.kind == "missing"
 
 
+def test_evidence_verify_accepts_real_issue_reference_formats():
+    sig = make_signals()
+    for source in ("#3", "issues/3", "https://github.com/o/lib/issues/3"):
+        step = GuideStep(
+            step_id=1,
+            stage="C",
+            stage_label="挑选 issue",
+            title="选择真实 issue",
+            evidence=Evidence(kind="issue", source=source, quote="真实来源"),
+        )
+        out = _verify_and_relabel(sig, [step])
+        assert out[0].evidence.kind == "issue"
+        assert out[0].evidence.source == "#3"
+        assert out[0].evidence.quote == "真实来源"
+
+
 def test_heuristic_stage_commands_are_not_all_the_same():
     # 回归：无 LLM 时曾把 README 里第一条命令（pip install）同时塞给
     # A/B/D 三个阶段。每个阶段必须给"属于自己"的命令，找不到就留空，

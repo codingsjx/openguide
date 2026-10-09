@@ -42,7 +42,7 @@ docker compose up --build
 ```bash
 cd backend
 uv sync                        # 按 uv.lock 安装依赖
-uv run pytest tests/ -q        # 68 个单测（评测体系另有 14 个：pytest benchmark/tests）
+uv run pytest tests/ -q        # 69 个单测（评测体系另有 14 个：pytest benchmark/tests）
 uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 ```
 

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   Button,
   Card,
+  Alert,
   Empty,
   Input,
   Space,
@@ -218,6 +219,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
   const [done, setDone] = useState<Set<number>>(new Set())
 
   const step = steps[current] ?? null
+  const allDone = steps.length > 0 && done.size === steps.length
 
   const stepItems = useMemo(
     () =>
@@ -235,6 +237,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
   )
 
   function markDone() {
+    const completingAll = !done.has(current) && done.size + 1 === steps.length
     setDone((prev) => {
       const next = new Set(prev)
       next.add(current)
@@ -242,7 +245,14 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
     })
     if (current < steps.length - 1) {
       setCurrent((c) => c + 1)
+    } else if (completingAll) {
+      void message.success('恭喜，你已完成全部贡献步骤！')
     }
+  }
+
+  function resetProgress() {
+    setDone(new Set())
+    setCurrent(0)
   }
 
   if (guide.unsuitable) {
@@ -274,7 +284,6 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
       <div style={{ flex: 1, minWidth: 280 }}>
         <Steps
           current={current}
-          onChange={setCurrent}
           size="small"
           items={stepItems.map((it, i) => ({
             ...it,
@@ -337,6 +346,21 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
           </Card>
         )}
 
+        {allDone && (
+          <Alert
+            showIcon
+            type="success"
+            message={`你已完成全部 ${steps.length} 个步骤`}
+            description="路线图已走完。提交 PR 后，记得关注评审意见并及时回复维护者。"
+            style={{ marginTop: 16 }}
+            action={
+              <Button size="small" onClick={resetProgress}>
+                重新开始
+              </Button>
+            }
+          />
+        )}
+
         <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between' }}>
           <Button
             icon={<LeftOutlined />}
@@ -350,8 +374,8 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
               完成并下一步 <RightOutlined />
             </Button>
           ) : (
-            <Button type="primary" icon={<CheckCircleOutlined />} onClick={markDone}>
-              完成全部
+            <Button type="primary" icon={<CheckCircleOutlined />} disabled={allDone} onClick={markDone}>
+              {allDone ? '已全部完成' : '完成全部'}
             </Button>
           )}
         </div>

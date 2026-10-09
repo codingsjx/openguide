@@ -11,7 +11,7 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons'
 
-import { api } from '../api/client'
+import { api, ApiError } from '../api/client'
 import type { Profile } from '../types/profile'
 import ProfileCard from '../components/ProfileCard'
 import GuideGenerator from '../components/GuideGenerator'
@@ -73,15 +73,22 @@ export default function HomePage() {
     if (!trimmed) return
     setLoading(true)
     setDemoMode(false)
+    setTab('guide')
+    setProfile(null)
+    setSubmittedUrl('')
     try {
       const p = await api.postProfile(trimmed)
       setProfile(p)
       setSubmittedUrl(trimmed)
-    } catch {
-      setProfile(demoProfile)
-      setSubmittedUrl(trimmed)
-      setDemoMode(true)
-      void message.info('后端暂未连接，已切换到本地演示模式')
+    } catch (error) {
+      if (error instanceof ApiError) {
+        void message.error(error.message)
+      } else {
+        setProfile(demoProfile)
+        setSubmittedUrl(trimmed)
+        setDemoMode(true)
+        void message.info('后端暂未连接，已切换到本地演示模式')
+      }
     } finally {
       setLoading(false)
     }
@@ -126,7 +133,7 @@ export default function HomePage() {
             <Input size="large" placeholder="https://github.com/owner/repo" value={url} onChange={(e) => setUrl(e.target.value)} onPressEnter={handleSubmit} disabled={loading} prefix={<GithubOutlined />} />
             <Button type="primary" size="large" icon={<RocketOutlined />} loading={loading} onClick={handleSubmit}>生成路线图 <ArrowRightOutlined /></Button>
           </Space.Compact>
-          <div className="search-foot"><span>不知道用哪个？</span><button onClick={startDemo}>体验 requests 示例 <ArrowRightOutlined /></button><span className="shortcut">⌘ Enter</span></div>
+          <div className="search-foot"><span>不知道用哪个？</span><button onClick={startDemo}>体验 requests 示例 <ArrowRightOutlined /></button><span className="shortcut">Enter</span></div>
         </section>
 
         {!showGuide && !loading && <section className="feature-grid"><div><span className="feature-number">01</span><h3>先做仓库体检</h3><p>识别语言、构建方式、活跃度和 good-first-issue 信号。</p></div><div><span className="feature-number">02</span><h3>再生成贡献路线</h3><p>从环境搭建到首个 PR，每一步都写清楚预期结果。</p></div><div><span className="feature-number">03</span><h3>证据始终在场</h3><p>每条建议都能回到 README、issue 或真实代码来源。</p></div></section>}

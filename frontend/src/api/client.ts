@@ -2,20 +2,47 @@
 // Point VITE_API_BASE at the backend root when not using the proxy.
 const BASE = import.meta.env.VITE_API_BASE ?? ''
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  })
+export class ApiError extends Error {
+  readonly status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+async function request<T>(path: string, init?: RequestInit, timeoutMs = 60_000): Promise<T> {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs)
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...init,
+      signal: controller.signal,
+    })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error(`请求超时（${Math.round(timeoutMs / 1000)} 秒），请检查网络或改用本地规则`)
+    }
+    throw new Error(error instanceof Error ? `网络请求失败：${error.message}` : '网络请求失败')
+  } finally {
+    window.clearTimeout(timeout)
+  }
   if (!res.ok) {
     let detail = `请求失败 (${res.status})`
     try {
       const body = await res.json()
-      if (body?.detail) detail = body.detail
+      if (typeof body?.detail === 'string') {
+        detail = body.detail
+      } else if (Array.isArray(body?.detail)) {
+        detail = body.detail.map((item: { msg?: string }) => item.msg ?? '参数错误').join('；')
+      }
     } catch {
       /* keep default */
     }
-    throw new Error(detail)
+    throw new ApiError(res.status, detail)
   }
   return res.json() as Promise<T>
 }
@@ -50,7 +77,7 @@ export const api = {
     request<import('../types/guide').Guide>('/api/guide', {
       method: 'POST',
       body: JSON.stringify({ url, use_llm: useLlm }),
-    }),
+    }, 180_000),
   getLlmConfig: () => request<{ configured: boolean }>('/api/llm-config'),
   setLlmConfig: (cfg: { api_key: string; base_url: string; model: string }) =>
     request<{ configured: boolean }>('/api/llm-config', {
