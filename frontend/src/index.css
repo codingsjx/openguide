@@ -52,3 +52,12 @@ button { font: inherit; }
 .results-wrap .ant-card { border-color: #dce7e4; box-shadow: 0 10px 32px rgba(20, 35, 59, .05); }
 
 @media (max-width: 720px) { .topbar { padding: 0 18px; }.topbar-note { display: none; }.page-wrap { padding: 42px 18px 28px; }.hero { min-height: unset; display: block; }.hero-orbit { width: 260px; height: 220px; margin: 35px auto 10px; transform: scale(.85); }.orbit-core { top: 62px; left: 73px; }.page-wrap .hero h1 { font-size: 50px; }.search-panel { padding: 20px 16px 16px; }.search-box { display: block; }.search-box .ant-input-affix-wrapper, .search-box .ant-btn { width: 100%; }.search-box .ant-btn { margin-top: 8px; }.feature-grid { grid-template-columns: 1fr; gap: 22px; margin-top: 42px; }.shortcut { display: none; }.results-wrap { padding: 0 18px 40px; }.results-wrap .ant-tabs-nav-list { width: 100%; }.results-wrap .ant-tabs-tab { flex: 1; justify-content: center; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

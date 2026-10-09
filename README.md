@@ -66,7 +66,7 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 
 不配置 Key 也能跑：生成会走**确定性启发式**路径（`core/generate/pipeline.py` 的 `_generate_heuristic`），用于演示与 CI。要启用 AI 生成，二选一：
 
-- 页面右上角「设置我的 LLM」填写（仅存**当前会话内存**，不写盘）
+- 页面右上角「设置我的 LLM」填写（发送到本地后端并仅存**当前进程内存**，不写盘；只适合单用户本地演示）
 - `backend/.env` 填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`
 
 任何 OpenAI 兼容端点均可，默认指向官方端点。使用第三方服务前请阅读 [docs/third_party_disclosure.md](docs/third_party_disclosure.md)。
@@ -79,7 +79,7 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 | POST | `/api/search` | `{url, query, kind?}` → 按视角路由的检索结果（带证据来源） |
 | POST | `/api/guide` | `{url, use_llm}` → Stage A–D 结构化指南（每步带 `evidence`） |
 | POST | `/api/followup` | 三步追问：这步太粗 / 看不懂为什么 / 报错了 |
-| GET/POST | `/api/llm-config` | 读取 / 设置会话内 LLM 配置（不回显 Key） |
+| GET/POST | `/api/llm-config` | 读取 / 设置当前后端进程的 LLM 配置（不回显 Key；仅限本地单用户演示） |
 | GET | `/health` | 存活检查 |
 
 完整约定见 [docs/code_outline.md](docs/code_outline.md)。

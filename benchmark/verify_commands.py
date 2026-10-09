@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -32,7 +33,11 @@ REPORTS_DIR = ROOT / "benchmark" / "reports"
 
 # Node install dir (added to PATH so `npm` resolves even when the parent shell's
 # PATH does not carry it). Keep in sync with the machine's Node location.
-NODE_DIR = Path(r"C:\Users\Lenovo\node\node-v24.21.0-win-x64")
+_node_executable = shutil.which("node")
+NODE_DIR = Path(
+    os.environ.get("OPENGUIDE_NODE_DIR")
+    or (str(Path(_node_executable).parent) if _node_executable else "")
+)
 
 # Commands that provision an environment rather than verify the repo works.
 # We skip them: they're already done in _golden_work, and re-running them is

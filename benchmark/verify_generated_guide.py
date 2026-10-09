@@ -70,7 +70,6 @@ _CMD_TIMEOUT_S = int(os.environ.get("OG_CMD_TIMEOUT", "900"))
 # Node install dirs, appended to PATH so npm/node resolve regardless of the
 # parent shell's environment. Tried in order; first that exists wins.
 _NODE_CANDIDATES = (
-    Path(r"C:\Users\Lenovo\node\node-v24.21.0-win-x64"),
     Path(r"C:\Program Files\nodejs"),
     Path(r"C:\Program Files (x86)\nodejs"),
     Path.home() / "AppData" / "Roaming" / "npm",

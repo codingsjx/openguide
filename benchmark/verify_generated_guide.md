@@ -100,8 +100,8 @@ backend/.venv/Scripts/python.exe benchmark/verify_generated_guide.py --cleanup
 ## 七、环境依赖
 
 - Python：`backend/.venv`（用 `uv run --python 3.13` 建的 venv）。
-- Node：`C:\Users\Lenovo\node\node-v24.21.0-win-x64`（脚本里硬编码的 `NODE_DIR`，换机器要改）。
-- 网络：clone 仓库、装依赖需要联网，git 需配代理（代理地址 `127.0.0.1:7897`，网络不通时手动切换直连/代理）。
+- Node：需要 Node.js 24 LTS；脚本默认从 `PATH` 查找，也可通过 `OPENGUIDE_NODE_DIR` 指定安装目录。
+- 网络：clone 仓库、安装依赖需要联网；是否使用代理由运行环境自行配置，脚本不绑定个人代理地址。
 
 ## 八、相关文件
 

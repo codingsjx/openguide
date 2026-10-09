@@ -12,7 +12,7 @@ pnpm install
 pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 ```
 
-浏览器打开 http://127.0.0.1:5173 ，输入 `https://github.com/psf/requests`
+浏览器打开 http://127.0.0.1:5173，输入 `https://github.com/psf/requests`
 之类即可看到体检卡与路线图。开发时请先启动后端（见 `../backend/README.md`），
 否则前端会提示后端未连接。
 

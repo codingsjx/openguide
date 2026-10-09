@@ -77,7 +77,7 @@ export default function HomePage() {
       const p = await api.postProfile(trimmed)
       setProfile(p)
       setSubmittedUrl(trimmed)
-    } catch (e) {
+    } catch {
       setProfile(demoProfile)
       setSubmittedUrl(trimmed)
       setDemoMode(true)

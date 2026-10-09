@@ -14,16 +14,19 @@ export default function LlmSettings() {
   const [configured, setConfigured] = useState(false)
   const [form] = Form.useForm()
 
-  async function refresh() {
-    try {
-      const r = await api.getLlmConfig()
-      setConfigured(r.configured)
-    } catch {
-      setConfigured(false)
-    }
-  }
   useEffect(() => {
-    void refresh()
+    let active = true
+    api
+      .getLlmConfig()
+      .then((r) => {
+        if (active) setConfigured(r.configured)
+      })
+      .catch(() => {
+        if (active) setConfigured(false)
+      })
+    return () => {
+      active = false
+    }
   }, [])
 
   async function handleOk() {
@@ -60,7 +63,7 @@ export default function LlmSettings() {
         cancelText="取消"
       >
         <p style={{ color: '#888' }}>
-          Key 仅保存在本会话内存中，不写入磁盘，也不会上传；重启后需重新填写。
+          Key 会发送到当前本地后端并仅保存在进程内存中，不写入磁盘；重启后需重新填写。请勿在共享部署中使用此功能。
         </p>
         <Form form={form} layout="vertical">
           <Form.Item
