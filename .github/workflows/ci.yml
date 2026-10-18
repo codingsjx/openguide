@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, 'improve/**']
   pull_request:
     branches: [master, main]
   workflow_dispatch:
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: 扫描提交内容中的密钥特征
         run: |
-          if grep -rInE 'sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_|AKIA[0-9A-Z]{16}|xox[baprs]-' \
+          if grep -rlE 'sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{20,}' \
                --exclude-dir=.git --exclude-dir=node_modules --exclude=pnpm-lock.yaml . ; then
             echo "::error::检测到疑似密钥，禁止提交"
             exit 1

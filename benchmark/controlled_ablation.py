@@ -64,11 +64,11 @@ def run(args):
     write(out / "manifest.json", {"started_at": stamp, "code_sha256": code_hash,
           "repeats": args.repeats, "retrieval": "local-token-overlap", "model": LLMClient().public_config(),
           "paired_audit": True, "golden_review_status": "pending_independent_human_review",
-          "protocol": "2-global-flat-deduplicated", "reference_dir": args.reference_dir,
+          "protocol": "3-global-flat-task-slots", "reference_dir": args.reference_dir,
           "controls": {"routed_executable_boost": False, "flat_single_corpus": True,
               "flat_deduplicated": True, "stage_calls": 4, "snippets_per_stage": 4,
               "snippet_character_cap": 1200, "max_output_tokens_per_stage": 1800,
-              "temperature": 0.2, "counterbalanced_arm_order": True}})
+              "temperature": 0.2, "counterbalanced_arm_order": True, "stage_a_task_slots": True}})
     rows, summaries, reference_checks = [], {}, {}
     arms = ("single_shot", "flat_rag", "layered_raw", "layered_verified")
     references = load_references(Path(args.reference_dir)) if args.reference_dir else iter_golden_guides()
@@ -177,7 +177,7 @@ def run(args):
     result = {"metric_version": "2-strict-command", "status": "complete" if len(rows) == expected and all(r['status']=='ok' for r in rows) else "incomplete",
         "expected_runs": expected, "successful_runs": sum(r['status']=='ok' for r in rows),
         "summaries_success_only": {k: merge_summary(v) for k,v in summaries.items()},
-        "protocol": "2-global-flat-deduplicated", "reference_checks": reference_checks,
+        "protocol": "3-global-flat-task-slots", "reference_checks": reference_checks,
         "quality_claim_eligible": len(reference_checks) == len(guides) and all(c.get('quality_claim_eligible',False) for c in reference_checks.values()),
         "limitations": ["command_exec not measured", "golden annotations require review against snapshot SHA",
                         "single-shot differs in request count and token budget; routing effect uses flat_rag vs layered_raw",

@@ -24,3 +24,18 @@ def test_baseline_prioritized_before_randomized_special_suite():
     idx = RepoIndex("o", "lib"); idx.index(sig)
     snippets = _retrieve_for_stage(idx, "B", _STAGE_QUERIES["B"])
     assert "tox r -e random" not in snippets[0]["text"]
+
+
+def test_setup_context_keeps_clone_install_and_runtime_within_four_slots():
+    sig = make_signals()
+    sig.doc_files[0].text += '\ngit clone https://github.com/o/lib.git\n'
+    sig.doc_files += [
+        DocFile(path='Makefile',name='Makefile',text='init:\n\tpython -m pip install -r requirements-dev.txt\n'),
+        DocFile(path='pyproject.toml',name='pyproject.toml',text='[project]\nrequires-python = ">=3.10"\n'),
+    ]
+    idx=RepoIndex('o','lib');idx.index(sig)
+    snippets=_retrieve_for_stage(idx,'A',_STAGE_QUERIES['A'])
+    assert len(snippets) <= 4
+    assert any('git clone' in s['text'] for s in snippets)
+    assert any('pip install' in s['text'] for s in snippets)
+    assert any('requires-python' in s['text'] for s in snippets)

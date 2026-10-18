@@ -1,0 +1,222 @@
+{
+  "repo_url": "https://github.com/psf/requests",
+  "owner": "psf",
+  "repo": "requests",
+  "default_branch": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "unsuitable": false,
+  "reasons": [
+    "实验跳过适用性门槛，不代表推荐贡献此仓库"
+  ],
+  "steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "克隆仓库",
+      "command": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "clone_destination",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "在你选择的项目存放目录执行；克隆结束后再进入新建的仓库目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "Requests 仓库被克隆到当前目录。",
+      "fail_hints": [
+        "如果遇到 bad commit timestamp 错误，使用该命令中的 Git 配置参数。"
+      ],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+        "verification": "command_verified",
+        "line_start": 65,
+        "line_end": 65,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 2,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "准备受支持的 Python 环境",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "仓库工作流使用 Python 3.10 和 Python 3.14。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": ".github/workflows/typecheck.yml",
+        "quote": "python-version: [\"3.10\", \"3.14\"]",
+        "verification": "quote_verified",
+        "line_start": 14,
+        "line_end": 14,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 3,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "安装开发依赖",
+      "command": "python -m pip install -r requirements-dev.txt",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": {
+        "status": "passed",
+        "command": "python -m pip install -r requirements-dev.txt",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "environment": "Windows 11 / Python 3.12.8 / dedicated venv",
+        "summary": "开发依赖安装退出码 0",
+        "report": "benchmark/reports/execution_validation_20261018.json",
+        "working_directory": "."
+      },
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "build_file",
+      "required_paths": [
+        "requirements-dev.txt"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        1
+      ],
+      "context_notes": [
+        "按在该 Makefile 所在目录运行的常见约定推导；请核对原文中的 -C/-f、子项目说明及运行时依赖。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "开发依赖安装完成。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "Makefile",
+        "quote": "python -m pip install -r requirements-dev.txt",
+        "verification": "command_verified",
+        "line_start": 3,
+        "line_end": 3,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 4,
+      "stage": "B",
+      "stage_label": "测试基线",
+      "title": "运行测试套件",
+      "command": "python -m pytest tests",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "build_file",
+      "required_paths": [
+        "tests"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        1,
+        3
+      ],
+      "context_notes": [
+        "按在该 Makefile 所在目录运行的常见约定推导；请核对原文中的 -C/-f、子项目说明及运行时依赖。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。",
+        "核对测试输出中的失败、跳过与未选中项，并确认实际运行了预期用例。"
+      ],
+      "expected": "测试全部通过并显示 passed。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "Makefile",
+        "quote": "python -m pytest tests",
+        "verification": "command_verified",
+        "line_start": 5,
+        "line_end": 5,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 5,
+      "stage": "C",
+      "stage_label": "挑选 issue",
+      "title": "待确认可供挑选的 issue 槽位及其资料",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "补充可引用的 issue 槽位、标题和原文描述后，再从中推荐 1-3 个适合新手且可直接认领的 issue。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    },
+    {
+      "step_id": 6,
+      "stage": "D",
+      "stage_label": "首次 PR 路径",
+      "title": "待确认从 fork 到提交 PR 的操作步骤",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "当前提供的仓库原文仅说明克隆仓库所需的 Git 命令，未提供 fork、创建分支、提交 commit、推送分支或创建 PR 的步骤，因此无法依据资料生成完整首次 PR 路径。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    }
+  ],
+  "generation_mode": "mixed",
+  "warnings": [
+    "本文件来自任务证据槽优化后的单仓库工程试跑，不是完整对照实验。历史执行结果只附到同命令、同目录与同提交的步骤。"
+  ]
+}

@@ -133,6 +133,24 @@ def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
         baseline = stage == "B" and any(re.match(_STAGE_CMD_PATTERNS[stage], line) and not re.search(r"\b(?:stress|random|coverage|browser)\b|--numprocesses", line) for line in commands)
         return (development, baseline, relevant, hit.score)
     hits = sorted(res.hits, key=rank, reverse=True)
+    if stage == "A":
+        # Preserve complementary prerequisites within the same context budget:
+        # installation-heavy files must not crowd out clone/runtime evidence.
+        slots = [
+            ("git clone source repository", lambda text: any(re.match(r"^git clone\b", re.sub(r"^[$>]\s*", "", line.strip())) for line in text.splitlines())),
+            ("development install dependencies requirements-dev editable uv sync npm ci", lambda text: any(re.match(_STAGE_CMD_PATTERNS['A'], re.sub(r"^[$>]\s*", "", line.strip())) and 'git clone' not in line for line in text.splitlines())),
+            ("requires-python python version node engines", lambda text: any(token in text.lower() for token in ("requires-python", "python-version", '"engines"', "node-version"))),
+        ]
+        reserved = []
+        for slot_query, accepts in slots:
+            candidates = index.search(slot_query, kind=kind, top_k=20).hits
+            candidates = sorted(candidates, key=lambda h: (
+                (h.meta or {}).get('source','').lower() in {'readme.md','readme.rst','readme'} if 'git clone' in slot_query else False,
+                rank(h)), reverse=True)
+            match = next((h for h in candidates if (h.meta or {}).get('source') and accepts(h.text)), None)
+            if match and not any(h.text == match.text and h.meta == match.meta for h in reserved):
+                reserved.append(match)
+        hits = reserved + [h for h in hits if not any(h.text == r.text and h.meta == r.meta for r in reserved)]
     # Diversity: a long generic file must not occupy every context slot.
     selected, source_counts = [], {}
     for hit in hits:

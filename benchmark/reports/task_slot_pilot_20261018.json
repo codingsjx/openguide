@@ -1,0 +1,47 @@
+{
+  "kind": "single-repository-task-slot-pilot",
+  "protocol": "3-global-flat-task-slots",
+  "repo": "psf/requests",
+  "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "code_sha256": "9785b93081950cae275e5e62cb1f41666ee2658aab74c1fa6d4d8283f8dc5c04",
+  "config": {
+    "model": "gpt-5.5",
+    "endpoint_host": "api.a6api.com"
+  },
+  "model_attempts": 4,
+  "recorded_responses": 4,
+  "reported_total_tokens": 21921,
+  "elapsed_s": 45.64,
+  "reference_validation": {
+    "source_rule_validation": "passed",
+    "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+    "evaluation_scope": [
+      "A",
+      "B"
+    ],
+    "source_review": "agent_source_reviewed",
+    "independent_human_review": "pending",
+    "quality_claim_eligible": false,
+    "human_review_identity_independently_verified": false
+  },
+  "reference_metrics": {
+    "repo_id": "psf/requests",
+    "n_golden": 3,
+    "n_gen": 4,
+    "step_coverage": 1.0,
+    "evidence_hit": 1.0,
+    "command_exec": null,
+    "command_correct": 1.0,
+    "assert_rate": 1.0,
+    "missing_commands": [],
+    "elapsed_s": 45.64,
+    "command_coverage": 1.0
+  },
+  "measured_command_execution": false,
+  "causal_effect_established": false,
+  "limitations": [
+    "One engineering pilot only; not a repeated controlled comparison",
+    "Reference independent human review remains pending",
+    "No upstream commands executed in this pilot"
+  ]
+}
