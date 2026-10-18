@@ -1,0 +1,32 @@
+{
+  "kind": "git-blob-cross-check",
+  "date": "2026-10-18",
+  "independent_human_review": false,
+  "rows": [
+    {
+      "repo": "pallets/click",
+      "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "path": "docs/contributing.md",
+      "git_blob": "25a2426928a85fe087d49048350a7118b84d70dc",
+      "snapshot_matches_git_blob": true,
+      "content_sha256": "1d9c25130401b3a20c33f36261a2f8742ee61876e05adea7b116eae7a58fadd6"
+    },
+    {
+      "repo": "psf/requests",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "path": "Makefile",
+      "git_blob": "5401f406d535b77f9492ecaaba9dc16f6c8ed683",
+      "snapshot_matches_git_blob": true,
+      "content_sha256": "c31f5628de71af324c7db9b61579e8a287caae87f76586d70994a7dc86964ec7"
+    },
+    {
+      "repo": "psf/requests",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "path": "README.md",
+      "git_blob": "4e5c44555c02f127cd0cca2efa8b22716c78ee23",
+      "snapshot_matches_git_blob": true,
+      "content_sha256": "2a9268c9be5f4dc9abe9105740be7c5234babc3dd2b25eb11ca376c538a0c67b"
+    }
+  ],
+  "status": "passed"
+}

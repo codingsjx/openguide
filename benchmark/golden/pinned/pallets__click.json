@@ -1,0 +1,48 @@
+{
+  "owner": "pallets",
+  "repo": "click",
+  "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+  "evaluation_scope": [
+    "B"
+  ],
+  "source_review": "agent_source_reviewed",
+  "reviewer": "Codex AI agent",
+  "review_date": "2026-10-18",
+  "source_license": "BSD-3-Clause",
+  "independent_human_review": "pending",
+  "human_reviewer": "",
+  "human_review_date": "",
+  "steps": [
+    {
+      "order": 1,
+      "stage": "B",
+      "title": "找到原文明确记载的一种专项测试路径",
+      "expected_commands": [
+        "tox r -e stress",
+        "tox r -e random"
+      ],
+      "expected_outcome": "按原文执行并核对实际结果，不预设通过数量。",
+      "evidence_sources": [
+        "docs/contributing.md#L18",
+        "docs/contributing.md#L25"
+      ],
+      "citations": [
+        {
+          "path": "docs/contributing.md",
+          "line_start": 18,
+          "line_end": 18,
+          "quote": "tox r -e stress"
+        },
+        {
+          "path": "docs/contributing.md",
+          "line_start": 25,
+          "line_end": 25,
+          "quote": "tox r -e random"
+        }
+      ],
+      "execution_status": "not_run",
+      "execution_note": ""
+    }
+  ],
+  "notes": "仅检验源码中明示的 B 阶段命令提取，不评价这些专项命令对新手是否合适。不将已通过的直接pytest基线挪用为tox命令执行结果；A外部安装文档和C/D不评分。"
+}

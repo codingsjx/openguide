@@ -1,91 +1,47 @@
-# OpenGuide 评测方法论（benchmark/）
+# OpenGuide 评测方法与证据边界
 
-评测分四层，口径红线：**仓库内样例/烟测不得宣称生成质量；任何质量数字必须能回溯到人工复核过的 golden 仓库集。**
+正式效果结论应基于固定版本、适当范围和独立人工复核。AI 源码复核和规则校验可以用于探索性实验，但不能冒充人工金标准或新手成功率。
 
-## 分层
+## 当前验证入口
 
-| 层 | 内容 | 目的 |
+| 入口 | 能证明什么 | 不能证明什么 |
 |---|---|---|
-| **L1 烟测** `l1_smoke.py` | 本地 fixture（不联网、无 LLM、无 chroma）喂固定信号，只验证 URL→画像→决策树→索引→生成→schema→证据审计链路通 | 跑 CI / 演示。**不代表生成质量** |
-| **L2 黄金评估** `l2_golden/` | golden 仓库 + 人工"标准上手指南" + 规则化指标 | 量化生成质量；只报**已人工复核**数字 |
-| **L3 消融** `l3_ablation/` | 同批仓库：朴素 baseline vs 分层管线 | 支撑"分层管线的价值"叙事；同批同基准防漂移 |
-| **L4 真实贡献** `l4_contribution/` | 用本产品向小仓库走通真实 PR | 方向三闭环佐证（M5 填入链接） |
+| `python -m benchmark.l1_smoke` | 离线链路与结构约束 | 真实模型质量或用户效果 |
+| `python -m benchmark.reference_audit` | 指定 SHA 的引用、行号与明示命令可找到 | 语义完整性、独立人工复核、执行成功 |
+| `python -m benchmark.controlled_ablation` | 同快照、明确控制项下的模型输出与参考匹配差异 | 未测的命令执行或最终贡献结果 |
+| `python -m benchmark.execute_reviewed` | 已审阅计划在记录环境中的执行结果 | 全平台成功率或任意生成命令安全性 |
+| `python -m benchmark.l4_contribution.runner` | 已录入的贡献链接与状态 | 空记录不能证明真实贡献闭环 |
 
-## 指标（benchmark/metrics.py，规则化、确定性）
+旧 `golden_guides/`、L2/L3 与 2026-10-06 报告保留为历史记录；其中无 SHA 的旧标注和 fake 基线不用于新协议的正式结论。L4 无记录时为 PENDING，不能写成闭环完成。
 
-- **step_coverage 步骤完整率**：生成的步骤覆盖了多少 golden 步骤
-- **evidence_hit 证据命中率**：生成命令步骤里，证据 source 能否解析到真实仓库文件
-- **command_exec 命令可执行率**：命令能否在真实 clone 上执行（需离线 runner，默认留待 runner 填）
-- **assert_rate 有据断言率**：非 missing 证据占全部生成步骤比例（无证据不宣称 的直接度量）
+## 新的固定参考集
 
-## golden 仓库清单
+`golden/pinned/` 保存 SHA、评分阶段、原文引句、行号、执行状态与人工复核状态。当前两份参考均为 `agent_source_reviewed`，独立人工复核 pending。
+Requests 只评分 A/B；Click 只评分 B 的明示专项命令提取，不评价这些命令是否适合新手。未覆盖范围不得计作已验证。
 
-见 `golden/repos.json`（2026-09-05 初选：psf/requests、camelot-dev/camelot、mochajs/mocha、pallets/click、cookiecutter/cookiecutter）。**build/test_cmd 待 C 人工复核定稿。**
-
-## 人工标注流程（C 负责）
-
-1. 对 `golden/repos.json` 每个仓库：clone 到本地，真实跑通 环境搭建 + 测试基线，把"能跑的命令 + 期望结果 + 出处文件"写成 golden guide JSON：
-   `golden/golden_guides/<owner>__<repo>.json`（schema 见 `golden/schema.py`）。
-2. 至少覆盖 A(环境搭建)+B(测试基线)；C(选 issue)/D(首PR) 视仓库而定。
-3. 标注完把该仓库标记 `repos.json` 里 `verified: true`，评测才把它计入 L2 汇总。
-
-## 如何运行
-
-```bash
-# 全部（L1-L4）
-uv run python -m benchmark.runner
-
-# 单层（L2-L4 的入口在各自的 runner.py，包 __init__ 是空的）
-uv run python -m benchmark.l1_smoke            # L1
-uv run python -m benchmark.l2_golden.runner    # L2
-uv run python -m benchmark.l3_ablation.runner  # L3
-uv run python -m benchmark.l4_contribution.runner  # L4
+```powershell
+python -m benchmark.reference_audit --snapshots _run_cache/pinned_inputs --output benchmark/reports/pinned_reference_audit_20261018.json
+python -m benchmark.controlled_ablation --reference-dir benchmark/golden/pinned --snapshot-dir _run_cache/pinned_inputs --repeats 2
 ```
 
-输出：`reports/` 下 jsonl（逐条）+ summary json（汇总），为提交包证据。
+上述快照目录是本机归档；外部复现须按固定提交准备相同输入并核对快照哈希。原始仓库文本、提示和响应不默认公开，统计与原始内容分开管理。
 
-## 待办
+## 对照协议 2
 
-- [x] golden_guides/*.json：5/5 完成（requests / click / cookiecutter / mocha / camelot）
-- [x] 5 个仓库的 build/test_cmd 已人工复核并标 `verified: true`
-- [x] L1 烟测（`l1_smoke.py`）
-- [x] L2 接入真实生成器（`python -m benchmark.l2_golden.runner` 跑出五维度真数字）
-- [x] L3 接 baseline + layered 生成器（`l3_ablation/`，含 `--provider auto` 走真实模型）
-- [x] 延迟指标：L2/L3 报告记录单仓库耗时（`elapsed_s` / `elapsed_s_mean`）
-- [ ] L4 填真实 PR/commit 链接（`l4_contribution/records.json`，见下）
+- 普通 RAG 使用一个去重后的全局索引，不是四个独立索引结果的合并。
+- 路由与全局检索均关闭 V3 专属命令加分；共享阶段提示、查询、候选排序、最终 top-k 和 token 上限。
+- 两次重复交替生成顺序，保留失败和重试次数；不只挑表现最好的一轮。
+- 后处理组复用同一份路由原始生成，包含证据审计、make 展开、流程排序和上下文推导。它检验组合后处理，不能分别归因各机制。
+- 后处理记录增量耗时与包含生成的端到端耗时，不能把毫秒级审计耗时当作完整生成耗时。
+- 单次全文生成组的输入、输出预算和调用次数不同，仅作产品基线，不作为路由机制的公平单变量对照。
 
-## 环境准备（command_exec 的前提）
+## 指标解释
 
-`command_exec` 只有在命令**真能跑**时才有意义，因此 L2/L3 会为每个仓库准备独立环境：
+- `step_coverage`：一对一参考步骤匹配率，非真实用户任务成功率。
+- `command_correct`：保留动作和参数的参考命令匹配率，非通用语义正确率；未收录的合理等价命令可能被拒绝。
+- `command_coverage`：参考命令步骤覆盖，防止删除所有困难命令后匹配率虚高。
+- `evidence_hit`：所有评分范围内步骤的来源路径命中率，非引文支持关系或事实正确率。
+- `assert_rate`：非 missing 来源比例，非有据断言正确率。
+- `command_exec`：只有明确执行才可赋值。受控生成实验没有运行命令，公开导出记为 null，不把内部默认 0 当成执行失败率。
 
-| 语言 | 动作 |
-|---|---|
-| Python | 建 venv，尝试 `pip install -r requirements-dev.txt`、`pip install -e .[dev]` / `-e .`，并补装 `tox` |
-| JavaScript | 解析 `npm` 全路径后执行 `npm ci`（有 lock）或 `npm install` |
-
-| 环境变量 | 作用 |
-|---|---|
-| `OG_CMD_TIMEOUT` | 单条命令超时秒数（默认 900）。超时记为失败并标注 `(超时 >Ns)` |
-| `OG_SKIP_PROVISION=1` | 跳过依赖安装（快速跑批，此时 `command_exec` 仅供参考） |
-
-准备标记（`.og_python_deps` / `.og_node_deps`）**仅在安装成功时写入**，
-避免一次瞬时失败永久禁用该仓库的环境准备。
-
-> 重跑前若想强制重新准备环境，删掉对应 `_run_cache/<owner>__<repo>/.og_*_deps` 即可。
-
-## 口径提醒
-
-- **L1 不产出质量数字**：它只证明链路通，任何"质量"结论必须来自 L2 且可回溯到人工复核过的仓库集。
-- **fake 臂不算模型质量**：L3 的 `--provider fake` 是确定性替身，只用于证明指标能检出「无据断言」，
-  报告里标了 `baseline_is_fake`，不得当作模型对比数字引用。
-- **L4 为空时 `benchmark.runner` 会报未通过**：这是有意设计——没有真实贡献就不算闭环。
-  填入 `l4_contribution/records.json` 后即通过。
-
-## 如何补 L4 记录
-
-```python
-from benchmark.l4_contribution.runner import add_record
-add_record("owner", "repo", "pr", "https://github.com/owner/repo/pull/123", "用本产品走通的文档改进")
-```
-
-再跑 `python -m benchmark.l4_contribution.runner` 应打印记录并返回 0。
+当前两仓库、两次重复与不同范围，只能产生探索性结果，不支持统计显著性或普遍优越性的声明。人工复核清单见 `docs/reference_review_checklist.md`。

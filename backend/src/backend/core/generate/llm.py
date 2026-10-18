@@ -45,6 +45,7 @@ class LLMClient:
         self._base = (_OVERRIDE_BASE or s.llm_base_url).rstrip("/")
         self._model = _OVERRIDE_MODEL or s.llm_model
         self.trace: list[dict] = []
+        self.attempt_count = 0
 
     def public_config(self) -> dict:
         """Non-secret experiment metadata. Never include credentials or URL query."""
@@ -84,6 +85,7 @@ class LLMClient:
         }
         last_exc: Exception | None = None
         for attempt in range(retries + 1):
+            self.attempt_count += 1
             try:
                 resp = httpx.post(
                     f"{self._base}/chat/completions",
@@ -104,7 +106,8 @@ class LLMClient:
             except (ValueError, KeyError, IndexError, TypeError) as exc:
                 raise LLMUnavailable("LLM 响应结构无效") from exc
             self.trace.append({"messages": messages, "content": content,
-                               "usage": data.get("usage", {}), "model": data.get("model", self._model)})
+                               "usage": data.get("usage", {}), "model": data.get("model", self._model),
+                               "response_id": data.get("id"), "attempt": attempt + 1})
             try:
                 parsed = json.loads(content)
                 if not isinstance(parsed, dict):
@@ -139,6 +142,7 @@ class LLMClient:
         }
         last_exc: Exception | None = None
         for attempt in range(retries + 1):
+            self.attempt_count += 1
             try:
                 resp = httpx.post(
                     f"{self._base}/chat/completions",

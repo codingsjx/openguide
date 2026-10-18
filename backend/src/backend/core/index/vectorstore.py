@@ -70,7 +70,7 @@ def _tokens(text: str) -> set[str]:
 class Store:
     """Thin wrapper: per-(repo,perspective) upsert + query with fallback."""
 
-    def __init__(self, owner: str, repo: str, persist_dir: str | None = None) -> None:
+    def __init__(self, owner: str, repo: str, persist_dir: str | None = None, boost_executable: bool = True) -> None:
         settings = get_settings()
         self.owner = owner
         self.repo = repo
@@ -79,6 +79,7 @@ class Store:
         self._embed_fn = None
         self._collections: dict[str, object] = {}
         self._rows: dict[str, list[dict]] = {}  # fallback in-memory store
+        self.boost_executable = boost_executable
         if settings.use_chroma:
             self._init_chromadb()
 
@@ -187,7 +188,7 @@ class Store:
             for t in _tokens(r["text"]):
                 df[t] = df.get(t, 0) + 1
         # V3 = executable path, so favour chunks that actually carry a command.
-        runnable_boost = perspective == "v3"
+        runnable_boost = self.boost_executable and perspective == "v3"
         scored: list[tuple[float, dict]] = []
         for r in rows:
             d = _tokens(r["text"])

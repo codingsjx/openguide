@@ -1,0 +1,40 @@
+{
+  "kind": "pinned-source-reference-audit",
+  "rows": [
+    {
+      "repo": "pallets/click",
+      "source_rule_validation": "passed",
+      "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "evaluation_scope": [
+        "B"
+      ],
+      "source_review": "agent_source_reviewed",
+      "independent_human_review": "pending",
+      "quality_claim_eligible": false,
+      "human_review_identity_independently_verified": false,
+      "steps": 1,
+      "citations": 2
+    },
+    {
+      "repo": "psf/requests",
+      "source_rule_validation": "passed",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "evaluation_scope": [
+        "A",
+        "B"
+      ],
+      "source_review": "agent_source_reviewed",
+      "independent_human_review": "pending",
+      "quality_claim_eligible": false,
+      "human_review_identity_independently_verified": false,
+      "steps": 3,
+      "citations": 4
+    }
+  ],
+  "status": "source_checks_passed",
+  "independent_human_review_complete": false,
+  "limitations": [
+    "literal source checks are not independent human annotation",
+    "no commands executed by this audit"
+  ]
+}

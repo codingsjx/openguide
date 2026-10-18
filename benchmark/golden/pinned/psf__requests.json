@@ -1,0 +1,93 @@
+{
+  "owner": "psf",
+  "repo": "requests",
+  "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "evaluation_scope": [
+    "A",
+    "B"
+  ],
+  "source_review": "agent_source_reviewed",
+  "reviewer": "Codex AI agent",
+  "review_date": "2026-10-18",
+  "source_license": "Apache-2.0",
+  "independent_human_review": "pending",
+  "human_reviewer": "",
+  "human_review_date": "",
+  "steps": [
+    {
+      "order": 1,
+      "stage": "A",
+      "title": "克隆仓库",
+      "expected_commands": [
+        "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git"
+      ],
+      "expected_outcome": "按原文执行并核对实际结果，不预设通过数量。",
+      "evidence_sources": [
+        "README.md#L65"
+      ],
+      "citations": [
+        {
+          "path": "README.md",
+          "line_start": 65,
+          "line_end": 65,
+          "quote": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git"
+        }
+      ],
+      "execution_status": "not_run",
+      "execution_note": ""
+    },
+    {
+      "order": 2,
+      "stage": "A",
+      "title": "安装开发依赖",
+      "expected_commands": [
+        "python -m pip install -r requirements-dev.txt"
+      ],
+      "expected_outcome": "按原文执行并核对实际结果，不预设通过数量。",
+      "evidence_sources": [
+        "Makefile#L3"
+      ],
+      "citations": [
+        {
+          "path": "Makefile",
+          "line_start": 3,
+          "line_end": 3,
+          "quote": "python -m pip install -r requirements-dev.txt"
+        }
+      ],
+      "execution_status": "passed",
+      "execution_note": "仅记录的 Windows/Python3.12 环境安装通过。"
+    },
+    {
+      "order": 3,
+      "stage": "B",
+      "title": "选择原文记载的一种完整测试命令",
+      "expected_commands": [
+        "python -m pytest tests",
+        "python -m pytest tests --junitxml=report.xml"
+      ],
+      "expected_outcome": "按原文执行并核对实际结果，不预设通过数量。",
+      "evidence_sources": [
+        "Makefile#L5",
+        "Makefile#L8"
+      ],
+      "citations": [
+        {
+          "path": "Makefile",
+          "line_start": 5,
+          "line_end": 5,
+          "quote": "python -m pytest tests"
+        },
+        {
+          "path": "Makefile",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "python -m pytest tests --junitxml=report.xml"
+        }
+      ],
+      "execution_status": "failed",
+      "execution_note": "带 JUnit 的 CI 形式实跑625通过6失败；不带报告参数的形式未单独运行。"
+    }
+  ],
+  "notes": "仅评估安装与测试范围。C/D 未在本参考中评分。命令匹配不等于执行成功或用户任务成功。"
+}

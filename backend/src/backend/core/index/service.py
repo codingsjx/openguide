@@ -16,10 +16,10 @@ from backend.core.github.recon import RawSignals
 class RepoIndex:
     """Owns the persistent store for one repo and indexes it on demand."""
 
-    def __init__(self, owner: str, repo: str) -> None:
+    def __init__(self, owner: str, repo: str, boost_executable: bool = True) -> None:
         self.owner = owner
         self.repo = repo
-        self._store = Store(owner, repo)
+        self._store = Store(owner, repo, boost_executable=boost_executable)
 
     def index(self, sig: RawSignals) -> None:
         """Assemble perspective chunks (each with a real source) + upsert."""
