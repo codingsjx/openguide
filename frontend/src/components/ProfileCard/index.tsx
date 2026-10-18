@@ -1,4 +1,4 @@
-import { Card, Col, Progress, Row, Statistic, Tag, Typography } from 'antd'
+import { Alert, Card, Col, Progress, Row, Statistic, Tag, Typography } from 'antd'
 import {
   BranchesOutlined,
   CheckCircleOutlined,
@@ -24,6 +24,7 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
     .slice(0, 6)
     .map(([name, frac]) => ({ name, pct: Math.round(frac * 100) }))
   const build = profile.build
+  const unavailable = new Set(profile.unavailable_signals ?? [])
   const hasBuildInfo = Boolean(build?.tool || build?.test_cmd)
 
   return (
@@ -58,10 +59,12 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
           {profile.suitability === 'promising'
             ? '适合新手'
             : profile.suitability === 'unclear'
-              ? '信号偏弱'
+              ? '需进一步确认'
               : '暂不建议'}
         </Tag>
       </div>
+
+      {profile.collection_warnings?.map((warning) => <Alert key={warning} type="warning" message={warning} style={{ marginTop: 8 }} />)}
 
       <Row gutter={[12, 12]} style={{ marginTop: 8 }}>
         <Col span={6}>
@@ -78,7 +81,7 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
           />
         </Col>
         <Col span={6}>
-          <Statistic title="30 天提交" value={profile.activity.commits_30d} />
+          <Statistic title="30 天提交" value={unavailable.has('activity') ? '未取得' : profile.activity.commits_30d} />
         </Col>
       </Row>
 
@@ -122,12 +125,12 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
           <Tag icon={<FileTextOutlined />}>
             {hasBuildInfo ? `构建: ${build!.tool}` : '未识别到构建文件'}
           </Tag>
-          {build?.test_cmd && <Tag color="purple">测试: {build.test_cmd}</Tag>}
+          {build?.test_cmd && <Tag color="purple">候选测试（未核验）: {build.test_cmd}</Tag>}
         </div>
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <Text strong>AI 体检建议</Text>
+        <Text strong>规则体检建议</Text>
         <ul style={{ margin: '8px 0 0', paddingLeft: 20 }}>
           {profile.reasons.map((r, i) => (
             <li key={i}>
@@ -137,10 +140,10 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
         </ul>
       </div>
 
-      {profile.gfi.count > 0 && (
+      {profile.gfi.count > 0 && !unavailable.has('issues') && (
         <div style={{ marginTop: 12 }}>
           <CheckCircleOutlined style={{ color: '#52c41a' }} />{' '}
-          <Text>有 {profile.gfi.count} 个 good-first-issue 可挑选，适合首次贡献切入</Text>
+          <Text>抓取到 {profile.gfi.count} 个候选任务（可能包含 help wanted）；难度与认领状态需逐项确认。</Text>
         </div>
       )}
     </Card>

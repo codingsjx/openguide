@@ -86,7 +86,7 @@ def build_profile(sig: RawSignals) -> Profile:
         languages=_normalise_languages(sig.language_bytes),
         license=meta.license,
         default_branch=meta.default_branch,
-        has_readme="readme.md" in root,
+        has_readme=any(n in root for n in ("readme.md", "readme.rst", "readme")),
         has_contributing=any(
             name in root for name in ("contributing.md", "contributing")
         ),
@@ -97,6 +97,8 @@ def build_profile(sig: RawSignals) -> Profile:
             commits_30d=sig.commits_30d,
             last_release_days=_release_age(meta.pushed_at),
         ),
+        unavailable_signals=sig.unavailable_signals,
+        collection_warnings=sig.collection_warnings,
     )
 
 

@@ -195,6 +195,15 @@ CI 全程走 hermetic 路径（`USE_CHROMA=false`），**不下载任何嵌入�
 
 ---
 
+### 5.5 第二轮命令实跑（固定提交与环境）
+
+Requests 开发依赖安装通过；完整 CI 为 625 passed、6 failed、3 skipped、1 xfailed，整体失败。另选的数据结构子集 24 passed，不能替代全量结果。
+Click 直接 pytest 基线为 2179 passed、107 skipped、31000 deselected、1 xfailed，不代表 tox random 或 stress 环境通过。
+Requests 的 Windows 符号链接问题经定位，证书单例复测通过；完整 CI 没有在链接修复后重跑，其他网络/代理相关失败仍待解决。
+
+本轮据此增加简单 make 目标原文展开、保存指南执行记录、抓取缺失状态和符号链接提示。执行计划、原始模型回放与实际执行结果分开记录，不将它们混成一个准确率。
+详见 `execution_findings_20261018.md` 与 `benchmark/reports/execution_validation_20261018.json`。
+
 ## 6. 真实贡献记录（方向三佐证）
 
 L4 记录"用本产品自己走通一个真实 PR"的闭环证据，落盘于

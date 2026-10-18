@@ -34,7 +34,7 @@ python -m benchmark.controlled_ablation --repos pallets/click --repeats 1
 
 ## 提交前必须补齐的外部证据
 
-本轮已完成五仓库探索性实验和浏览器离线回放验收，详见 [真实模型发现](real_model_findings_20261018.md)。当前自动化验证为后端/评测 108 项、前端导入验证 5 项通过；构建和 lint 通过。仍有构建体积提示与上游测试客户端弃用提示，不影响本轮通过结论。
+本轮已完成五仓库探索性实验和浏览器离线回放验收，详见 [真实模型发现](real_model_findings_20261018.md)。当前自动化验证为后端/评测 129 项、前端导入验证 7 项通过；构建和 lint 通过。仍有构建体积提示与上游测试客户端弃用提示，不影响本轮通过结论。
 
 | 项目 | 当前边界 | 验收要求 |
 |---|---|---|
@@ -53,3 +53,7 @@ python -m benchmark.controlled_ablation --repos pallets/click --repeats 1
 - 不将路径命中率或非 missing 比例称为事实正确率。
 - 不将上游 PR 已提交描述为已接受或已合并。
 - 不将本轮修复完成描述为达到国一或稳获国奖。
+
+## 第二轮命令实跑
+
+已完成两个固定仓库的实际安装/测试及 Requests 符号链接诊断，结果与边界见 [第二轮记录](execution_findings_20261018.md)。Requests 完整 CI 仍未通过；不把子集结果作为全量成功。真实用户效果和上游贡献仍待补齐。

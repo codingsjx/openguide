@@ -43,4 +43,5 @@ _frontend.log
 tmp/
 # Raw research archives include third-party source text; keep local.
 benchmark/reports/controlled_*/
+benchmark/reports/execution_*/
 output/*.zip

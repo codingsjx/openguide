@@ -1,0 +1,11 @@
+{
+  "repo": "psf/requests",
+  "checkout": "psf__requests",
+  "environment": "requests_py312_exec",
+  "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "review_status": "source_reviewed_by_agent",
+  "review_note": "Diagnostic after restoring two tracked mode-120000 directory symlinks which Git for Windows had checked out as text. Tracked git source remains clean. This is a single failing-case recheck, not a rerun of the full suite.",
+  "commands": [
+    {"id": "tls_bundle_after_symlink_restore", "phase": "test", "argv": ["{python}", "-m", "pytest", "tests/test_requests.py", "-k", "test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert"], "source": "tests/test_requests.py; git mode 120000 tests/certs/valid/ca", "derivation": "reviewer-selected regression case after checkout-semantics repair; not the full generated test command", "timeout_s": 60}
+  ]
+}

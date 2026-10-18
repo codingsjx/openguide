@@ -1,0 +1,13 @@
+{
+  "repo": "pallets/click",
+  "checkout": "pallets__click",
+  "environment": "click_py312_exec",
+  "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+  "review_status": "source_reviewed_by_agent",
+  "review_note": "AI agent reviewed pyproject dependency group tests, testpaths and tox pytest entrypoint. This is a reviewed direct baseline, not proof that the generated tox random command works. Team human review remains pending.",
+  "commands": [
+    {"id": "bootstrap_pip", "phase": "setup", "argv": ["{python}", "-m", "pip", "install", "--upgrade", "pip"], "derivation": "reviewer environment bootstrap for dependency-group support", "timeout_s": 120},
+    {"id": "install_test_group", "phase": "setup", "argv": ["{python}", "-m", "pip", "install", "-e", ".", "--group", "tests"], "source": "pyproject.toml dependency-groups.tests and build-system", "derivation": "reviewer provisioned editable checkout and declared tests group", "timeout_s": 180},
+    {"id": "direct_pytest_baseline", "phase": "test", "argv": ["{python}", "-m", "pytest", "tests"], "source": "pyproject.toml tool.pytest.ini_options.testpaths and tool.tox.env_run_base.commands", "derivation": "reviewer direct pytest entrypoint; does not validate tox random, its parallelism or extra environments", "timeout_s": 180}
+  ]
+}

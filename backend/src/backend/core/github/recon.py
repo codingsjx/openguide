@@ -40,6 +40,9 @@ class RawSignals(BaseModel):
     issues: list[dict] = Field(default_factory=list)
     commits_30d: int = 0
     file_tree: list[str] = Field(default_factory=list)  # repo-relative file paths
+    unavailable_signals: list[str] = Field(default_factory=list)
+    collection_warnings: list[str] = Field(default_factory=list)
+    symlink_paths: list[str] = Field(default_factory=list)
 
 
 # Doc files fetched during enrichment (README/CONTRIBUTING/LICENSE + docs/**).
@@ -83,6 +86,7 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
     """Collect the raw signal bundle for (owner, repo)."""
     client = client or GitHubClient()
     data = client.get_repo(owner, repo)
+    unavailable, warnings = [], []
 
     meta = RepoMeta(
         owner=owner,
@@ -106,6 +110,8 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
             lang_bytes = raw_lang
     except GitHubClientError:
         lang_bytes = {}
+        unavailable.append("languages")
+        warnings.append("语言信息抓取失败，不能按空结果判断")
 
     # Root listing: build markers + doc presence.
     root_entries: dict[str, str] = {}
@@ -122,7 +128,8 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
                 if name.lower().startswith("license"):
                     has_license_file = True
     except GitHubClientError:
-        pass
+        unavailable.append("root")
+        warnings.append("根目录信息抓取失败，文件存在性待确认")
 
     # Good-first-issue / help-wanted issues (dedup by number).
     issues: list[dict] = []
@@ -136,7 +143,8 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
                 seen_numbers.add(num)
                 issues.append(issue)
     except GitHubClientError:
-        issues = []
+        unavailable.append("issues")
+        warnings.append("新手任务信息未完整取得，不能据此判断没有任务")
 
     # Recent commits for activity signal.
     commits = 0
@@ -147,6 +155,8 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
         commits = sum(1 for item in recent if _commit_recent(item, cutoff))
     except GitHubClientError:
         commits = 0
+        unavailable.append("activity")
+        warnings.append("提交活跃度未取得，不能按零提交判断")
 
     return RawSignals(
         meta=meta,
@@ -157,6 +167,8 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
         issues=issues,
         commits_30d=commits,
         file_tree=[],
+        unavailable_signals=unavailable,
+        collection_warnings=warnings,
     )
 
 
@@ -170,6 +182,8 @@ def enrich_docs_and_tree(
     """
     client = client or GitHubClient()
     root = sig.root_entries
+    unavailable = list(sig.unavailable_signals)
+    warnings = list(sig.collection_warnings)
     docs_dir_name = root.get("docs")
 
     doc_files: list[DocFile] = []
@@ -189,11 +203,15 @@ def enrich_docs_and_tree(
 
     # Full file tree: cheap single request, gives us exact doc paths to fetch.
     file_tree: list[str] = []
+    symlink_paths: list[str] = []
     try:
         tree = client.get_git_tree(sig.meta.owner, sig.meta.repo, sig.meta.default_branch)
         file_tree = [t.get("path", "") for t in tree if t.get("type") == "blob" and t.get("path")]
+        symlink_paths = [t["path"] for t in tree if t.get("mode") == "120000" and t.get("path")]
     except GitHubClientError:
         file_tree = []
+        unavailable.append("tree")
+        warnings.append("文件树未取得，目录与引用覆盖可能不完整")
 
     # Pick key newcomer-relevant docs from the tree (dev/contributing/guide/
     # installation/tutorial under docs/ or at root), plus a cap of other docs.
@@ -226,7 +244,13 @@ def enrich_docs_and_tree(
     for path in fetch_paths:
         if path.lower() in {d.path.lower() for d in doc_files}:
             continue
-        text = client.get_file_text(sig.meta.owner, sig.meta.repo, path)
+        try:
+            text = client.get_file_text(sig.meta.owner, sig.meta.repo, path)
+        except GitHubClientError:
+            if "docs" not in unavailable:
+                unavailable.append("docs")
+                warnings.append("部分文档抓取失败，仅能依据已取得的原文生成")
+            continue
         if text is None or len(text) > _MAX_DOC_SIZE:
             continue
         doc_files.append(DocFile(path=path, name=path.split("/")[-1], text=text))
@@ -241,4 +265,7 @@ def enrich_docs_and_tree(
         issues=sig.issues,
         commits_30d=sig.commits_30d,
         file_tree=file_tree,
+        unavailable_signals=unavailable,
+        collection_warnings=warnings,
+        symlink_paths=symlink_paths,
     )

@@ -24,6 +24,8 @@ class GenStep(BaseModel):
     stage: str
     title: str
     command: str | None = None
+    original_command: str | None = None
+    command_derivation: str = ""
     expected: str = ""
     fail_hints: list[str] = Field(default_factory=list)
     evidence: GenEvidence = Field(default_factory=GenEvidence)

@@ -67,6 +67,7 @@ export default function HomePage() {
   const [submittedUrl, setSubmittedUrl] = useState('')
   const [demoMode, setDemoMode] = useState(false)
   const [savedGuide, setSavedGuide] = useState<Guide | null>(null)
+  const [guideVersion, setGuideVersion] = useState(0)
 
   async function handleSubmit() {
     const trimmed = url.trim()
@@ -93,6 +94,7 @@ export default function HomePage() {
   }
 
   function startDemo() {
+    setGuideVersion((version) => version + 1)
     setSavedGuide(null)
     setUrl(DEMO_URL)
     setProfile(demoProfile)
@@ -138,6 +140,7 @@ export default function HomePage() {
               if (file.size > 2_000_000) throw new Error('指南文件不能超过 2 MB')
               const imported = parseSavedGuide(await file.text())
               setSavedGuide(imported)
+              setGuideVersion((version) => version + 1)
               setSubmittedUrl(imported.repo_url)
               setDemoMode(false)
               setTab('guide')
@@ -164,7 +167,7 @@ export default function HomePage() {
                   <ThunderboltOutlined /> 贡献指南
                 </Space>
               ),
-              children: savedGuide ? <GuideWizard guide={savedGuide} url={savedGuide.repo_url} /> : demoMode ? <GuideWizard guide={demoGuide} url={submittedUrl} /> : <GuideGenerator initialUrl={submittedUrl} />,
+              children: savedGuide ? <GuideWizard key={`saved-${guideVersion}`} guide={savedGuide} url={savedGuide.repo_url} /> : demoMode ? <GuideWizard key={`demo-${guideVersion}`} guide={demoGuide} url={submittedUrl} /> : <GuideGenerator initialUrl={submittedUrl} />,
             },
             {
               key: 'health',

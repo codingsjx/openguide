@@ -16,3 +16,11 @@ def test_test_command_is_retrieved_ahead_of_issue_automation():
     assert snippets
     assert snippets[0]["source"] != ".github/workflows/issues.yml"
     assert any("pytest" in s["text"] for s in snippets)
+
+
+def test_baseline_prioritized_before_randomized_special_suite():
+    sig = make_signals()
+    sig.doc_files += [DocFile(path="docs/special.md", name="special.md", text="run test suite pytest tox random stress\ntox r -e random\n")]
+    idx = RepoIndex("o", "lib"); idx.index(sig)
+    snippets = _retrieve_for_stage(idx, "B", _STAGE_QUERIES["B"])
+    assert "tox r -e random" not in snippets[0]["text"]

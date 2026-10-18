@@ -40,4 +40,6 @@ export interface Profile {
   activity: ActivityInfo
   suitability: Suitability
   reasons: string[]
+  unavailable_signals?: string[]
+  collection_warnings?: string[]
 }

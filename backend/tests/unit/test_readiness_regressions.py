@@ -56,3 +56,10 @@ def test_test_command_cannot_masquerade_as_installation():
     result = audit_steps(sig, idx, [step])[0]
     assert result.command is None
     assert result.evidence.kind == "missing"
+
+
+def test_symlink_checkout_requirement_is_shown_in_guide():
+    sig = make_signals()
+    sig.symlink_paths = ['tests/certs/ca']
+    guide = build_guide(sig, use_llm=False)
+    assert any('符号链接' in warning and 'Windows' in warning for warning in guide.warnings)

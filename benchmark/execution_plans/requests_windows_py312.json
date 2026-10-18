@@ -1,0 +1,13 @@
+{
+  "repo": "psf/requests",
+  "checkout": "psf__requests",
+  "environment": "requests_py312_exec",
+  "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "review_status": "source_reviewed_by_agent",
+  "review_note": "AI agent checked Makefile init/test/ci and selected existing test_structures.py for a separate narrow diagnostic. Team human review remains pending.",
+  "commands": [
+    {"id": "install", "phase": "setup", "argv": ["{python}", "-m", "pip", "install", "-r", "requirements-dev.txt"], "source": "Makefile#L3", "timeout_s": 300},
+    {"id": "ci_recipe", "phase": "test", "argv": ["{python}", "-m", "pytest", "tests", "--junitxml=report.xml"], "source": "Makefile#L8", "timeout_s": 180},
+    {"id": "structures_subset", "phase": "test", "argv": ["{python}", "-m", "pytest", "tests/test_structures.py"], "source": "Makefile#L5; tests/test_structures.py", "derivation": "reviewer-selected subset of the test target; not claimed as the original generated command or full suite", "timeout_s": 60}
+  ]
+}

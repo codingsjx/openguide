@@ -195,7 +195,7 @@ function EvidencePanel({ guide, step }: { guide: Guide; step: GuideStep | null }
             <EvidenceBadge guide={guide} ev={ev} />
           </div>
           <Paragraph style={{ marginTop: 8 }}>
-            {ev.verification === 'command_verified' ? '命令已匹配原文，尚未执行验证' : ev.verification === 'quote_verified' ? '引用已匹配原文，建议仍需结合上下文判断' : '仅确认来源存在，尚未核验内容支持关系'}
+            {ev.verification === 'command_verified' ? step.execution_record ? '命令已匹配原文，附带固定环境的历史执行记录' : '命令已匹配原文，尚未执行验证' : ev.verification === 'quote_verified' ? '引用已匹配原文，建议仍需结合上下文判断' : '仅确认来源存在，尚未核验内容支持关系'}
           </Paragraph>
           {ev.quote && <Paragraph style={{ whiteSpace: 'pre-wrap' }}><Text code>{ev.quote}</Text></Paragraph>}
           {href && (
@@ -245,7 +245,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
     if (current < steps.length - 1) {
       setCurrent((c) => c + 1)
     } else if (completingAll) {
-      void message.success('恭喜，你已完成全部贡献步骤！')
+      void message.success('已标记全部步骤，请结合实际测试和 PR 状态核对结果。')
     }
   }
 
@@ -281,7 +281,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 16, alignItems: 'flex-start' }}>
       {/* Main column: steps + current card */}
       <div style={{ flex: 1, minWidth: 280 }}>
-        <Alert type="info" showIcon style={{ marginBottom: 12 }} message={guide.is_saved ? '已保存指南，未重新联网核验' : guide.is_demo ? '静态交互示例，未分析仓库' : guide.generation_mode === 'llm' ? '本次使用 AI 生成；命令仍需在本地验证' : '本次使用规则生成；配置模型后可启用 AI 生成'} />
+        <Alert type="info" showIcon style={{ marginBottom: 12 }} message={guide.is_saved ? '已保存指南，未重新联网核验' : guide.is_demo ? '静态交互示例，未分析仓库' : guide.generation_mode === 'mixed' ? 'AI 生成与仓库原文展开；命令仍需本地验证' : guide.generation_mode === 'llm' ? '本次使用 AI 生成；命令仍需在本地验证' : '本次使用规则生成；配置模型后可启用 AI 生成'} />
         {guide.warnings?.map((warning) => <Alert key={warning} type="warning" message={warning} style={{ marginBottom: 8 }} />)}
         <Steps
           current={['A', 'B', 'C', 'D'].indexOf(step?.stage ?? 'A')}
@@ -332,6 +332,12 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
                 <CheckCircleOutlined style={{ color: '#52c41a' }} /> 期望：{step.expected}
               </Paragraph>
             )}
+            {step.command_derivation && <Paragraph type="secondary">{step.command_derivation}（原建议：{step.original_command}）</Paragraph>}
+            {step.execution_record && <Alert showIcon
+              type={step.execution_record.status === 'passed' ? 'success' : 'error'}
+              message={`历史执行记录：${step.execution_record.status === 'passed' ? '通过' : step.execution_record.status === 'timed_out' ? '超时' : '失败'}`}
+              description={`${step.execution_record.summary}；环境：${step.execution_record.environment}。仅适用于记录中的提交与环境，不代表当前机器已验证。`}
+              style={{ marginTop: 10, marginBottom: 10 }} />}
 
             {step.fail_hints && step.fail_hints.length > 0 && (
               <div style={{ marginTop: 6 }}>
@@ -355,8 +361,8 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
           <Alert
             showIcon
             type="success"
-            message={`你已完成全部 ${steps.length} 个步骤`}
-            description="路线图已走完。提交 PR 后，记得关注评审意见并及时回复维护者。"
+            message={`你已手动标记全部 ${steps.length} 个步骤`}
+            description="这是手动进度记录。请结合测试结果和 GitHub 上的实际 PR 状态确认贡献完成情况。"
             style={{ marginTop: 16 }}
             action={
               <Button size="small" onClick={resetProgress}>

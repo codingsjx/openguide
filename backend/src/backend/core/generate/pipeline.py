@@ -20,6 +20,7 @@ import re
 from backend.core.decide.decider import decide
 from backend.core.generate.evidence import verify_step_evidence
 from backend.core.generate.llm import LLMClient, LLMUnavailable
+from backend.core.generate.make_recipe import expand_make_recipe
 from backend.core.generate.prompts import build_stage_messages, step_from_llm_json
 from backend.core.generate.schemas import Evidence, Guide, GuideStep
 from backend.core.github.recon import RawSignals
@@ -58,7 +59,10 @@ def build_guide(
         default_branch=profile.default_branch,
         unsuitable=(suitability == "avoid"),
         reasons=reasons,
+        warnings=list(sig.collection_warnings),
     )
+    if sig.symlink_paths:
+        guide.warnings.append(f"仓库含 {len(sig.symlink_paths)} 个符号链接；Windows 克隆后请确认链接未变成普通文本文件，否则可能导致路径或证书测试失败")
     if suitability == "avoid":
         return guide  # 不适合则只给理由，不硬生成（帮新手避坑）
 
@@ -88,11 +92,15 @@ def build_guide(
         guide.steps = steps
         return guide
     guide.steps = audit_steps(sig, index, steps)
+    if guide.generation_mode == "llm" and any(s.command_derivation for s in guide.steps):
+        guide.generation_mode = "mixed"
+        guide.warnings.append("部分 make 命令已按仓库原文展开，展开过程可查看；尚未执行")
     return guide
 
 
 def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> list[GuideStep]:
     """Shared audit for product and paired before/after experiments."""
+    steps = [expand_make_recipe(step, sig) for step in steps]
     steps = _verify_and_relabel(sig, steps)
     # Second pass: try to find a real source for still-missing steps by
     # re-searching the index with the step's own title/command.
@@ -102,6 +110,7 @@ def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> li
             st.evidence = Evidence(kind="missing", reason="命令动作不属于当前阶段")
         if st.command and st.evidence.verification != "command_verified":
             st.command = None
+            st.execution_record = None
             st.expected = "请先在仓库文档中确认操作方法"
             st.fail_hints.append("命令未通过原文核验，已隐藏；可打开仓库文档或向维护者提问")
     return steps
@@ -120,7 +129,8 @@ def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
         commands = [re.sub(r"^(?:\$|>)\s*", "", line.strip()) for line in hit.text.splitlines()]
         relevant = any(re.match(_STAGE_CMD_PATTERNS[stage], line) for line in commands)
         development = stage == "A" and any("-e " in line or "requirements-dev" in line or "uv sync" in line for line in commands)
-        return (development, relevant, hit.score)
+        baseline = stage == "B" and any(re.match(_STAGE_CMD_PATTERNS[stage], line) and not re.search(r"\b(?:stress|random|coverage|browser)\b|--numprocesses", line) for line in commands)
+        return (development, baseline, relevant, hit.score)
     hits = sorted(res.hits, key=rank, reverse=True)
     # Diversity: a long generic file must not occupy every context slot.
     selected, source_counts = [], {}

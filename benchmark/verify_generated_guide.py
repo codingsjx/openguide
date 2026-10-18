@@ -320,6 +320,8 @@ def to_generated_guide(guide) -> "object":
             expected=s.expected,
             fail_hints=s.fail_hints,
             evidence=GenEvidence(**s.evidence.model_dump()),
+            original_command=s.original_command,
+            command_derivation=s.command_derivation,
         )
         for s in guide.steps
     ]

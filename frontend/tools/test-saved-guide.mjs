@@ -28,3 +28,16 @@ test('non-text expected output cannot crash the React renderer', () => {
 test('invalid JSON fails without side effects', () => {
   assert.throws(() => parseSavedGuide('{bad json'))
 })
+test('invalid command derivation cannot crash rendering', () => {
+  const f = fixture(); f.steps[0].command_derivation = { unexpected: true }
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})
+test('execution result cannot be attached to another command or commit', () => {
+  const f = fixture()
+  f.default_branch = 'a'.repeat(40)
+  f.steps[0].command = 'pytest tests'
+  f.steps[0].execution_record = { status: 'passed', command: 'pytest unrelated', commit_sha: f.default_branch, environment: 'test', summary: 'ok', report: 'report.json' }
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+  f.steps[0].execution_record.command = f.steps[0].command
+  assert.equal(parseSavedGuide(JSON.stringify(f)).steps[0].execution_record.status, 'passed')
+})

@@ -16,6 +16,16 @@ export interface GuideStep {
   stage_label: string
   title: string
   command: string | null
+  original_command?: string | null
+  command_derivation?: string
+  execution_record?: {
+    status: 'passed' | 'failed' | 'timed_out'
+    command: string
+    commit_sha: string
+    environment: string
+    summary: string
+    report: string
+  } | null
   expected: string
   fail_hints: string[]
   evidence: Evidence

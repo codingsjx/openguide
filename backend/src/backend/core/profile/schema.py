@@ -52,3 +52,5 @@ class Profile(BaseModel):
     activity: ActivityInfo = Field(default_factory=ActivityInfo)
     suitability: Suitability = "unclear"
     reasons: list[str] = Field(default_factory=list)  # human-readable decision notes
+    unavailable_signals: list[str] = Field(default_factory=list)
+    collection_warnings: list[str] = Field(default_factory=list)

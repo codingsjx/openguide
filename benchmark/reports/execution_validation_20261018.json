@@ -1,0 +1,229 @@
+{
+  "date": "2026-10-18",
+  "kind": "reviewed-command-execution",
+  "records": [
+    {
+      "run_id": "execution_20261018T011755Z",
+      "repo": "psf/requests",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "python": "Python 3.12.8",
+      "os": "Windows-11-10.0.22631-SP0",
+      "plan_sha256": "1b22af77305c253088dfdb408adc0d222eca88d0287059821fd5b9e4cab1bc80",
+      "commands": [
+        {
+          "id": "install",
+          "phase": "setup",
+          "argv": [
+            "{python}",
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            "requirements-dev.txt"
+          ],
+          "cwd": ".",
+          "source": "Makefile#L3",
+          "derivation": "literal-source-command",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 15.737,
+          "pytest_counts": {}
+        },
+        {
+          "id": "ci_recipe",
+          "phase": "test",
+          "argv": [
+            "{python}",
+            "-m",
+            "pytest",
+            "tests",
+            "--junitxml=report.xml"
+          ],
+          "cwd": ".",
+          "source": "Makefile#L8",
+          "derivation": "literal-source-command",
+          "status": "failed",
+          "exit_code": 1,
+          "elapsed_s": 170.778,
+          "pytest_counts": {
+            "failed": 6,
+            "passed": 625,
+            "skipped": 3,
+            "xfailed": 1
+          }
+        },
+        {
+          "id": "structures_subset",
+          "phase": "test",
+          "argv": [
+            "{python}",
+            "-m",
+            "pytest",
+            "tests/test_structures.py"
+          ],
+          "cwd": ".",
+          "source": "Makefile#L5; tests/test_structures.py",
+          "derivation": "reviewer-selected subset of the test target; not claimed as the original generated command or full suite",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 0.666,
+          "pytest_counts": {
+            "passed": 24
+          }
+        }
+      ],
+      "is_security_sandbox": false,
+      "reviewer": "AI agent; independent human review pending"
+    },
+    {
+      "run_id": "execution_20261018T012009Z",
+      "repo": "pallets/click",
+      "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "python": "Python 3.12.8",
+      "os": "Windows-11-10.0.22631-SP0",
+      "plan_sha256": "ad49f6b7d479812e03b75cc132ea7fb9b5bf57e3ef4a1a92e8c37e5338b4f566",
+      "commands": [
+        {
+          "id": "bootstrap_pip",
+          "phase": "setup",
+          "argv": [
+            "{python}",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "pip"
+          ],
+          "cwd": ".",
+          "source": null,
+          "derivation": "reviewer environment bootstrap for dependency-group support",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 3.004,
+          "pytest_counts": {}
+        },
+        {
+          "id": "install_test_group",
+          "phase": "setup",
+          "argv": [
+            "{python}",
+            "-m",
+            "pip",
+            "install",
+            "-e",
+            ".",
+            "--group",
+            "tests"
+          ],
+          "cwd": ".",
+          "source": "pyproject.toml dependency-groups.tests and build-system",
+          "derivation": "reviewer provisioned editable checkout and declared tests group",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 4.595,
+          "pytest_counts": {}
+        },
+        {
+          "id": "direct_pytest_baseline",
+          "phase": "test",
+          "argv": [
+            "{python}",
+            "-m",
+            "pytest",
+            "tests"
+          ],
+          "cwd": ".",
+          "source": "pyproject.toml tool.pytest.ini_options.testpaths and tool.tox.env_run_base.commands",
+          "derivation": "reviewer direct pytest entrypoint; does not validate tox random, its parallelism or extra environments",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 7.305,
+          "pytest_counts": {
+            "passed": 2179,
+            "skipped": 107,
+            "deselected": 31000,
+            "xfailed": 1
+          }
+        }
+      ],
+      "is_security_sandbox": false,
+      "reviewer": "AI agent; independent human review pending"
+    },
+    {
+      "run_id": "execution_20261018T012403Z",
+      "repo": "psf/requests",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "python": "Python 3.12.8",
+      "os": "Windows-11-10.0.22631-SP0",
+      "plan_sha256": "2d31a0bce9e6edf13871c5689d47d04ae9eb66b93c3f8be42fc87452fcc27976",
+      "commands": [
+        {
+          "id": "tls_bundle_after_symlink_restore",
+          "phase": "test",
+          "argv": [
+            "{python}",
+            "-m",
+            "pytest",
+            "tests/test_requests.py",
+            "-k",
+            "test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert"
+          ],
+          "cwd": ".",
+          "source": "tests/test_requests.py; git mode 120000 tests/certs/valid/ca",
+          "derivation": "reviewer-selected regression case after checkout-semantics repair; not the full generated test command",
+          "status": "failed",
+          "exit_code": 1,
+          "elapsed_s": 3.443,
+          "pytest_counts": {
+            "failed": 1,
+            "deselected": 340
+          }
+        }
+      ],
+      "is_security_sandbox": false,
+      "reviewer": "AI agent; independent human review pending"
+    },
+    {
+      "run_id": "execution_20261018T012447Z",
+      "repo": "psf/requests",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "python": "Python 3.12.8",
+      "os": "Windows-11-10.0.22631-SP0",
+      "plan_sha256": "2d31a0bce9e6edf13871c5689d47d04ae9eb66b93c3f8be42fc87452fcc27976",
+      "commands": [
+        {
+          "id": "tls_bundle_after_symlink_restore",
+          "phase": "test",
+          "argv": [
+            "{python}",
+            "-m",
+            "pytest",
+            "tests/test_requests.py",
+            "-k",
+            "test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert"
+          ],
+          "cwd": ".",
+          "source": "tests/test_requests.py; git mode 120000 tests/certs/valid/ca",
+          "derivation": "reviewer-selected regression case after checkout-semantics repair; not the full generated test command",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 10.942,
+          "pytest_counts": {
+            "deselected": 340,
+            "passed": 1
+          }
+        }
+      ],
+      "is_security_sandbox": false,
+      "reviewer": "AI agent; independent human review pending"
+    }
+  ],
+  "limitations": [
+    "Only the recorded Windows/Python environments were tested",
+    "Click direct baseline is reviewer-derived; tox random was not validated",
+    "Requests subset pass is not full-suite pass",
+    "Original Requests full CI failed; restoring Windows symlink targets fixed one rechecked TLS case, but the full suite was not rerun",
+    "Initial invalid symlink recreation attempt also failed and is retained",
+    "No user-study or upstream contribution outcome is implied"
+  ]
+}
