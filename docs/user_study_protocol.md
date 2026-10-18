@@ -20,3 +20,22 @@ participant_id,experience,sequence,task,condition,commit_sha,os,setup_ok,test_ok
 ```
 
 贡献案例另记：仓库、任务链接、使用的指南版本、工具帮助的具体步骤、人工修正、PR 链接、提交/关闭/合并状态和维护者反馈日期。
+
+## 本地记录工具（尚无真人数据）
+
+在仓库根目录运行，生成空白台账及描述性报告：
+
+```powershell
+python -m benchmark.user_study init --output _run_cache/user-study.json
+python -m benchmark.user_study summarize _run_cache/user-study.json --output _run_cache/user-study-report.json
+```
+
+空台账状态为 `draft`，人数为 0，成功率为 null，不构成实验结果。工具不会覆盖已有文件；更新报告时使用新的文件名。
+
+开始前填写 `tasks` 两项：`task_id`、`repo`、40 位 `commit_sha`、`environment`、`setup_success`、`test_success`、`issue_success`。组织者应在指定环境亲自验证任务后填写 `organizer_verified=true`，再把状态设为 `collecting`。此布尔字段是组织者声明，软件无法证明其真实性。开始后保留一份只读计划及哈希，不能根据结果修改成功标准。
+
+实际招募后才填写 `participants`：匿名 `participant_id`（如 P001）、已取得同意的 `consent_recorded`、`experience`、`sequence`（AB/BA）、`first_task`。A 表示官方文档，B 表示 OpenGuide；第二个任务交换条件。不要用示例编号充当真实招募人数。
+
+每次观察填写 `sessions`：`participant_id`、`task_id`、`condition`（official_docs/openguide）、`status`（completed/timed_out/withdrawn）、`elapsed_seconds`、`setup_ok`、`test_ok`、`issue_ok`、`help_count`、`wrong_command_count`、`observation_reference`，另可填 `notes`。OpenGuide 条件必须记录 `guide_revision`（代码版本及保存指南的定位信息）。观察引用应指向本地脱敏日志或组织者笔记，不要填密钥或个人姓名。退出必须记录原因，超过限时不能计为 completed。
+
+报告以已招募且同意参加的人数作为每个条件的分母，保留缺失、退出和超时；同时列出实际观察人数及用时分布。用时中位数仅基于已有观察，不能隐去缺失情况，也不能直接推断工具带来因果收益。工具校验记录结构、分组和统计口径，无法独立核验观察真实性。原始台账默认放在被忽略的 `_run_cache`，不自动上传。

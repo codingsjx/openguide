@@ -11,6 +11,7 @@
 | `python -m benchmark.controlled_ablation` | 同快照、明确控制项下的模型输出与参考匹配差异 | 未测的命令执行或最终贡献结果 |
 | `python -m benchmark.execute_reviewed` | 已审阅计划在记录环境中的执行结果 | 全平台成功率或任意生成命令安全性 |
 | `python -m benchmark.l4_contribution.runner` | 已录入的贡献链接与状态 | 空记录不能证明真实贡献闭环 |
+| `python -m benchmark.user_study` | 本地观察记录结构、分组与描述性统计 | 不能认证人工记录真实，空台账没有用户效果结论 |
 
 旧 `golden_guides/`、L2/L3 与 2026-10-06 报告保留为历史记录；其中无 SHA 的旧标注和 fake 基线不用于新协议的正式结论。L4 无记录时为 PENDING，不能写成闭环完成。
 

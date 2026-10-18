@@ -181,9 +181,16 @@ def enrich_docs_and_tree(
     heavier docs/tree fetch only runs when perspectives/indexing need it.
     """
     client = client or GitHubClient()
-    root = sig.root_entries
+    # Fail rather than combine documents from changing branch revisions.
+    revision = client.resolve_commit(sig.meta.owner, sig.meta.repo, sig.meta.default_branch)
+    meta = sig.meta.model_copy(update={"default_branch": revision})
+    listing = client.get_contents(meta.owner, meta.repo, "", ref=revision)
+    if not isinstance(listing, list):
+        raise GitHubClientError("无法取得固定版本的仓库根目录")
+    root = {entry["name"].lower(): entry["name"] for entry in listing if entry.get("name")}
     unavailable = list(sig.unavailable_signals)
     warnings = list(sig.collection_warnings)
+    warnings.append(f"文件证据固定于提交 {revision}；issue 信息是独立采集的快照，操作前需核对最新状态。")
     docs_dir_name = root.get("docs")
 
     doc_files: list[DocFile] = []
@@ -205,7 +212,7 @@ def enrich_docs_and_tree(
     file_tree: list[str] = []
     symlink_paths: list[str] = []
     try:
-        tree = client.get_git_tree(sig.meta.owner, sig.meta.repo, sig.meta.default_branch)
+        tree = client.get_git_tree(meta.owner, meta.repo, revision)
         file_tree = [t.get("path", "") for t in tree if t.get("type") == "blob" and t.get("path")]
         symlink_paths = [t["path"] for t in tree if t.get("mode") == "120000" and t.get("path")]
     except GitHubClientError:
@@ -221,6 +228,11 @@ def enrich_docs_and_tree(
     keyed: list[str] = []
     for p in file_tree:
         low = p.lower()
+        name = low.rsplit("/", 1)[-1]
+        if (name.rsplit(".", 1)[0] in {"contributing", "code_of_conduct", "pull_request_template"}
+                or low.startswith(".github/pull_request_template/")) and low.endswith(_TEXT_EXT):
+            keyed.insert(0, p)
+            continue
         if low.startswith(".github/workflows/") and low.endswith((".yml", ".yaml")):
             keyed.append(p)
             continue
@@ -235,9 +247,10 @@ def enrich_docs_and_tree(
         # Skip docs/__something__/ (api/autodoc/reference) unless it has a keyword.
         if in_docs and not is_key:
             continue
-        if len(picked) >= 40:
-            break
-        (keyed if is_key else picked).append(p)
+        if is_key:
+            keyed.append(p)
+        elif len(picked) < 40:
+            picked.append(p)
     fetch_paths.extend(keyed[:30])
     fetch_paths.extend(picked[:10])
 
@@ -245,22 +258,25 @@ def enrich_docs_and_tree(
         if path.lower() in {d.path.lower() for d in doc_files}:
             continue
         try:
-            text = client.get_file_text(sig.meta.owner, sig.meta.repo, path)
+            text = client.get_file_text(meta.owner, meta.repo, path, ref=revision)
         except GitHubClientError:
             if "docs" not in unavailable:
                 unavailable.append("docs")
                 warnings.append("部分文档抓取失败，仅能依据已取得的原文生成")
             continue
         if text is None or len(text) > _MAX_DOC_SIZE:
+            if "docs" not in unavailable:
+                unavailable.append("docs")
+                warnings.append("部分文档不存在或超过大小限制，资料覆盖不完整")
             continue
         doc_files.append(DocFile(path=path, name=path.split("/")[-1], text=text))
 
     return RawSignals(
-        meta=sig.meta,
+        meta=meta,
         language_bytes=sig.language_bytes,
-        root_entries=sig.root_entries,
-        has_docs_dir=sig.has_docs_dir,
-        has_license_file=sig.has_license_file,
+        root_entries=root,
+        has_docs_dir="docs" in root,
+        has_license_file=any(name.startswith("license") for name in root),
         doc_files=doc_files,
         issues=sig.issues,
         commits_30d=sig.commits_30d,

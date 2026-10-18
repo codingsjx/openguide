@@ -1,0 +1,14 @@
+{
+  "repo": "codingsjx/openguide",
+  "revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "documents": 7,
+  "tree_files": 139,
+  "unavailable_signals": [],
+  "guide_steps": 4,
+  "generation_mode": "heuristic",
+  "elapsed_seconds": 7.17,
+  "scope": "Real GitHub collection and offline rule generation; no model calls or upstream command execution",
+  "warnings": [
+    "文件证据固定于提交 8c21e6d43798c707b5aa5001112719e832ae95a8；issue 信息是独立采集的快照，操作前需核对最新状态。"
+  ]
+}

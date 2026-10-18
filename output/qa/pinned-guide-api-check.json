@@ -1,0 +1,11 @@
+{
+  "status_code": 200,
+  "revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "generation_mode": "heuristic",
+  "steps": 4,
+  "warnings": [
+    "文件证据固定于提交 8c21e6d43798c707b5aa5001112719e832ae95a8；issue 信息是独立采集的快照，操作前需核对最新状态。"
+  ],
+  "scope": "Local HTTP API plus real GitHub collection; rule generation only, no model calls or command execution",
+  "initial_check": "First request during server hot reload returned the previous version; repeated request after reload passed."
+}

@@ -8,6 +8,8 @@ avoid burning the rate limit during development and demos.
 from __future__ import annotations
 
 import time
+import re
+from urllib.parse import quote
 
 import httpx
 
@@ -45,6 +47,16 @@ class GitHubClient:
     def get_repo(self, owner: str, repo: str) -> dict:
         """Top-level repo metadata: languages, license, stars, default branch."""
         return self._cached(f"repos/{owner}/{repo}", path=f"{owner}/{repo}")
+
+    def resolve_commit(self, owner: str, repo: str, ref: str) -> str:
+        """Resolve once so tree, documents and citations describe one revision."""
+        if re.fullmatch(r"[0-9a-f]{40}", ref):
+            return ref
+        data = self._cached(f"repos/{owner}/{repo}/commits/{quote(ref, safe='')}", path=f"{owner}/{repo}")
+        sha = data.get("sha") if isinstance(data, dict) else None
+        if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}", sha):
+            raise GitHubClientError("无法确认仓库提交版本，请稍后重试")
+        return sha
 
     def get_contents(self, owner: str, repo: str, path: str = "", ref: str | None = None) -> list[dict] | dict:
         """Listing for ``path`` ('' = root). Returns list of entries or a file blob dict."""
@@ -89,6 +101,8 @@ class GitHubClient:
             if exc.response.status_code == 404:
                 return None
             raise GitHubClientError(f"获取文件失败 {owner}/{repo}/{path}: {exc}") from exc
+        except httpx.HTTPError as exc:
+            raise GitHubClientError(f"获取文件网络失败 {owner}/{repo}/{path}") from exc
         data = res.json()
         content = data.get("content")
         if not content:
@@ -130,8 +144,10 @@ class GitHubClient:
             path=f"{owner}/{repo}",
             params=params,
         )
-        if not isinstance(data, dict):
-            return []
+        if not isinstance(data, dict) or not isinstance(data.get("tree"), list):
+            raise GitHubClientError("GitHub 文件树响应无效")
+        if data.get("truncated"):
+            raise GitHubClientError("GitHub 文件树被截断，无法确认完整文件清单")
         return [t for t in data.get("tree", []) if isinstance(t, dict)]
 
     # -- internals ---------------------------------------------------------
@@ -143,15 +159,24 @@ class GitHubClient:
             raise GitHubClientError(f"网络请求失败 {url}: {exc}") from exc
 
         if res.status_code == 429:
-            retry_after = int(res.headers.get("Retry-After", "3") or 3)
+            try:
+                retry_after = max(0, int(res.headers.get("Retry-After", "3") or 3))
+            except ValueError:
+                retry_after = 3
             time.sleep(min(retry_after, 10))
-            res = self._client.get(url, params=params)
+            try:
+                res = self._client.get(url, params=params)
+            except httpx.HTTPError as exc:
+                raise GitHubClientError(f"GitHub 重试网络失败: {url}") from exc
 
         if res.status_code == 404:
             raise GitHubClientError(f"资源不存在 (404): {url}")
         if res.status_code == 403:
             raise GitHubClientError(f"GitHub 访问受限/未授权 (403): {url}")
-        res.raise_for_status()
+        try:
+            res.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise GitHubClientError(f"GitHub 请求失败 ({res.status_code}): {url}") from exc
         return res.json()
 
     def _cached(

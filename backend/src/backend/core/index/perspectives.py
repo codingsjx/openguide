@@ -137,7 +137,8 @@ def assemble_perspective_chunks(sig: RawSignals) -> list[PerspectiveChunk]:
     for doc in sig.doc_files:
         name = doc.path.replace("\\", "/").rsplit("/", 1)[-1].lower()
         stem = name.rsplit(".", 1)[0]
-        if name in _V1_FILES or stem in {"contributing", "code_of_conduct", "pull_request_template"}:
+        if (name in _V1_FILES or stem in {"contributing", "code_of_conduct", "pull_request_template"}
+                or doc.path.lower().startswith(".github/pull_request_template/")):
             _emit_doc_chunks("v1", doc.path, doc.text, chunks)
     if sig.meta.description and not chunks:
         chunks.append(
