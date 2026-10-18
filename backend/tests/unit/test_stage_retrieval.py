@@ -39,3 +39,16 @@ def test_setup_context_keeps_clone_install_and_runtime_within_four_slots():
     assert any('git clone' in s['text'] for s in snippets)
     assert any('pip install' in s['text'] for s in snippets)
     assert any('requires-python' in s['text'] for s in snippets)
+
+
+def test_reserved_tasks_can_use_three_different_chunks_from_same_readme():
+    from backend.core.index.retrieval import SearchResult
+    from backend.core.index.vectorstore import Hit
+    hits = [Hit(text=t,perspective='v3',score=1,meta={'source':'README.md','kind':'file'}) for t in
+        ['git clone https://github.com/o/lib.git','pip install -e .','requires-python = ">=3.10"']]
+    class Index:
+        def search(self,query,kind=None,top_k=20):
+            return SearchResult(query=query,kind='setup',perspective='v3',hits=hits)
+    snippets=_retrieve_for_stage(Index(),'A',_STAGE_QUERIES['A'])
+    assert len(snippets) == 3
+    assert any('requires-python' in s['text'] for s in snippets)

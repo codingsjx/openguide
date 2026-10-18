@@ -6,15 +6,15 @@ for the "可验证" narrative).
 
 Definitions:
 - step_coverage  : fraction of golden steps that have a matching generated step
-- evidence_hit   : fraction of generated *command steps* whose evidence.source
+- evidence_hit   : fraction of all scored generated steps whose evidence.source
                    resolves to a real file in the repo (verified offline)
 - command_exec   : fraction of generated command steps whose command can be
                    executed against a local clone (best-effort; may be skipped)
 - command_correct: fraction of generated command steps whose command matches the
-                   golden reference command for that step's stage — this is the
-                   "semantic correctness" dimension (跑对没有，而非只是跑得动)
+                   golden reference command for that step's stage; this is conservative
+                   reference matching, NOT semantic correctness
 - assert_rate    : fraction of generated steps with a non-empty `evidence`,
-                   i.e. NOT the "missing/unknown" fallback
+                   i.e. NOT the "missing/unknown" fallback; not a truthfulness score
 
 `elapsed_s` is wall-clock generation time for the repo, recorded by the runner
 (not by `compute`). It is what backs the "成本/延迟" column of the L3 ablation:
@@ -57,8 +57,8 @@ def _stage_of(stage: str) -> str:
 
 def _step_matches(g_step, gen_steps) -> bool:
     """A generated step 'covers' a golden step when they share the same stage
-    (A/B/C/D) AND either their titles share a meaningful token or the generated
-    step's command shares a verb with the golden reference command.
+    (A/B/C/D) AND their commands match a declared reference, when reference commands exist.
+    Otherwise title-token overlap is used as a narrow proxy, not semantic proof.
 
     This replaces the old 'title substring' rule, which was too strict — it
     treated '运行测试套件' vs '运行测试基线' as no match and reported 0% coverage.

@@ -43,5 +43,12 @@
     "One engineering pilot only; not a repeated controlled comparison",
     "Reference independent human review remains pending",
     "No upstream commands executed in this pilot"
-  ]
+  ],
+  "measurement_source_revision": "ff440bb",
+  "post_edge_fix_prompt_replay_matches": {
+    "A": true,
+    "B": true,
+    "C": true,
+    "D": true
+  }
 }

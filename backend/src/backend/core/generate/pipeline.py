@@ -133,6 +133,7 @@ def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
         baseline = stage == "B" and any(re.match(_STAGE_CMD_PATTERNS[stage], line) and not re.search(r"\b(?:stress|random|coverage|browser)\b|--numprocesses", line) for line in commands)
         return (development, baseline, relevant, hit.score)
     hits = sorted(res.hits, key=rank, reverse=True)
+    reserved = []
     if stage == "A":
         # Preserve complementary prerequisites within the same context budget:
         # installation-heavy files must not crowd out clone/runtime evidence.
@@ -141,7 +142,6 @@ def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
             ("development install dependencies requirements-dev editable uv sync npm ci", lambda text: any(re.match(_STAGE_CMD_PATTERNS['A'], re.sub(r"^[$>]\s*", "", line.strip())) and 'git clone' not in line for line in text.splitlines())),
             ("requires-python python version node engines", lambda text: any(token in text.lower() for token in ("requires-python", "python-version", '"engines"', "node-version"))),
         ]
-        reserved = []
         for slot_query, accepts in slots:
             candidates = index.search(slot_query, kind=kind, top_k=20).hits
             candidates = sorted(candidates, key=lambda h: (
@@ -155,7 +155,7 @@ def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
     selected, source_counts = [], {}
     for hit in hits:
         source = (hit.meta or {}).get("source", "")
-        if source_counts.get(source, 0) >= 2:
+        if source_counts.get(source, 0) >= 2 and not any(hit is item for item in reserved):
             continue
         selected.append(hit)
         source_counts[source] = source_counts.get(source, 0) + 1
