@@ -9,13 +9,20 @@
 ```bash
 cd backend
 uv sync                        # 按 uv.lock 安装依赖
-uv run pytest tests/ -q        # 68 个单测
+uv run pytest tests/ -q        # 默认离线测试
 uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 ```
 
 可选：复制 `.env.example` 为 `.env`，填 `GITHUB_TOKEN` 提升 GitHub 限流；
 填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` 启用 AI 生成。不填也能跑：
 生成会走确定性启发式路径，测试与 CI 均在该路径下验证。
+
+在线指南先解析固定提交，再抓取同版本的目录与文档。公开文档优先使用
+`raw.githubusercontent.com`，原文服务失败时回到相同提交的 Contents API；
+API 令牌不会发往原文服务。此优化只减少文件请求占用的 API 额度，不能解决
+仓库元信息、提交与 issue 接口的全部限流问题。首次读取新仓库仍可能需要
+有效的 `GITHUB_TOKEN` 或等待额度恢复；本地规则模式同样依赖仓库资料。
+只在本机 `.env` 填令牌，不要放入指南、报告或仓库。资料不完整时页面保留警告。
 
 > 测试默认走 hermetic 路径（`conftest.py` 设 `USE_CHROMA=false`），
 > 不下载嵌入模型，秒级完成。需要真实向量检索时设 `USE_CHROMA=true`。

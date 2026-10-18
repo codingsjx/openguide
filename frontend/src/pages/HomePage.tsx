@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Tabs, Input, Space, Typography, message, Tag, Upload } from 'antd'
+import { Alert, Button, Tabs, Input, Space, Typography, message, Tag, Upload } from 'antd'
 import {
   GithubOutlined,
   QuestionCircleOutlined,
@@ -11,7 +11,7 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons'
 
-import { api, ApiError } from '../api/client'
+import { api } from '../api/client'
 import type { Profile } from '../types/profile'
 import ProfileCard from '../components/ProfileCard'
 import GuideGenerator from '../components/GuideGenerator'
@@ -63,6 +63,7 @@ export default function HomePage() {
   const [url, setUrl] = useState('')
   const [tab, setTab] = useState<string>('guide')
   const [loading, setLoading] = useState(false)
+  const [profileError, setProfileError] = useState<string | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [submittedUrl, setSubmittedUrl] = useState('')
   const [demoMode, setDemoMode] = useState(false)
@@ -72,6 +73,8 @@ export default function HomePage() {
   async function handleSubmit() {
     const trimmed = url.trim()
     if (!trimmed) return
+    if (loading) return
+    setProfileError(null)
     setLoading(true)
     setSavedGuide(null)
     setDemoMode(false)
@@ -83,11 +86,7 @@ export default function HomePage() {
       setProfile(p)
       setSubmittedUrl(trimmed)
     } catch (error) {
-      if (error instanceof ApiError) {
-        void message.error(error.message)
-      } else {
-        void message.error('后端连接失败，请启动服务后重试；也可手动选择交互示例。')
-      }
+      setProfileError(error instanceof Error ? error.message : '仓库读取失败，请重试或导入已保存指南。')
     } finally {
       setLoading(false)
     }
@@ -134,6 +133,7 @@ export default function HomePage() {
             <Input size="large" placeholder="https://github.com/owner/repo" value={url} onChange={(e) => setUrl(e.target.value)} onPressEnter={handleSubmit} disabled={loading} prefix={<GithubOutlined />} />
             <Button type="primary" size="large" icon={<RocketOutlined />} loading={loading} onClick={handleSubmit}>生成路线图 <ArrowRightOutlined /></Button>
           </Space.Compact>
+          {profileError && <Alert showIcon type="error" message="仓库读取失败" description={profileError} style={{ marginTop: 12 }} />}
           <div className="search-foot"><span>不知道用哪个？</span><button onClick={startDemo}>体验 requests 示例 <ArrowRightOutlined /></button><span className="shortcut">Enter</span></div>
           <Upload accept=".json" showUploadList={false} beforeUpload={async (file) => {
             try {

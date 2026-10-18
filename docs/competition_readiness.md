@@ -75,3 +75,7 @@ python -m benchmark.controlled_ablation --repos pallets/click --repeats 1
 真实 GitHub 检查取得 `codingsjx/openguide` 提交 `8c21e6d43798c707b5aa5001112719e832ae95a8` 的 139 个文件路径及 7 份文档；本机 HTTP API 复验返回固定提交。见 `output/qa/revision-collection-check.json` 和 `output/qa/pinned-guide-api-check.json`。这是在线采集与规则生成检查，不是模型效果、新手实验或上游命令执行。首次 HTTP 请求碰到旧热重载进程，重载后的重复检查通过；记录保留该情况。
 
 `benchmark.user_study` 提供本地台账结构、分组/同意/限时校验及保留缺失和退出的描述性统计。空台账仍是 0 位参与者、无成功率；工具不认证人工观察的真实性，不上传原始记录。团队可按 `docs/user_study_protocol.md` 开展实验。
+
+## 第六轮在线可靠性
+
+修复公开原文下载、资料失败定位、低活跃度误判及等待取消。Requests 在线文档从 2 份恢复至 24 份，安装、测试与贡献规范均有来源；新仓库元信息 API 仍可能受限。后端/评测 170 项通过，前端 9 项测试、lint 和构建通过。现场 AI 请求恢复测试与贡献规范共 12 步；后续加入在线客户端超时及无重试策略，尚无该策略的多仓库效果结论。详见 [第六轮验收记录](reliability_round6_20261018.md)。

@@ -14,6 +14,9 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit, timeoutMs = 60_000): Promise<T> {
   const controller = new AbortController()
+  const cancel = () => controller.abort()
+  init?.signal?.addEventListener('abort', cancel, { once: true })
+  if (init?.signal?.aborted) controller.abort()
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs)
   let res: Response
   try {
@@ -24,11 +27,13 @@ async function request<T>(path: string, init?: RequestInit, timeoutMs = 60_000):
     })
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
+      if (init?.signal?.aborted) throw new Error('已取消等待；服务端可能仍在完成当前处理')
       throw new Error(`请求超时（${Math.round(timeoutMs / 1000)} 秒），请检查网络或改用本地规则`)
     }
     throw new Error(error instanceof Error ? `网络请求失败：${error.message}` : '网络请求失败')
   } finally {
     window.clearTimeout(timeout)
+    init?.signal?.removeEventListener('abort', cancel)
   }
   if (!res.ok) {
     let detail = `请求失败 (${res.status})`
@@ -73,10 +78,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url, query, kind: kind ?? null }),
     }),
-  postGuide: (url: string, useLlm = true) =>
+  postGuide: (url: string, useLlm = true, signal?: AbortSignal) =>
     request<import('../types/guide').Guide>('/api/guide', {
       method: 'POST',
       body: JSON.stringify({ url, use_llm: useLlm }),
+      signal,
     }, 180_000),
   getLlmConfig: () => request<{ configured: boolean }>('/api/llm-config'),
   setLlmConfig: (cfg: { api_key: string; base_url: string; model: string }) =>

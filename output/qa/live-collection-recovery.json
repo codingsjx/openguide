@@ -1,0 +1,57 @@
+{
+  "repo": "psf/requests",
+  "revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "documents": [
+    "README.md",
+    "LICENSE",
+    "Makefile",
+    "pyproject.toml",
+    "tox.ini",
+    "setup.py",
+    "requirements-dev.txt",
+    "docs/dev/contributing.rst",
+    ".github/CONTRIBUTING.md",
+    ".github/CODE_OF_CONDUCT.md",
+    ".github/workflows/close-issues.yml",
+    ".github/workflows/codeql-analysis.yml",
+    ".github/workflows/lint.yml",
+    ".github/workflows/lock-issues.yml",
+    ".github/workflows/publish.yml",
+    ".github/workflows/run-tests.yml",
+    ".github/workflows/typecheck.yml",
+    ".github/workflows/zizmor.yml",
+    "docs/user/install.rst",
+    "AUTHORS.rst",
+    "HISTORY.md",
+    "tests/certs/README.md",
+    "tests/certs/expired/README.md",
+    "tests/certs/mtls/README.md"
+  ],
+  "raw_files_fetched": 22,
+  "unavailable_signals": [
+    "languages"
+  ],
+  "stage_sources": {
+    "A": [
+      "README.md",
+      "Makefile",
+      ".github/workflows/typecheck.yml",
+      ".github/workflows/typecheck.yml"
+    ],
+    "B": [
+      "tox.ini",
+      "Makefile",
+      "requirements-dev.txt",
+      ".github/workflows/run-tests.yml"
+    ],
+    "C": [],
+    "D": [
+      "README.md",
+      "docs/dev/contributing.rst",
+      ".github/CONTRIBUTING.md",
+      "docs/dev/contributing.rst"
+    ]
+  },
+  "elapsed_seconds": 9.38,
+  "scope": "Live GitHub documents and retrieval only; no LLM or command execution"
+}

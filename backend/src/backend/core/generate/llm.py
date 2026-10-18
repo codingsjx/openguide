@@ -39,13 +39,15 @@ def llm_configured() -> bool:
 
 
 class LLMClient:
-    def __init__(self) -> None:
+    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2) -> None:
         s = get_settings()
         self._key = _OVERRIDE_KEY or s.llm_api_key
         self._base = (_OVERRIDE_BASE or s.llm_base_url).rstrip("/")
         self._model = _OVERRIDE_MODEL or s.llm_model
         self.trace: list[dict] = []
         self.attempt_count = 0
+        self._timeout_s = timeout_s
+        self._retry_limit = retry_limit
 
     def public_config(self) -> dict:
         """Non-secret experiment metadata. Never include credentials or URL query."""
@@ -84,6 +86,7 @@ class LLMClient:
             "response_format": {"type": "json_object"},
         }
         last_exc: Exception | None = None
+        retries = min(retries, self._retry_limit)
         for attempt in range(retries + 1):
             self.attempt_count += 1
             try:
@@ -91,7 +94,7 @@ class LLMClient:
                     f"{self._base}/chat/completions",
                     headers=headers,
                     json=payload,
-                    timeout=300.0,  # generous: stage prompts can be slow on relays
+                    timeout=self._timeout_s,
                 )
                 resp.raise_for_status()
             except Exception as exc:  # noqa: BLE001 - network/API errors surfaced
@@ -141,6 +144,7 @@ class LLMClient:
             "max_tokens": max_tokens,
         }
         last_exc: Exception | None = None
+        retries = min(retries, self._retry_limit)
         for attempt in range(retries + 1):
             self.attempt_count += 1
             try:
@@ -148,7 +152,7 @@ class LLMClient:
                     f"{self._base}/chat/completions",
                     headers=headers,
                     json=payload,
-                    timeout=300.0,
+                    timeout=self._timeout_s,
                 )
                 resp.raise_for_status()
             except Exception as exc:  # noqa: BLE001

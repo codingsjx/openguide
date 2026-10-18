@@ -2,6 +2,23 @@ import httpx
 from backend.core.generate.llm import LLMClient
 
 
+def test_interactive_timeout_does_not_retry(monkeypatch):
+    import pytest
+    import httpx
+    from backend.core.generate.llm import LLMUnavailable
+    client = LLMClient(timeout_s=25.0, retry_limit=0)
+    client._key = 'test-placeholder'
+    calls = []
+    def fail(*args, **kwargs):
+        calls.append(kwargs['timeout'])
+        raise httpx.ReadTimeout('synthetic timeout')
+    monkeypatch.setattr(httpx, 'post', fail)
+    with pytest.raises(LLMUnavailable):
+        client.chat_json([{'role': 'user', 'content': 'test'}])
+    assert calls == [25.0]
+    assert client.attempt_count == 1
+
+
 def test_retry_attempts_are_distinct_from_recorded_responses(monkeypatch):
     client = LLMClient(); client._key = 'test-placeholder'
     responses = iter([

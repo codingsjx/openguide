@@ -254,12 +254,14 @@ def enrich_docs_and_tree(
     fetch_paths.extend(keyed[:30])
     fetch_paths.extend(picked[:10])
 
+    failed_paths: list[str] = []
     for path in fetch_paths:
         if path.lower() in {d.path.lower() for d in doc_files}:
             continue
         try:
             text = client.get_file_text(meta.owner, meta.repo, path, ref=revision)
         except GitHubClientError:
+            failed_paths.append(path)
             if "docs" not in unavailable:
                 unavailable.append("docs")
                 warnings.append("部分文档抓取失败，仅能依据已取得的原文生成")
@@ -270,6 +272,9 @@ def enrich_docs_and_tree(
                 warnings.append("部分文档不存在或超过大小限制，资料覆盖不完整")
             continue
         doc_files.append(DocFile(path=path, name=path.split("/")[-1], text=text))
+
+    if failed_paths:
+        warnings.append(f"未取得 {len(failed_paths)} 份文档（前 5 项）：" + "、".join(failed_paths[:5]) + "；可稍后重试，当前指南不覆盖这些资料。")
 
     return RawSignals(
         meta=meta,

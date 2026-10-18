@@ -28,7 +28,7 @@ def decide(profile: Profile) -> tuple[str, list[str]]:
         points += 1
         reasons.append(f"星标 {profile.stars} ≥ {_MIN_STARS}，社区认可度不错")
     else:
-        gates.append(f"星标仅 {profile.stars}，低于 {_MIN_STARS}，社区太小")
+        reasons.append(f"星标 {profile.stars} 较少；社区规模不能单独判断贡献价值")
 
     if "activity" in unavailable:
         reasons.append("近期活跃度未取得，暂不参与适用性判断")
@@ -36,7 +36,7 @@ def decide(profile: Profile) -> tuple[str, list[str]]:
         points += 1
         reasons.append(f"近 30 天 {profile.activity.commits_30d} 次提交，维护活跃")
     else:
-        gates.append("近 30 天提交过少，可能无人维护")
+        reasons.append(f"采集到近 30 天 {profile.activity.commits_30d} 次提交；仅凭提交数量无法判断是否有人维护，请核对 issue 回复与发布记录")
 
     if "root" in unavailable:
         reasons.append("入口文档信息不完整，需确认 README")
@@ -75,7 +75,7 @@ def decide(profile: Profile) -> tuple[str, list[str]]:
     if gates:
         return "unclear", reasons + gates
 
-    if points >= 3:
+    if points >= 3 and profile.activity.commits_30d >= _MIN_ACTIVITY:
         return "promising", reasons
 
     return "unclear", reasons + ["综合信号偏弱，建议人工确认后再投入"]

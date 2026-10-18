@@ -39,10 +39,16 @@ def test_promising_healthy_repo():
     assert reasons  # non-empty reasons
 
 
-def test_avoid_dormant_no_readme():
+def test_low_activity_no_readme_requires_confirmation():
     p = make_profile(commits_30d=0, has_readme=False)
     suitability, _ = decide(p)
-    assert suitability == "avoid"
+    assert suitability == "unclear"
+
+
+def test_small_quiet_repository_is_not_rejected_as_unmaintained():
+    suitability, reasons = decide(make_profile(stars=1, commits_30d=0))
+    assert suitability == "unclear"
+    assert not any("无人维护" in reason or "社区太小" in reason for reason in reasons)
 
 
 def test_unclear_when_only_mild_gaps():

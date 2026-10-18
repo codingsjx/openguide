@@ -38,9 +38,16 @@ class GitHubClient:
         self._client = httpx.Client(
             base_url="https://api.github.com", headers=headers, timeout=settings.github_timeout_s
         )
+        # Public immutable file delivery has a separate quota. Never forward
+        # API credentials to this host or follow arbitrary redirect targets.
+        self._raw_client = httpx.Client(base_url="https://raw.githubusercontent.com",
+            headers={"User-Agent": "openguide"}, timeout=settings.github_timeout_s,
+            follow_redirects=False)
+        self.raw_files_fetched = 0
 
     def close(self) -> None:
         self._client.close()
+        self._raw_client.close()
 
     # -- public API --------------------------------------------------------
 
@@ -83,9 +90,38 @@ class GitHubClient:
         if isinstance(hit, dict) and "text" in hit:
             return hit["text"]
 
-        text = self._download_file_text(owner, repo, path, ref)
+        text = None
+        if ref and re.fullmatch(r"[0-9a-f]{40}", ref):
+            try:
+                text = self._download_pinned_raw(owner, repo, path, ref)
+                self.raw_files_fetched += 1
+            except GitHubClientError:
+                # Private repos and unavailable public delivery retain the
+                # authenticated Contents API path; no branch fallback.
+                text = self._download_file_text(owner, repo, path, ref)
+        else:
+            text = self._download_file_text(owner, repo, path, ref)
         cache.set(key, {"text": text})
         return text
+
+    def _download_pinned_raw(self, owner: str, repo: str, path: str, ref: str) -> str:
+        parts = path.split("/")
+        if (not re.fullmatch(r"[0-9a-f]{40}", ref) or
+                any(part in {"", ".", ".."} for part in parts) or "\\" in path):
+            raise GitHubClientError("原文下载需要固定提交及合法仓库内路径")
+        url = "/" + "/".join(quote(part, safe="") for part in [owner, repo, ref, *parts])
+        try:
+            with self._raw_client.stream("GET", url) as response:
+                response.raise_for_status()
+                chunks, size = [], 0
+                for chunk in response.iter_bytes():
+                    size += len(chunk)
+                    if size > 200_000:
+                        raise GitHubClientError("原文超过下载大小限制")
+                    chunks.append(chunk)
+            return b"".join(chunks).decode("utf-8", errors="replace")
+        except httpx.HTTPError as exc:
+            raise GitHubClientError("固定版本原文下载失败") from exc
 
     def _download_file_text(
         self, owner: str, repo: str, path: str, ref: str | None = None
@@ -172,7 +208,7 @@ class GitHubClient:
         if res.status_code == 404:
             raise GitHubClientError(f"资源不存在 (404): {url}")
         if res.status_code == 403:
-            raise GitHubClientError(f"GitHub 访问受限/未授权 (403): {url}")
+            raise GitHubClientError("GitHub API 访问受限 (403)。可能额度耗尽或权限不足；请稍后重试，或在服务端本地 .env 配置 GITHUB_TOKEN 后重启。不要在聊天或日志中发送令牌。")
         try:
             res.raise_for_status()
         except httpx.HTTPStatusError as exc:

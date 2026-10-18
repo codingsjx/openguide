@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException
 
 from backend.core.generate.pipeline import build_guide
+from backend.core.generate.llm import LLMClient
 from backend.core.generate.schemas import Guide
 from backend.core.github.client import GitHubClient, GitHubClientError
 from backend.core.github.parse import parse_github_url
@@ -43,4 +44,7 @@ def make_guide(req: GuideRequest) -> Guide:
 
     idx = RepoIndex(owner, repo)
     idx.index(sig)
-    return build_guide(sig, index=idx, use_llm=req.use_llm)
+    # Interactive requests should not retry a slow model for many minutes.
+    # Offline experiment clients retain their own default timeout policy.
+    return build_guide(sig, index=idx, use_llm=req.use_llm,
+        llm_client=LLMClient(timeout_s=25.0, retry_limit=0) if req.use_llm else None)

@@ -14,21 +14,46 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
   const [loading, setLoading] = useState(false)
   const [guide, setGuide] = useState<Guide | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [cancelled, setCancelled] = useState(false)
   const lastUrlRef = useRef('')
+  const activeRequest = useRef<AbortController | null>(null)
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    if (!loading) return
+    const started = Date.now()
+    const timer = window.setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000)
+    return () => window.clearInterval(timer)
+  }, [loading])
+  useEffect(() => () => {
+    activeRequest.current?.abort()
+    activeRequest.current = null
+    // React StrictMode replays effects on mount; allow that setup to restart
+    // the request instead of leaving the first, aborted request as "loaded".
+    lastUrlRef.current = ''
+  }, [])
 
   const generate = useCallback(async (targetUrl: string, useLlm: boolean) => {
     const u = targetUrl.trim()
     if (!u) return
+    activeRequest.current?.abort()
+    const controller = new AbortController()
+    activeRequest.current = controller
+    setElapsed(0)
     setLoading(true)
     setGuide(null)
     setError(null)
+    setCancelled(false)
     try {
-      const g = await api.postGuide(u, useLlm)
-      setGuide(g)
+      const g = await api.postGuide(u, useLlm, controller.signal)
+      if (activeRequest.current === controller) setGuide(g)
     } catch (e) {
-      setError(e instanceof Error ? e.message : '生成失败')
+      if (activeRequest.current === controller) {
+        if (controller.signal.aborted) setCancelled(true)
+        else setError(e instanceof Error ? e.message : '生成失败')
+      }
     } finally {
-      setLoading(false)
+      if (activeRequest.current === controller) setLoading(false)
     }
   }, [])
 
@@ -55,6 +80,7 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           <Input
             value={url}
+            disabled={loading}
             placeholder="仓库 URL"
             onChange={(e) => setUrl(e.target.value)}
             onPressEnter={() => generate(url, true)}
@@ -81,10 +107,13 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
           showIcon
           type="info"
           message="正在生成贡献路线图"
-          description="正在读取仓库文档、issue 和构建配置，通常需要 10–60 秒，请稍候。"
+          description={`已等待 ${elapsed} 秒。正在处理仓库资料与指南；网络和模型响应可能较慢。取消仅停止本页等待，后台处理可能继续。`}
+          action={<Button size="small" onClick={() => activeRequest.current?.abort()}>取消等待</Button>}
           style={{ marginTop: 12 }}
         />
       )}
+
+      {cancelled && <Alert showIcon type="info" message="已取消等待" description="后台可能仍在完成当前处理。你可以重新生成，或选择本地规则；本地规则也需要仓库资料。" style={{ marginTop: 12 }} />}
 
       {error && (
         <Alert
