@@ -312,6 +312,14 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
               第 {current + 1}/{steps.length} 步 · {step.title}
             </Title>
 
+            {step.command && <Paragraph>
+              <Text strong>{step.directory_basis === 'build_file' ? '建议执行位置（按构建文件推导）：' : '执行位置：'}</Text>{step.directory_basis === 'clone_destination' ? '你选择的项目存放目录（克隆后进入仓库）' : step.working_directory === '.' ? '仓库根目录' : step.working_directory || '待确认，请先核对来源中的目录说明'}
+            </Paragraph>}
+            {Boolean(step.prerequisite_step_ids?.length) && <Paragraph><Text strong>建议先完成：</Text>第 {step.prerequisite_step_ids!.join('、')} 步（流程顺序，不代表依赖已验证）</Paragraph>}
+            {Boolean(step.required_paths?.length) && <Paragraph><Text strong>所需输入路径：</Text>{step.required_paths!.join('、')}</Paragraph>}
+            {Boolean(step.missing_inputs?.length) && <Alert type="error" showIcon message={`在当前文件树中未找到：${step.missing_inputs!.join('、')}；请先确认目录、分支和依赖文件`} style={{ marginBottom: 10 }} />}
+            {step.context_notes?.map((note, i) => <Paragraph type="secondary" key={i}>{note}</Paragraph>)}
+
             {step.command && (
               <pre
                 style={{
@@ -333,6 +341,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
               </Paragraph>
             )}
             {step.command_derivation && <Paragraph type="secondary">{step.command_derivation}（原建议：{step.original_command}）</Paragraph>}
+            {Boolean(step.success_checks?.length) && <div style={{ marginTop: 8, marginBottom: 8 }}><Text strong>基础完成检查（通用）：</Text>{step.success_checks!.map((check, i) => <Paragraph key={i} style={{ marginBottom: 4 }}>{check}</Paragraph>)}</div>}
             {step.execution_record && <Alert showIcon
               type={step.execution_record.status === 'passed' ? 'success' : 'error'}
               message={`历史执行记录：${step.execution_record.status === 'passed' ? '通过' : step.execution_record.status === 'timed_out' ? '超时' : '失败'}`}

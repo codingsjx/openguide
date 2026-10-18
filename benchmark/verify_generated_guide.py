@@ -322,6 +322,14 @@ def to_generated_guide(guide) -> "object":
             evidence=GenEvidence(**s.evidence.model_dump()),
             original_command=s.original_command,
             command_derivation=s.command_derivation,
+            original_stage=s.original_stage,
+            working_directory=s.working_directory,
+            directory_basis=s.directory_basis,
+            required_paths=s.required_paths,
+            missing_inputs=s.missing_inputs,
+            prerequisite_step_ids=s.prerequisite_step_ids,
+            context_notes=s.context_notes,
+            success_checks=s.success_checks,
         )
         for s in guide.steps
     ]

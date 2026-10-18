@@ -7,6 +7,7 @@ export function parseSavedGuide(text: string): Guide {
     throw new Error('指南格式无效，需要 GitHub 仓库地址和 steps 列表')
   }
   const ids = new Set<number>()
+  const relativePath = (value: unknown) => typeof value === 'string' && value.length > 0 && !/^(?:\/|[A-Za-z]:)/.test(value) && !value.includes('\\') && !value.split('/').includes('..')
   for (const step of data.steps) {
     if (!step || !Number.isInteger(step.step_id) || ids.has(step.step_id) ||
         !['A', 'B', 'C', 'D'].includes(step.stage) || typeof step.title !== 'string' ||
@@ -21,14 +22,28 @@ export function parseSavedGuide(text: string): Guide {
       throw new Error('指南步骤或证据字段格式无效')
     }
     ids.add(step.step_id)
+    if ((step.working_directory != null && !relativePath(step.working_directory)) ||
+        (step.directory_basis != null && !['build_file', 'unknown', 'clone_destination'].includes(step.directory_basis)) ||
+        ['required_paths', 'missing_inputs'].some((field) => step[field] != null && (!Array.isArray(step[field]) || step[field].some((p: unknown) => !relativePath(p)))) ||
+        (step.context_notes != null && (!Array.isArray(step.context_notes) || step.context_notes.some((n: unknown) => typeof n !== 'string'))) ||
+        (step.success_checks != null && (!Array.isArray(step.success_checks) || step.success_checks.some((n: unknown) => typeof n !== 'string'))) ||
+        (step.prerequisite_step_ids != null && (!Array.isArray(step.prerequisite_step_ids) || step.prerequisite_step_ids.some((id: unknown) => !Number.isInteger(id))))) {
+      throw new Error('操作目录或前置条件格式无效')
+    }
     if (step.execution_record != null) {
       const record = step.execution_record
       if (!['passed', 'failed', 'timed_out'].includes(record.status) || record.command !== step.command ||
           record.commit_sha !== data.default_branch || !/^[0-9a-f]{40}$/.test(record.commit_sha) ||
+          (record.working_directory != null && (!relativePath(record.working_directory) || record.working_directory !== step.working_directory)) ||
           ['environment', 'summary', 'report'].some((field) => typeof record[field] !== 'string')) {
         throw new Error('执行记录与当前命令或固定提交不一致')
       }
     }
+  }
+  const earlier = new Set<number>()
+  for (const step of data.steps) {
+    if ((step.prerequisite_step_ids ?? []).some((id: number) => !earlier.has(id))) throw new Error('前置步骤必须引用指南中已出现的步骤')
+    earlier.add(step.step_id)
   }
   const [, owner, repo] = data.repo_url.match(/^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/?$/)
   return { ...data, owner, repo,

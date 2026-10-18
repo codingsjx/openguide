@@ -26,6 +26,14 @@ class GenStep(BaseModel):
     command: str | None = None
     original_command: str | None = None
     command_derivation: str = ""
+    original_stage: str | None = None
+    working_directory: str | None = None
+    directory_basis: str = "unknown"
+    required_paths: list[str] = Field(default_factory=list)
+    missing_inputs: list[str] = Field(default_factory=list)
+    prerequisite_step_ids: list[int] = Field(default_factory=list)
+    context_notes: list[str] = Field(default_factory=list)
+    success_checks: list[str] = Field(default_factory=list)
     expected: str = ""
     fail_hints: list[str] = Field(default_factory=list)
     evidence: GenEvidence = Field(default_factory=GenEvidence)

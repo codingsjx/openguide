@@ -41,3 +41,11 @@ test('execution result cannot be attached to another command or commit', () => {
   f.steps[0].execution_record.command = f.steps[0].command
   assert.equal(parseSavedGuide(JSON.stringify(f)).steps[0].execution_record.status, 'passed')
 })
+test('working directory cannot escape the checkout', () => {
+  const f = fixture(); f.steps[0].working_directory = '../outside'
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})
+test('prerequisites cannot point forward or to nonexistent steps', () => {
+  const f = fixture(); f.steps[0].prerequisite_step_ids = [2]
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})

@@ -18,6 +18,14 @@ export interface GuideStep {
   command: string | null
   original_command?: string | null
   command_derivation?: string
+  original_stage?: 'A' | 'B' | 'C' | 'D' | null
+  working_directory?: string | null
+  directory_basis?: 'build_file' | 'unknown' | 'clone_destination'
+  required_paths?: string[]
+  missing_inputs?: string[]
+  prerequisite_step_ids?: number[]
+  context_notes?: string[]
+  success_checks?: string[]
   execution_record?: {
     status: 'passed' | 'failed' | 'timed_out'
     command: string
@@ -25,6 +33,7 @@ export interface GuideStep {
     environment: string
     summary: string
     report: string
+    working_directory?: string | null
   } | null
   expected: string
   fail_hints: string[]

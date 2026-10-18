@@ -21,6 +21,7 @@ from backend.core.decide.decider import decide
 from backend.core.generate.evidence import verify_step_evidence
 from backend.core.generate.llm import LLMClient, LLMUnavailable
 from backend.core.generate.make_recipe import expand_make_recipe
+from backend.core.generate.workflow import prepare_workflow
 from backend.core.generate.prompts import build_stage_messages, step_from_llm_json
 from backend.core.generate.schemas import Evidence, Guide, GuideStep
 from backend.core.github.recon import RawSignals
@@ -100,7 +101,7 @@ def build_guide(
 
 def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> list[GuideStep]:
     """Shared audit for product and paired before/after experiments."""
-    steps = [expand_make_recipe(step, sig) for step in steps]
+    steps = prepare_workflow(sig, [expand_make_recipe(step, sig) for step in steps])
     steps = _verify_and_relabel(sig, steps)
     # Second pass: try to find a real source for still-missing steps by
     # re-searching the index with the step's own title/command.
@@ -113,7 +114,7 @@ def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> li
             st.execution_record = None
             st.expected = "请先在仓库文档中确认操作方法"
             st.fail_hints.append("命令未通过原文核验，已隐藏；可打开仓库文档或向维护者提问")
-    return steps
+    return prepare_workflow(sig, steps)
 
 
 def _build_index(sig: RawSignals) -> RepoIndex:
@@ -215,7 +216,7 @@ _TITLES = {
 # git/PR). We now only accept a command whose family matches the stage, and
 # fall back to no command rather than mis-attributing one (无证据不宣称).
 _STAGE_CMD_PATTERNS = {
-    "A": r"^(pip(?:3)? install|uv (?:sync|venv|pip install)|poetry (?:install|sync)|conda (?:create|env create|install)|python(?:3)? -m (?:pip install|venv)|virtualenv|npm (?:ci|install)|pnpm install|yarn(?: install)?$|cargo build|go mod (?:download|tidy)|bundle install|gem install|composer install)\b",
+    "A": r"^(git clone|pip(?:3)? install|uv (?:sync|venv|pip install)|poetry (?:install|sync)|conda (?:create|env create|install)|python(?:3)? -m (?:pip install|venv)|virtualenv|npm (?:ci|install)|pnpm install|yarn(?: install)?$|cargo build|go mod (?:download|tidy)|bundle install|gem install|composer install)\b",
     "B": r"^(pytest|tox|nox|python -m pytest|python -m unittest|npm (test|run test)|pnpm (test|run test)|yarn (test|run test)|cargo test|go test|make (test|check)|bundle exec rspec)\b",
     "C": r"^(gh issue|git (log|branch))\b",
     "D": r"^(git (checkout|switch|add|commit|push|clone|remote|branch)|gh (pr|repo|fork))\b",
