@@ -11,6 +11,28 @@ from backend.core.generate.schemas import Evidence, GuideStep
 from backend.core.github.models import DocFile, RepoMeta
 from backend.core.github.recon import RawSignals
 from backend.core.index.service import RepoIndex
+import pytest
+
+
+@pytest.mark.parametrize("fields,warning", [
+    ({"locked": True, "assignees": []}, "讨论已锁定"),
+    ({"locked": False, "assignees": [{"login": "someone"}]}, "已有负责人"),
+    ({}, "未取得字段"),
+    ({"locked": False, "assignees": []}, "待确认候选"),
+])
+def test_issue_candidates_never_claim_availability(fields, warning):
+    from backend.core.generate.pipeline import audit_steps
+    sig = make_signals()
+    sig.issues[0].update(fields)
+    idx = RepoIndex("o", "lib")
+    idx.index(sig)
+    step = GuideStep(step_id=1, stage="C", title="立即认领，保证适合新手",
+                     expected="已经完成贡献", evidence=Evidence(kind="issue", source="#3", quote="Add docs"))
+    result = audit_steps(sig, idx, [step])[0]
+    assert "立即认领" not in result.title
+    assert warning in result.title + " ".join(result.context_notes)
+    assert "本步骤不代表已认领或已完成贡献" in result.expected
+    assert "关联 PR" in result.success_checks[0]
 
 
 def make_signals() -> RawSignals:

@@ -134,11 +134,11 @@ def assemble_perspective_chunks(sig: RawSignals) -> list[PerspectiveChunk]:
     chunks: list[PerspectiveChunk] = []
 
     # ---- V1: entry & conventions (per-doc real source) ---------------------
-    for name in _V1_FILES:
-        hit = _doc_by_path(sig, name)
-        if hit:
-            real_path, text = hit
-            _emit_doc_chunks("v1", real_path, text, chunks)
+    for doc in sig.doc_files:
+        name = doc.path.replace("\\", "/").rsplit("/", 1)[-1].lower()
+        stem = name.rsplit(".", 1)[0]
+        if name in _V1_FILES or stem in {"contributing", "code_of_conduct", "pull_request_template"}:
+            _emit_doc_chunks("v1", doc.path, doc.text, chunks)
     if sig.meta.description and not chunks:
         chunks.append(
             PerspectiveChunk(
@@ -208,7 +208,12 @@ def assemble_perspective_chunks(sig: RawSignals) -> list[PerspectiveChunk]:
         title = iss.get("title", "")
         body = (iss.get("body") or "")[:600]
         labels = ", ".join(l.get("name", "") for l in iss.get("labels", []))
-        line = f"issue #{num} [{labels}] {title}\n{body}"
+        owners = iss.get("assignees")
+        owner_count = len(owners) if isinstance(owners, list) else "unknown"
+        line = (f"issue #{num} [{labels}] {title}\n"
+                f"state={iss.get('state', 'unknown')}; assignee_count={owner_count}; "
+                f"locked={iss.get('locked', 'unknown')}; updated_at={iss.get('updated_at', 'unknown')}\n"
+                "采集快照不是实时可认领证明；请核对最新讨论及关联 PR。\n" + body)
         chunks.append(
             PerspectiveChunk(
                 perspective="v4",

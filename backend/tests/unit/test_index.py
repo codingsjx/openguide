@@ -17,6 +17,24 @@ from backend.core.index.retrieval import _guess_kind
 from backend.core.index.service import RepoIndex
 
 
+def test_nested_contribution_rules_and_issue_snapshot_are_retrievable():
+    from backend.core.github.models import DocFile
+    sig = make_signals()
+    sig.doc_files.extend([
+        DocFile(path="docs/dev/contributing.rst", name="contributing.rst", text="Include regression coverage."),
+        DocFile(path=".github/PULL_REQUEST_TEMPLATE.md", name="PULL_REQUEST_TEMPLATE.md", text="Describe validation."),
+    ])
+    sig.issues[0].update(locked=True, assignees=[{"login": "dev"}])
+    chunks = assemble_perspective_chunks(sig)
+    sources = [c.source_path for c in chunks if c.perspective == "v1"]
+    assert "docs/dev/contributing.rst" in sources
+    assert ".github/PULL_REQUEST_TEMPLATE.md" in sources
+    assert len(sources) == len(set(sources))
+    issue = next(c for c in chunks if c.perspective == "v4")
+    assert "assignee_count=1" in issue.text
+    assert "locked=True" in issue.text
+
+
 def make_signals() -> RawSignals:
     docs = [
         ("README.md", "# My Lib\nInstall with `pip install -e .[dev]`.\nRun `pytest`."),

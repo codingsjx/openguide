@@ -114,7 +114,30 @@ def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> li
             st.execution_record = None
             st.expected = "请先在仓库文档中确认操作方法"
             st.fail_hints.append("命令未通过原文核验，已隐藏；可打开仓库文档或向维护者提问")
-    return prepare_workflow(sig, steps)
+    steps = prepare_workflow(sig, steps)
+    for step in steps:
+        if step.stage != "C" or step.evidence.kind != "issue":
+            continue
+        issue = next((i for i in sig.issues if f"#{i.get('number')}" == step.evidence.source), None)
+        if issue is None:
+            continue
+        blockers = []
+        if issue.get("state") != "open":
+            blockers.append("状态未确认开放")
+        if issue.get("locked") is True:
+            blockers.append("讨论已锁定")
+        if issue.get("assignees") or issue.get("assignee"):
+            blockers.append("已有负责人")
+        unknown = [key for key in ("state", "locked", "assignees") if key not in issue]
+        step.title = f"核对 issue #{issue['number']}（{'；'.join(blockers) if blockers else '待确认候选'}）"
+        step.expected = "核对最新讨论、关联 PR 和维护者认领规则后，再决定是否参与；本步骤不代表已认领或已完成贡献。"
+        step.context_notes.append("issue 标签不能证明适合新手；采集状态可能已变化，关联 PR 与最新讨论尚未核验。")
+        if blockers:
+            step.context_notes.append("当前快照存在阻碍：" + "；".join(blockers) + "。请先核对，不建议直接认领。")
+        if unknown:
+            step.context_notes.append("未取得字段：" + ", ".join(unknown) + "，不能据此判断无人负责或讨论未锁定。")
+        step.success_checks = ["已打开原始 issue，核对负责人、最新讨论及关联 PR，并确认维护者允许参与。"]
+    return steps
 
 
 def _build_index(sig: RawSignals) -> RepoIndex:

@@ -32,8 +32,8 @@ def _step_instructions(stage: str) -> str:
     if stage == "B":
         return "给出运行测试基线的步骤：怎么跑测试、期望看到什么（如全部通过/passed）。"
     if stage == "C":
-        return "从提供的 issue 槽位里挑 1-3 个适合新手、可直接认领的 issue，并给推荐理由。"
-    return "给出从 fork 到提交 PR 的完整步骤（clone→分支→commit→push→建 PR）。"
+        return "从提供的 issue 中挑 1-3 个待确认候选，说明与新手任务的关联。检查 state、assignees、locked；已关闭、锁定或已有负责人时不要建议认领。字段缺失就标注未知。标签不能证明难度或可认领；提交前打开 issue 核对最新讨论、关联 PR，并按维护者流程确认。"
+    return "仅依据仓库贡献规范给出分支、修改、测试和提交 PR 的步骤；保留模板、测试及审查要求，缺少说明则待确认。不要重复阶段 A 的克隆。"
 
 
 def build_stage_messages(stage: str, context_snippets: list[dict]) -> list[dict[str, str]]:
