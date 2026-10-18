@@ -30,7 +30,7 @@ from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     BaseDocTemplate, Frame, KeepTogether, PageBreak, PageTemplate, Paragraph,
-    Spacer, Table, TableStyle,
+    Spacer, Table, TableStyle, NextPageTemplate,
 )
 
 FONT_DIR = Path(r"C:\Windows\Fonts")
@@ -62,11 +62,11 @@ CONTENT_W = PAGE_W - 2 * MARGIN_X
 def make_styles():
     S = {}
     S["h1"] = ParagraphStyle("h1", fontName="BodyBold", fontSize=17, leading=24,
-                             textColor=INK, spaceBefore=16, spaceAfter=8)
+                             textColor=INK, spaceBefore=16, spaceAfter=8, keepWithNext=True)
     S["h2"] = ParagraphStyle("h2", fontName="BodyBold", fontSize=13.5, leading=20,
-                             textColor=ACCENT, spaceBefore=13, spaceAfter=6)
+                             textColor=ACCENT, spaceBefore=13, spaceAfter=6, keepWithNext=True)
     S["h3"] = ParagraphStyle("h3", fontName="BodyBold", fontSize=11.5, leading=17,
-                             textColor=INK, spaceBefore=10, spaceAfter=4)
+                             textColor=INK, spaceBefore=10, spaceAfter=4, keepWithNext=True)
     S["body"] = ParagraphStyle("body", fontName="Body", fontSize=9.6, leading=16.4,
                                textColor=INK, alignment=TA_JUSTIFY, spaceAfter=6,
                                wordWrap="CJK")
@@ -205,6 +205,9 @@ def parse_markdown(md: str):
     lines, out, i = md.splitlines(), [], 0
     while i < len(lines):
         s = lines[i].strip()
+        if re.fullmatch(r"[-*_]{3,}", s):
+            i += 1
+            continue
         if s.startswith("```"):
             i += 1
             buf = []
@@ -278,16 +281,16 @@ def build(md_path: Path, out_path: Path) -> Path:
                        style=TableStyle([("BACKGROUND", (0, 0), (-1, -1), ACCENT_WARM)])))
     story.append(Spacer(1, 5 * mm))
     story.append(Paragraph(
-        "输入一个 GitHub 仓库 URL，输出一份<b>带证据、可执行、会陪你走完每一步</b>的新手贡献路线图。",
+        "输入 GitHub 仓库 URL，生成<b>分阶段、可回溯原文</b>的新手贡献路线图。未通过原文核验的命令隐藏，执行与用户效果另行验证。",
         ParagraphStyle("cov3", fontName="Body", fontSize=11.5, leading=21,
                        textColor=MUTED, wordWrap="CJK", alignment=TA_LEFT)))
     story.append(Spacer(1, 10 * mm))
     meta = [
-        ("申报方向", "方向一（开源赋能的 AI 应用创新）为主；方向三（真实开源贡献闭环）作佐证"),
-        ("作品名称", "OpenGuide —— 开源项目新手贡献智能向导"),
-        ("团队", "3 人（全栈，代号 A / B / C）"),
+        ("申报方向", "保持方向一：开源赋能的 AI 应用创新"),
+        ("作品名称", "OpenGuide开源贡献向导"),
+        ("验证状态", "工程验证已进行；用户效果与上游贡献闭环待补充"),
         ("许可", "MIT"),
-        ("文档版本", "2026-10-06"),
+        ("文档版本", "2026-10-18 · 修订工作稿"),
     ]
     mt = Table([[Paragraph(f"<b>{k}</b>", S["table"]), Paragraph(v, S["table"])] for k, v in meta],
                colWidths=[26 * mm, CONTENT_W - 26 * mm], hAlign="LEFT")
@@ -299,6 +302,7 @@ def build(md_path: Path, out_path: Path) -> Path:
     ]))
     story.append(mt)
 
+    story.append(NextPageTemplate("body"))
     story.append(PageBreak())
     story.append(Paragraph("目录", ParagraphStyle(
         "toc_title", fontName="BodyBold", fontSize=13.5, leading=20,
@@ -317,7 +321,7 @@ def build(md_path: Path, out_path: Path) -> Path:
         elif kind == "p":
             story.append(Paragraph(inline(payload), S["body"]))
         elif kind == "quote":
-            story.extend([Spacer(1, 2), callout_block(payload, S), Spacer(1, 6)])
+            story.extend([callout_block(payload, S), Spacer(1, 6)])
         elif kind == "ul":
             for it in payload:
                 story.append(Paragraph(inline(it), S["bullet"], bulletText="\u2022"))
@@ -327,11 +331,10 @@ def build(md_path: Path, out_path: Path) -> Path:
                 story.append(Paragraph(inline(it), S["bullet"], bulletText=f"{n}."))
             story.append(Spacer(1, 2))
         elif kind == "code":
-            story.extend([Spacer(1, 2), code_block(payload, S), Spacer(1, 7)])
+            story.extend([code_block(payload, S), Spacer(1, 7)])
         elif kind == "table":
             t = table_block(payload, S)
-            story.extend([Spacer(1, 2),
-                          KeepTogether([t]) if len(payload) >= 3 else t,
+            story.extend([t,
                           Spacer(1, 7)])
 
     doc.build(story)

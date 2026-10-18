@@ -1,0 +1,128 @@
+{
+  "repo_url": "https://github.com/psf/requests",
+  "owner": "psf",
+  "repo": "requests",
+  "default_branch": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "unsuitable": false,
+  "reasons": [],
+  "steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "",
+      "title": "准备 Python 3.10 或 Python 3.14 环境",
+      "command": null,
+      "expected": "已准备可用的 Python 环境；仓库工作流使用 Python 3.10 和 3.14。",
+      "fail_hints": [
+        "资料未说明本地如何安装 Python。"
+      ],
+      "evidence": {
+        "kind": "file",
+        "source": ".github/workflows/typecheck.yml",
+        "quote": "python-version: [\"3.10\", \"3.14\"]",
+        "verification": "quote_verified",
+        "line_start": 14,
+        "line_end": 14,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 2,
+      "stage": "A",
+      "stage_label": "",
+      "title": "安装开发依赖",
+      "command": "python -m pip install -r requirements-dev.txt",
+      "expected": "开发依赖安装完成。",
+      "fail_hints": [
+        "若命令执行失败，请确认 Python 与 pip 可用，并确认 requirements-dev.txt 存在。"
+      ],
+      "evidence": {
+        "kind": "file",
+        "source": "Makefile",
+        "quote": "python -m pip install -r requirements-dev.txt",
+        "verification": "command_verified",
+        "line_start": 3,
+        "line_end": 3,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 3,
+      "stage": "B",
+      "stage_label": "",
+      "title": "运行 pytest 测试并生成 JUnit 报告",
+      "command": null,
+      "expected": "请先在仓库文档中确认操作方法",
+      "fail_hints": [
+        "命令未通过原文核验，已隐藏；可打开仓库文档或向维护者提问"
+      ],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "命令动作不属于当前阶段"
+      }
+    },
+    {
+      "step_id": 4,
+      "stage": "C",
+      "stage_label": "",
+      "title": "待提供可引用的 issue 槽位资料后再推荐适合新手且可直接认领的 issue",
+      "command": null,
+      "expected": "目前没有可依据的 issue 原文，因此无法挑选或推荐 issue。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    },
+    {
+      "step_id": 5,
+      "stage": "D",
+      "stage_label": "",
+      "title": "确认 fork、创建分支、提交、推送和创建 PR 的仓库资料",
+      "command": null,
+      "expected": "待补充仓库原文后，才能生成从 fork 到提交 PR 的完整步骤。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    },
+    {
+      "step_id": 6,
+      "stage": "D",
+      "stage_label": "",
+      "title": "克隆 Requests 仓库",
+      "command": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+      "expected": "Requests 仓库被克隆到本地。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+        "verification": "command_verified",
+        "line_start": 65,
+        "line_end": 65,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    }
+  ],
+  "generation_mode": "llm",
+  "warnings": [
+    "保存的真实模型输出，使用固定源码快照；命令尚未执行。"
+  ]
+}

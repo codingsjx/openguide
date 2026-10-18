@@ -15,6 +15,10 @@ class Evidence(BaseModel):
     kind: Literal["file", "issue", "missing"] = "file"
     source: str = ""  # repo-relative "path#L22" 或 issue 引用；missing 时为空
     quote: str = ""  # 证据原文摘录（可选）
+    verification: Literal["missing", "source_exists", "quote_verified", "command_verified"] = "missing"
+    line_start: int | None = None
+    line_end: int | None = None
+    reason: str = ""
 
 
 class GuideStep(BaseModel):
@@ -36,3 +40,5 @@ class Guide(BaseModel):
     unsuitable: bool = False
     reasons: list[str] = Field(default_factory=list)
     steps: list[GuideStep] = Field(default_factory=list)
+    generation_mode: Literal["heuristic", "llm", "mixed"] = "heuristic"
+    warnings: list[str] = Field(default_factory=list)

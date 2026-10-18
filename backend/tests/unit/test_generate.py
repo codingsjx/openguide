@@ -33,7 +33,7 @@ def test_available_sources_include_docs_root_tree():
 
 def test_file_evidence_resolves():
     sig = make_signals()
-    ev = resolve_evidence_source("README.md#L3", sig)
+    ev = resolve_evidence_source("README.md#L1", sig)
     assert ev.kind == "file"
 
 

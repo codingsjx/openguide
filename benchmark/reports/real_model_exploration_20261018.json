@@ -1,0 +1,1198 @@
+{
+  "kind": "exploratory-real-model-diagnostics",
+  "date": "2026-10-18",
+  "unique_repositories": 5,
+  "repo_repetitions": 7,
+  "successful_arms": 28,
+  "model_calls": 63,
+  "reported_total_tokens": 299110,
+  "limitations": [
+    "golden needs independent review at snapshot SHA",
+    "no command execution",
+    "no user-study or contribution-outcome evidence",
+    "code differs across diagnostic runs; do not pool as one final benchmark",
+    "git-source snapshots do not include issues or GitHub activity",
+    "model identity and token usage reported by third-party service"
+  ],
+  "runs": [
+    {
+      "repo": "pallets/click",
+      "arm": "single_shot",
+      "repeat": 0,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "da23edad933d0c66f6592006ae89855da93ef84a8717b93f840aa13030dc3fac",
+      "status": "ok",
+      "elapsed_s": 40.702,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 13,
+        "step_coverage": 0.4,
+        "evidence_hit": 1.0,
+        "command_exec": 0.0,
+        "command_correct": 0.07692307692307693,
+        "assert_rate": 1.0,
+        "missing_commands": [],
+        "elapsed_s": 40.70157640000002,
+        "command_coverage": 0.3333333333333333
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T004844Z",
+      "code_sha256": "5ebe13621d3a97d9f7c5dff893570040bbfe3ec75d6c6e281f3d53d21b791cbd",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 1,
+      "total_tokens": 8623
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "flat_rag",
+      "repeat": 0,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "da23edad933d0c66f6592006ae89855da93ef84a8717b93f840aa13030dc3fac",
+      "status": "ok",
+      "elapsed_s": 23.032,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 4,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.0,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.0,
+        "missing_commands": [],
+        "elapsed_s": 23.0323542000001,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T004844Z",
+      "code_sha256": "5ebe13621d3a97d9f7c5dff893570040bbfe3ec75d6c6e281f3d53d21b791cbd",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 4,
+      "total_tokens": 17972
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "layered_raw",
+      "repeat": 0,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "da23edad933d0c66f6592006ae89855da93ef84a8717b93f840aa13030dc3fac",
+      "status": "ok",
+      "elapsed_s": 37.59,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 4,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.25,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.25,
+        "missing_commands": [],
+        "elapsed_s": 37.59045349999997,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T004844Z",
+      "code_sha256": "5ebe13621d3a97d9f7c5dff893570040bbfe3ec75d6c6e281f3d53d21b791cbd",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 4,
+      "total_tokens": 17590
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "layered_verified",
+      "repeat": 0,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "da23edad933d0c66f6592006ae89855da93ef84a8717b93f840aa13030dc3fac",
+      "status": "ok",
+      "elapsed_s": 0.005,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 4,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.25,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.25,
+        "missing_commands": [],
+        "elapsed_s": 0.005150899999989633,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T004844Z",
+      "code_sha256": "5ebe13621d3a97d9f7c5dff893570040bbfe3ec75d6c6e281f3d53d21b791cbd",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 0,
+      "total_tokens": 0,
+      "current_audit_replay": {
+        "repo": "pallets/click",
+        "repeat": 0,
+        "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "before": {
+          "n_golden": 5,
+          "n_gen": 4,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.25,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.25,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "after": {
+          "n_golden": 5,
+          "n_gen": 4,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.25,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.25,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "commands_before": 1,
+        "commands_after": 1,
+        "commands_without_literal_support_before": 1,
+        "limitations": "literal support only; no execution or semantic correctness proof"
+      }
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "single_shot",
+      "repeat": 1,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "da23edad933d0c66f6592006ae89855da93ef84a8717b93f840aa13030dc3fac",
+      "status": "ok",
+      "elapsed_s": 40.17,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 13,
+        "step_coverage": 0.4,
+        "evidence_hit": 1.0,
+        "command_exec": 0.0,
+        "command_correct": 0.09090909090909091,
+        "assert_rate": 1.0,
+        "missing_commands": [],
+        "elapsed_s": 40.17012969999996,
+        "command_coverage": 0.3333333333333333
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T004844Z",
+      "code_sha256": "5ebe13621d3a97d9f7c5dff893570040bbfe3ec75d6c6e281f3d53d21b791cbd",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 1,
+      "total_tokens": 8467
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "flat_rag",
+      "repeat": 1,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "da23edad933d0c66f6592006ae89855da93ef84a8717b93f840aa13030dc3fac",
+      "status": "ok",
+      "elapsed_s": 26.28,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 4,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.0,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.0,
+        "missing_commands": [],
+        "elapsed_s": 26.279510400000163,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T004844Z",
+      "code_sha256": "5ebe13621d3a97d9f7c5dff893570040bbfe3ec75d6c6e281f3d53d21b791cbd",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 4,
+      "total_tokens": 18160
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "layered_raw",
+      "repeat": 1,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "da23edad933d0c66f6592006ae89855da93ef84a8717b93f840aa13030dc3fac",
+      "status": "ok",
+      "elapsed_s": 32.236,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 4,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.0,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.0,
+        "missing_commands": [],
+        "elapsed_s": 32.235480900000084,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T004844Z",
+      "code_sha256": "5ebe13621d3a97d9f7c5dff893570040bbfe3ec75d6c6e281f3d53d21b791cbd",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 4,
+      "total_tokens": 17445
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "layered_verified",
+      "repeat": 1,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "da23edad933d0c66f6592006ae89855da93ef84a8717b93f840aa13030dc3fac",
+      "status": "ok",
+      "elapsed_s": 0.005,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 4,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.0,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.0,
+        "missing_commands": [],
+        "elapsed_s": 0.005166099999996732,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T004844Z",
+      "code_sha256": "5ebe13621d3a97d9f7c5dff893570040bbfe3ec75d6c6e281f3d53d21b791cbd",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 0,
+      "total_tokens": 0,
+      "current_audit_replay": {
+        "repo": "pallets/click",
+        "repeat": 1,
+        "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "before": {
+          "n_golden": 5,
+          "n_gen": 4,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.0,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.0,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "after": {
+          "n_golden": 5,
+          "n_gen": 4,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.0,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.0,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "commands_before": 0,
+        "commands_after": 0,
+        "commands_without_literal_support_before": 0,
+        "limitations": "literal support only; no execution or semantic correctness proof"
+      }
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "single_shot",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "cf5a4f6606d712d7ba21452ebe01cfae9884e55dc6ed60ec80b57461998cbd72",
+      "status": "ok",
+      "elapsed_s": 24.841,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 11,
+        "step_coverage": 0.0,
+        "evidence_hit": 0.8181818181818182,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 1.0,
+        "missing_commands": [],
+        "elapsed_s": 24.841290000000072,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005100Z",
+      "code_sha256": "84235b08d25d245645892f7fb22790e7956790525fdf68bae2b50fba4877221f",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 1,
+      "total_tokens": 11410
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "flat_rag",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "cf5a4f6606d712d7ba21452ebe01cfae9884e55dc6ed60ec80b57461998cbd72",
+      "status": "ok",
+      "elapsed_s": 33.981,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 11,
+        "step_coverage": 0.0,
+        "evidence_hit": 0.36363636363636365,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.36363636363636365,
+        "missing_commands": [],
+        "elapsed_s": 33.981259000000136,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005100Z",
+      "code_sha256": "84235b08d25d245645892f7fb22790e7956790525fdf68bae2b50fba4877221f",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 4,
+      "total_tokens": 17803
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "layered_raw",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "cf5a4f6606d712d7ba21452ebe01cfae9884e55dc6ed60ec80b57461998cbd72",
+      "status": "ok",
+      "elapsed_s": 32.871,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 8,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.5,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.5,
+        "missing_commands": [],
+        "elapsed_s": 32.871208499999966,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005100Z",
+      "code_sha256": "84235b08d25d245645892f7fb22790e7956790525fdf68bae2b50fba4877221f",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 4,
+      "total_tokens": 12546
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "layered_verified",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "cf5a4f6606d712d7ba21452ebe01cfae9884e55dc6ed60ec80b57461998cbd72",
+      "status": "ok",
+      "elapsed_s": 0.009,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 8,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.375,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.375,
+        "missing_commands": [],
+        "elapsed_s": 0.008803799999896,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005100Z",
+      "code_sha256": "84235b08d25d245645892f7fb22790e7956790525fdf68bae2b50fba4877221f",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 0,
+      "total_tokens": 0,
+      "current_audit_replay": {
+        "repo": "psf/requests",
+        "repeat": 0,
+        "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "before": {
+          "n_golden": 5,
+          "n_gen": 8,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.5,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.5,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "after": {
+          "n_golden": 5,
+          "n_gen": 8,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.375,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.375,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "commands_before": 3,
+        "commands_after": 2,
+        "commands_without_literal_support_before": 0,
+        "limitations": "literal support only; no execution or semantic correctness proof"
+      }
+    },
+    {
+      "repo": "camelot-dev/camelot",
+      "arm": "single_shot",
+      "repeat": 0,
+      "sha": "92777b852e00933a5c4b9ba642601784604356cd",
+      "snapshot_sha256": "9ecf95162fabf278fdb2838715febc9191fd37463400a10b30d7443a43671cfc",
+      "status": "ok",
+      "elapsed_s": 16.741,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 10,
+        "step_coverage": 0.2,
+        "evidence_hit": 1.0,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 1.0,
+        "missing_commands": [],
+        "elapsed_s": 16.740991900000154,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 1,
+      "total_tokens": 11894
+    },
+    {
+      "repo": "camelot-dev/camelot",
+      "arm": "flat_rag",
+      "repeat": 0,
+      "sha": "92777b852e00933a5c4b9ba642601784604356cd",
+      "snapshot_sha256": "9ecf95162fabf278fdb2838715febc9191fd37463400a10b30d7443a43671cfc",
+      "status": "ok",
+      "elapsed_s": 45.073,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 19,
+        "step_coverage": 0.6,
+        "evidence_hit": 0.9473684210526315,
+        "command_exec": 0.0,
+        "command_correct": 0.21428571428571427,
+        "assert_rate": 0.9473684210526315,
+        "missing_commands": [],
+        "elapsed_s": 45.072832800000015,
+        "command_coverage": 0.5
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 4,
+      "total_tokens": 14720
+    },
+    {
+      "repo": "camelot-dev/camelot",
+      "arm": "layered_raw",
+      "repeat": 0,
+      "sha": "92777b852e00933a5c4b9ba642601784604356cd",
+      "snapshot_sha256": "9ecf95162fabf278fdb2838715febc9191fd37463400a10b30d7443a43671cfc",
+      "status": "ok",
+      "elapsed_s": 37.157,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 11,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.8181818181818182,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.8181818181818182,
+        "missing_commands": [],
+        "elapsed_s": 37.15700469999979,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 4,
+      "total_tokens": 18123
+    },
+    {
+      "repo": "camelot-dev/camelot",
+      "arm": "layered_verified",
+      "repeat": 0,
+      "sha": "92777b852e00933a5c4b9ba642601784604356cd",
+      "snapshot_sha256": "9ecf95162fabf278fdb2838715febc9191fd37463400a10b30d7443a43671cfc",
+      "status": "ok",
+      "elapsed_s": 0.023,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 11,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.36363636363636365,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.36363636363636365,
+        "missing_commands": [],
+        "elapsed_s": 0.02285000000006221,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 0,
+      "total_tokens": 0,
+      "current_audit_replay": {
+        "repo": "camelot-dev/camelot",
+        "repeat": 0,
+        "sha": "92777b852e00933a5c4b9ba642601784604356cd",
+        "before": {
+          "repo_id": "camelot-dev/camelot",
+          "n_golden": 5,
+          "n_gen": 11,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.8181818181818182,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.8181818181818182,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "after": {
+          "repo_id": "camelot-dev/camelot",
+          "n_golden": 5,
+          "n_gen": 11,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.36363636363636365,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.36363636363636365,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "commands_before": 8,
+        "commands_after": 4,
+        "commands_without_literal_support_before": 1,
+        "limitations": "literal support only; no execution or semantic correctness proof"
+      }
+    },
+    {
+      "repo": "cookiecutter/cookiecutter",
+      "arm": "single_shot",
+      "repeat": 0,
+      "sha": "c88fbe921c97c58b65f1883ba90a0ab53cc91b34",
+      "snapshot_sha256": "8f1cbe5ccca8fc0cd7db9bb3e9ecb63ad0fba67c2caa88f48cbb831957a18bb0",
+      "status": "ok",
+      "elapsed_s": 26.372,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 12,
+        "step_coverage": 0.2,
+        "evidence_hit": 1.0,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 1.0,
+        "missing_commands": [],
+        "elapsed_s": 26.371898999999758,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 1,
+      "total_tokens": 7278
+    },
+    {
+      "repo": "cookiecutter/cookiecutter",
+      "arm": "flat_rag",
+      "repeat": 0,
+      "sha": "c88fbe921c97c58b65f1883ba90a0ab53cc91b34",
+      "snapshot_sha256": "8f1cbe5ccca8fc0cd7db9bb3e9ecb63ad0fba67c2caa88f48cbb831957a18bb0",
+      "status": "ok",
+      "elapsed_s": 49.292,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 14,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.8571428571428571,
+        "command_exec": 0.0,
+        "command_correct": 0.25,
+        "assert_rate": 0.8571428571428571,
+        "missing_commands": [],
+        "elapsed_s": 49.29229759999998,
+        "command_coverage": 0.3333333333333333
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 4,
+      "total_tokens": 14408
+    },
+    {
+      "repo": "cookiecutter/cookiecutter",
+      "arm": "layered_raw",
+      "repeat": 0,
+      "sha": "c88fbe921c97c58b65f1883ba90a0ab53cc91b34",
+      "snapshot_sha256": "8f1cbe5ccca8fc0cd7db9bb3e9ecb63ad0fba67c2caa88f48cbb831957a18bb0",
+      "status": "ok",
+      "elapsed_s": 44.26,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 15,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.9333333333333333,
+        "command_exec": 0.0,
+        "command_correct": 0.2,
+        "assert_rate": 0.9333333333333333,
+        "missing_commands": [],
+        "elapsed_s": 44.259752500000104,
+        "command_coverage": 0.3333333333333333
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 4,
+      "total_tokens": 14428
+    },
+    {
+      "repo": "cookiecutter/cookiecutter",
+      "arm": "layered_verified",
+      "repeat": 0,
+      "sha": "c88fbe921c97c58b65f1883ba90a0ab53cc91b34",
+      "snapshot_sha256": "8f1cbe5ccca8fc0cd7db9bb3e9ecb63ad0fba67c2caa88f48cbb831957a18bb0",
+      "status": "ok",
+      "elapsed_s": 0.019,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 15,
+        "step_coverage": 0.2,
+        "evidence_hit": 0.5333333333333333,
+        "command_exec": 0.0,
+        "command_correct": 0.5,
+        "assert_rate": 0.5333333333333333,
+        "missing_commands": [],
+        "elapsed_s": 0.018566200000350364,
+        "command_coverage": 0.3333333333333333
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 0,
+      "total_tokens": 0,
+      "current_audit_replay": {
+        "repo": "cookiecutter/cookiecutter",
+        "repeat": 0,
+        "sha": "c88fbe921c97c58b65f1883ba90a0ab53cc91b34",
+        "before": {
+          "repo_id": "cookiecutter/cookiecutter",
+          "n_golden": 5,
+          "n_gen": 15,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.9333333333333333,
+          "command_exec": 0.0,
+          "command_correct": 0.2,
+          "assert_rate": 0.9333333333333333,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.3333333333333333
+        },
+        "after": {
+          "repo_id": "cookiecutter/cookiecutter",
+          "n_golden": 5,
+          "n_gen": 15,
+          "step_coverage": 0.2,
+          "evidence_hit": 0.5333333333333333,
+          "command_exec": 0.0,
+          "command_correct": 0.5,
+          "assert_rate": 0.5333333333333333,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.3333333333333333
+        },
+        "commands_before": 10,
+        "commands_after": 4,
+        "commands_without_literal_support_before": 3,
+        "limitations": "literal support only; no execution or semantic correctness proof"
+      }
+    },
+    {
+      "repo": "mochajs/mocha",
+      "arm": "single_shot",
+      "repeat": 0,
+      "sha": "2c2b89600e3ba8225bf11d7919e698060a55c86e",
+      "snapshot_sha256": "371e794f6673f24612784e01418feba23e6311de4d0ce9a9ee2d0225452bfae0",
+      "status": "ok",
+      "elapsed_s": 21.777,
+      "metrics": {
+        "n_golden": 6,
+        "n_gen": 8,
+        "step_coverage": 0.16666666666666666,
+        "evidence_hit": 1.0,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 1.0,
+        "missing_commands": [],
+        "elapsed_s": 21.776784600000155,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 1,
+      "total_tokens": 12240
+    },
+    {
+      "repo": "mochajs/mocha",
+      "arm": "flat_rag",
+      "repeat": 0,
+      "sha": "2c2b89600e3ba8225bf11d7919e698060a55c86e",
+      "snapshot_sha256": "371e794f6673f24612784e01418feba23e6311de4d0ce9a9ee2d0225452bfae0",
+      "status": "ok",
+      "elapsed_s": 45.463,
+      "metrics": {
+        "n_golden": 6,
+        "n_gen": 9,
+        "step_coverage": 0.16666666666666666,
+        "evidence_hit": 0.6666666666666666,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.6666666666666666,
+        "missing_commands": [],
+        "elapsed_s": 45.46316980000029,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 4,
+      "total_tokens": 19194
+    },
+    {
+      "repo": "mochajs/mocha",
+      "arm": "layered_raw",
+      "repeat": 0,
+      "sha": "2c2b89600e3ba8225bf11d7919e698060a55c86e",
+      "snapshot_sha256": "371e794f6673f24612784e01418feba23e6311de4d0ce9a9ee2d0225452bfae0",
+      "status": "ok",
+      "elapsed_s": 33.626,
+      "metrics": {
+        "n_golden": 6,
+        "n_gen": 11,
+        "step_coverage": 0.16666666666666666,
+        "evidence_hit": 0.5454545454545454,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.5454545454545454,
+        "missing_commands": [],
+        "elapsed_s": 33.62620199999992,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 4,
+      "total_tokens": 17734
+    },
+    {
+      "repo": "mochajs/mocha",
+      "arm": "layered_verified",
+      "repeat": 0,
+      "sha": "2c2b89600e3ba8225bf11d7919e698060a55c86e",
+      "snapshot_sha256": "371e794f6673f24612784e01418feba23e6311de4d0ce9a9ee2d0225452bfae0",
+      "status": "ok",
+      "elapsed_s": 0.024,
+      "metrics": {
+        "n_golden": 6,
+        "n_gen": 11,
+        "step_coverage": 0.16666666666666666,
+        "evidence_hit": 0.45454545454545453,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 0.45454545454545453,
+        "missing_commands": [],
+        "elapsed_s": 0.02414039999985107,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005313Z",
+      "code_sha256": "49c31eb1436a3a377eac0de01e357ed8e1d6593582bed18fb0a09f9f25091860",
+      "input_source": "git-checkout",
+      "unmeasured": [
+        "issues",
+        "stars",
+        "language_bytes",
+        "release_activity",
+        "license_spdx"
+      ],
+      "model_calls": 0,
+      "total_tokens": 0,
+      "current_audit_replay": {
+        "repo": "mochajs/mocha",
+        "repeat": 0,
+        "sha": "2c2b89600e3ba8225bf11d7919e698060a55c86e",
+        "before": {
+          "repo_id": "mochajs/mocha",
+          "n_golden": 6,
+          "n_gen": 11,
+          "step_coverage": 0.16666666666666666,
+          "evidence_hit": 0.5454545454545454,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.5454545454545454,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "after": {
+          "repo_id": "mochajs/mocha",
+          "n_golden": 6,
+          "n_gen": 11,
+          "step_coverage": 0.16666666666666666,
+          "evidence_hit": 0.45454545454545453,
+          "command_exec": 0.0,
+          "command_correct": 0.0,
+          "assert_rate": 0.45454545454545453,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.0
+        },
+        "commands_before": 3,
+        "commands_after": 2,
+        "commands_without_literal_support_before": 0,
+        "limitations": "literal support only; no execution or semantic correctness proof"
+      }
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "single_shot",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "cf5a4f6606d712d7ba21452ebe01cfae9884e55dc6ed60ec80b57461998cbd72",
+      "status": "ok",
+      "elapsed_s": 24.68,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 11,
+        "step_coverage": 0.2,
+        "evidence_hit": 1.0,
+        "command_exec": 0.0,
+        "command_correct": 0.0,
+        "assert_rate": 1.0,
+        "missing_commands": [],
+        "elapsed_s": 24.67951519999997,
+        "command_coverage": 0.0
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005536Z",
+      "code_sha256": "cf9243ea922cd1042ea317a15f3e91500ee1f4a2ff8ffc338e8d5dc5c3e689c8",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 1,
+      "total_tokens": 11465
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "flat_rag",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "cf5a4f6606d712d7ba21452ebe01cfae9884e55dc6ed60ec80b57461998cbd72",
+      "status": "ok",
+      "elapsed_s": 59.933,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 11,
+        "step_coverage": 0.4,
+        "evidence_hit": 0.45454545454545453,
+        "command_exec": 0.0,
+        "command_correct": 0.6666666666666666,
+        "assert_rate": 0.45454545454545453,
+        "missing_commands": [],
+        "elapsed_s": 59.93297279999979,
+        "command_coverage": 0.6666666666666666
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005536Z",
+      "code_sha256": "cf9243ea922cd1042ea317a15f3e91500ee1f4a2ff8ffc338e8d5dc5c3e689c8",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 4,
+      "total_tokens": 14546
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "layered_raw",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "cf5a4f6606d712d7ba21452ebe01cfae9884e55dc6ed60ec80b57461998cbd72",
+      "status": "ok",
+      "elapsed_s": 40.978,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 6,
+        "step_coverage": 0.4,
+        "evidence_hit": 0.6666666666666666,
+        "command_exec": 0.0,
+        "command_correct": 0.3333333333333333,
+        "assert_rate": 0.6666666666666666,
+        "missing_commands": [],
+        "elapsed_s": 40.977889199999936,
+        "command_coverage": 0.3333333333333333
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005536Z",
+      "code_sha256": "cf9243ea922cd1042ea317a15f3e91500ee1f4a2ff8ffc338e8d5dc5c3e689c8",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 4,
+      "total_tokens": 13064
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "layered_verified",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "cf5a4f6606d712d7ba21452ebe01cfae9884e55dc6ed60ec80b57461998cbd72",
+      "status": "ok",
+      "elapsed_s": 0.007,
+      "metrics": {
+        "n_golden": 5,
+        "n_gen": 6,
+        "step_coverage": 0.4,
+        "evidence_hit": 0.5,
+        "command_exec": 0.0,
+        "command_correct": 0.5,
+        "assert_rate": 0.5,
+        "missing_commands": [],
+        "elapsed_s": 0.006769799999801762,
+        "command_coverage": 0.3333333333333333
+      },
+      "config": {
+        "model": "gpt-5.5",
+        "endpoint_host": "api.a6api.com"
+      },
+      "run_id": "controlled_20261018T005536Z",
+      "code_sha256": "cf9243ea922cd1042ea317a15f3e91500ee1f4a2ff8ffc338e8d5dc5c3e689c8",
+      "input_source": "github-api",
+      "unmeasured": [],
+      "model_calls": 0,
+      "total_tokens": 0,
+      "current_audit_replay": {
+        "repo": "psf/requests",
+        "repeat": 0,
+        "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "before": {
+          "repo_id": "psf/requests",
+          "n_golden": 5,
+          "n_gen": 6,
+          "step_coverage": 0.4,
+          "evidence_hit": 0.6666666666666666,
+          "command_exec": 0.0,
+          "command_correct": 0.3333333333333333,
+          "assert_rate": 0.6666666666666666,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.3333333333333333
+        },
+        "after": {
+          "repo_id": "psf/requests",
+          "n_golden": 5,
+          "n_gen": 6,
+          "step_coverage": 0.4,
+          "evidence_hit": 0.5,
+          "command_exec": 0.0,
+          "command_correct": 0.5,
+          "assert_rate": 0.5,
+          "missing_commands": [],
+          "elapsed_s": 0.0,
+          "command_coverage": 0.3333333333333333
+        },
+        "commands_before": 3,
+        "commands_after": 2,
+        "commands_without_literal_support_before": 1,
+        "limitations": "literal support only; no execution or semantic correctness proof"
+      }
+    }
+  ]
+}

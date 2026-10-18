@@ -12,6 +12,7 @@ keep the audit the same everywhere.
 from __future__ import annotations
 
 import re
+from urllib.parse import urlsplit, unquote
 
 from backend.core.github.recon import RawSignals
 from backend.core.generate.schemas import Evidence
@@ -47,6 +48,23 @@ def resolve_evidence_source(source: str, sig: RawSignals) -> Evidence:
     if not src:
         return Evidence(kind="missing", source="", quote="")
 
+    if src.startswith(("http://", "https://")):
+        url = urlsplit(src)
+        prefix = f"/{sig.meta.owner}/{sig.meta.repo}/"
+        if url.scheme != "https" or url.netloc.lower() != "github.com" or not url.path.startswith(prefix):
+            return Evidence(kind="missing", reason="来源不属于当前 GitHub 仓库")
+        relative = unquote(url.path[len(prefix):])
+        if relative.startswith("blob/"):
+            refs = [sig.meta.default_branch]
+            ref = next((r for r in refs if relative.startswith(f"blob/{r}/")), None)
+            if not ref:
+                return Evidence(kind="missing", reason="来源分支与当前分析分支不符")
+            src = relative[len(f"blob/{ref}/"):] + (f"#{url.fragment}" if url.fragment else "")
+        elif relative.startswith("issues/"):
+            src = relative
+        else:
+            return Evidence(kind="missing", reason="不支持的仓库来源 URL")
+
     m = _GH_ISSUE_URL_RE.search(src)
     if m and int(m.group(1)) in issue_numbers:
         return Evidence(kind="issue", source=f"#{m.group(1)}", quote="")
@@ -73,6 +91,73 @@ def resolve_evidence_source(source: str, sig: RawSignals) -> Evidence:
     if blob:
         norm = blob.group(1).split("#", 1)[0]
 
-    if norm in avail or any(norm.startswith(p + "/") for p in avail if p.count("/") == 0):
-        return Evidence(kind="file", source=src, quote="")
+    if ".." in norm.split("/"):
+        return Evidence(kind="missing", reason="非法来源路径")
+    actual_files = {d.path.lower() for d in sig.doc_files} | {p.lower() for p in sig.file_tree}
+    if norm in actual_files:
+        actual = next((p for p in [d.path for d in sig.doc_files] + sig.file_tree + list(sig.root_entries.values()) if p.lower() == norm), norm)
+        anchor = src.split("#", 1)[1] if "#" in src else ""
+        if anchor:
+            match = re.fullmatch(r"L(\d+)(?:-L?(\d+))?", anchor)
+            doc = next((d for d in sig.doc_files if d.path == actual), None)
+            if not match or doc is None:
+                return Evidence(kind="missing", reason="无法核验行号")
+            start, end = int(match[1]), int(match[2] or match[1])
+            if start < 1 or end < start or end > len(doc.text.splitlines()):
+                return Evidence(kind="missing", reason="行号越界")
+        return Evidence(kind="file", source=actual + (f"#{anchor}" if anchor else ""), verification="source_exists")
     return Evidence(kind="missing", source=src, quote="")
+
+
+def verify_step_evidence(step, sig: RawSignals) -> Evidence:
+    """Verify provenance and literal support; never claim semantic entailment.
+
+    A file existing is distinct from its text supporting a command. Commands
+    must occur verbatim in the cited text/line range; unrelated search hits
+    cannot repair them. No command is executed by this verifier.
+    """
+    ev = resolve_evidence_source(step.evidence.source, sig)
+    if ev.kind == "missing":
+        return ev
+    if ev.kind == "issue":
+        issue = next(i for i in sig.issues if str(i.get("number")) == ev.source.lstrip("#"))
+        text = f"{issue.get('title', '')}\n{issue.get('body') or ''}"
+        ev.verification = "source_exists"
+        if step.stage == "C" and issue.get("state", "open") != "open":
+            return Evidence(kind="missing", reason="任务已关闭")
+    else:
+        path = ev.source.split("#", 1)[0]
+        doc = next((d for d in sig.doc_files if d.path == path), None)
+        text = doc.text if doc else ""
+        if "#" in ev.source:
+            anchor = re.fullmatch(r"L(\d+)(?:-L?(\d+))?", ev.source.split("#", 1)[1])
+            ev.line_start, ev.line_end = int(anchor[1]), int(anchor[2] or anchor[1])
+            text = "\n".join(text.splitlines()[ev.line_start - 1:ev.line_end])
+    quote = step.evidence.quote.strip()
+    if quote:
+        if quote not in text:
+            return Evidence(kind="missing", reason="引用原文不在指定来源中")
+        ev.quote, ev.verification = quote, "quote_verified"
+    if step.command:
+        command = step.command.strip()
+        # A tool name inside a dependency/version string is not a command.
+        candidates = []
+        for line in text.splitlines():
+            line = re.sub(r"^(?:\$|>)\s*", "", line.strip())
+            line = re.sub(r"^-?\s*run:\s*", "", line)
+            candidates.append(line)
+        inline_commands = re.findall(r"`([^`\n]+)`", text)
+        if command not in candidates and command not in inline_commands:
+            return Evidence(kind="missing", reason="指定来源未包含该命令")
+        if ev.kind == "file":
+            relative_line = (candidates.index(command) + 1) if command in candidates else text[:text.find(f"`{command}`")].count("\n") + 1
+            ev.line_start = (ev.line_start or 1) + relative_line - 1
+            ev.line_end = ev.line_start
+        ev.quote, ev.verification = step.command.strip(), "command_verified"
+    if ev.kind == "file" and ev.quote and ev.line_start is None:
+        full = next(d.text for d in sig.doc_files if d.path == ev.source.split("#", 1)[0])
+        pos = full.find(ev.quote)
+        ev.line_start = full[:pos].count("\n") + 1
+        ev.line_end = ev.line_start + ev.quote.count("\n")
+    ev.reason = "原文匹配不等于命令已运行或建议语义正确"
+    return ev

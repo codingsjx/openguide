@@ -44,8 +44,8 @@ function evidenceHref(guide: Guide, ev: Evidence): string | null {
   }
   if (ev.kind === 'file' && ev.source) {
     const [path, line] = ev.source.split('#')
-    return `${guide.repo_url}/blob/${guide.default_branch ?? 'main'}/${path}${
-      line ? `#L${line.replace('L', '')}` : ''
+    return `${guide.repo_url}/blob/${guide.default_branch ?? 'main'}/${path.split('/').map(encodeURIComponent).join('/')}${
+      line ? `#${line}` : ev.line_start ? `#L${ev.line_start}${ev.line_end && ev.line_end !== ev.line_start ? `-L${ev.line_end}` : ''}` : ''
     }`
   }
   return null
@@ -186,7 +186,7 @@ function EvidencePanel({ guide, step }: { guide: Guide; step: GuideStep | null }
       <Paragraph style={{ marginTop: 2 }}>{step.title}</Paragraph>
       {ev.kind === 'missing' ? (
         <Tag color="red" icon={<WarningOutlined />}>
-          该项目文档未提供此步出处（无证据不宣称）
+          未找到通过核验的出处，请先确认原文
         </Tag>
       ) : (
         <div>
@@ -194,6 +194,10 @@ function EvidencePanel({ guide, step }: { guide: Guide; step: GuideStep | null }
           <div style={{ marginTop: 4 }}>
             <EvidenceBadge guide={guide} ev={ev} />
           </div>
+          <Paragraph style={{ marginTop: 8 }}>
+            {ev.verification === 'command_verified' ? '命令已匹配原文，尚未执行验证' : ev.verification === 'quote_verified' ? '引用已匹配原文，建议仍需结合上下文判断' : '仅确认来源存在，尚未核验内容支持关系'}
+          </Paragraph>
+          {ev.quote && <Paragraph style={{ whiteSpace: 'pre-wrap' }}><Text code>{ev.quote}</Text></Paragraph>}
           {href && (
             <Button
               size="small"
@@ -223,15 +227,10 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
 
   const stepItems = useMemo(
     () =>
-      steps.map((s) => ({
-        title: (
-          <Space size={4}>
-            <Tag color={STAGE_META[s.stage]?.color} style={{ marginRight: 0 }}>
-              {s.stage}
-            </Tag>
-            <span>{s.title}</span>
-          </Space>
-        ),
+      Object.entries(STAGE_META).map(([stage, meta]) => ({
+        title: meta.label,
+        description: `${steps.filter((s) => s.stage === stage).length} 步`,
+        disabled: !steps.some((s) => s.stage === stage),
       })),
     [steps],
   )
@@ -282,15 +281,21 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 16, alignItems: 'flex-start' }}>
       {/* Main column: steps + current card */}
       <div style={{ flex: 1, minWidth: 280 }}>
+        <Alert type="info" showIcon style={{ marginBottom: 12 }} message={guide.is_saved ? '已保存指南，未重新联网核验' : guide.is_demo ? '静态交互示例，未分析仓库' : guide.generation_mode === 'llm' ? '本次使用 AI 生成；命令仍需在本地验证' : '本次使用规则生成；配置模型后可启用 AI 生成'} />
+        {guide.warnings?.map((warning) => <Alert key={warning} type="warning" message={warning} style={{ marginBottom: 8 }} />)}
         <Steps
-          current={current}
+          current={['A', 'B', 'C', 'D'].indexOf(step?.stage ?? 'A')}
           size="small"
           items={stepItems.map((it, i) => ({
             ...it,
-            status: done.has(i) ? 'finish' : i === current ? 'process' : 'wait',
+            status: steps.some((s) => s.stage === ['A', 'B', 'C', 'D'][i]) && steps.every((s, n) => s.stage !== ['A', 'B', 'C', 'D'][i] || done.has(n)) ? 'finish' : step?.stage === ['A', 'B', 'C', 'D'][i] ? 'process' : 'wait',
           }))}
+          onChange={(stageIndex) => {
+            const first = steps.findIndex((s) => s.stage === ['A', 'B', 'C', 'D'][stageIndex])
+            if (first >= 0) setCurrent(first)
+          }}
           labelPlacement="vertical"
-          responsive={false}
+          responsive
         />
 
         {step && (
@@ -304,7 +309,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
             }
           >
             <Title level={5} style={{ marginTop: 0 }}>
-              Step {step.step_id} · {step.title}
+              第 {current + 1}/{steps.length} 步 · {step.title}
             </Title>
 
             {step.command && (
@@ -342,7 +347,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
               <EvidenceBadge guide={guide} ev={step.evidence} />
             </div>
 
-            <FollowupBar step={step} url={url} />
+            {!guide.is_demo && !guide.is_saved && <FollowupBar step={step} url={url} />}
           </Card>
         )}
 

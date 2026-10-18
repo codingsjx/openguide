@@ -171,6 +171,9 @@ def assemble_perspective_chunks(sig: RawSignals) -> list[PerspectiveChunk]:
     v3_paths: list[str] = []
     for d in sig.doc_files:
         low = d.path.lower()
+        if low.startswith(".github/workflows/"):
+            v3_paths.append(d.path)
+            continue
         if low.startswith(".") or low.endswith(("license",)) or "/license" in low:
             continue
         if _is_changelog_like(d.path):

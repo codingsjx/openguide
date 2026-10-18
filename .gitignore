@@ -38,3 +38,9 @@ _golden_work/
 # ---- local dev server logs ----
 _backend.log
 _frontend.log
+
+# Local PDF visual QA and experiment source snapshots (third-party content).
+tmp/
+# Raw research archives include third-party source text; keep local.
+benchmark/reports/controlled_*/
+output/*.zip

@@ -4,6 +4,10 @@ export interface Evidence {
   kind: 'file' | 'issue' | 'missing'
   source: string
   quote: string
+  verification?: 'missing' | 'source_exists' | 'quote_verified' | 'command_verified'
+  line_start?: number | null
+  line_end?: number | null
+  reason?: string
 }
 
 export interface GuideStep {
@@ -25,4 +29,8 @@ export interface Guide {
   unsuitable: boolean
   reasons: string[]
   steps: GuideStep[]
+  generation_mode?: 'heuristic' | 'llm' | 'mixed'
+  warnings?: string[]
+  is_demo?: boolean
+  is_saved?: boolean
 }

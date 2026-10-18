@@ -15,8 +15,10 @@ Two execution modes:
 
 from __future__ import annotations
 
+import re
+
 from backend.core.decide.decider import decide
-from backend.core.generate.evidence import resolve_evidence_source
+from backend.core.generate.evidence import verify_step_evidence
 from backend.core.generate.llm import LLMClient, LLMUnavailable
 from backend.core.generate.prompts import build_stage_messages, step_from_llm_json
 from backend.core.generate.schemas import Evidence, Guide, GuideStep
@@ -39,9 +41,15 @@ def build_guide(
     sig: RawSignals,
     index: RepoIndex | None = None,
     use_llm: bool = True,
+    strict_llm: bool = False,
+    verify_evidence: bool = True,
+    llm_client: LLMClient | None = None,
+    check_suitability: bool = True,
 ) -> Guide:
     profile = build_profile(sig)
     suitability, reasons = decide(profile)
+    if not check_suitability:
+        suitability, reasons = "unclear", ["实验跳过适用性门槛，不代表推荐贡献此仓库"]
     repo_url = f"https://github.com/{profile.owner}/{profile.repo}"
     guide = Guide(
         repo_url=repo_url,
@@ -60,21 +68,43 @@ def build_guide(
 
     if use_llm:
         try:
-            client = LLMClient()
+            client = llm_client or LLMClient()
             if client.available():
                 steps = _generate_with_llm(sig, index, client, start_id=step_id)
+                guide.generation_mode = "llm"
             else:
+                if strict_llm:
+                    raise LLMUnavailable("真实模型评测禁止无 Key 回退")
                 steps = _generate_heuristic(sig, index, start_id=step_id)
         except LLMUnavailable:
+            if strict_llm:
+                raise
             steps = _generate_heuristic(sig, index, start_id=step_id)
+            guide.warnings.append("模型不可用，本次使用规则生成")
     else:
         steps = _generate_heuristic(sig, index, start_id=step_id)
 
-    guide.steps = _verify_and_relabel(sig, steps)
+    if not verify_evidence:
+        guide.steps = steps
+        return guide
+    guide.steps = audit_steps(sig, index, steps)
+    return guide
+
+
+def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> list[GuideStep]:
+    """Shared audit for product and paired before/after experiments."""
+    steps = _verify_and_relabel(sig, steps)
     # Second pass: try to find a real source for still-missing steps by
     # re-searching the index with the step's own title/command.
-    guide.steps = _backfill_evidence(sig, index, guide.steps)
-    return guide
+    steps = _backfill_evidence(sig, index, steps)
+    for st in steps:
+        if st.command and not re.match(_STAGE_CMD_PATTERNS[st.stage], st.command):
+            st.evidence = Evidence(kind="missing", reason="命令动作不属于当前阶段")
+        if st.command and st.evidence.verification != "command_verified":
+            st.command = None
+            st.expected = "请先在仓库文档中确认操作方法"
+            st.fail_hints.append("命令未通过原文核验，已隐藏；可打开仓库文档或向维护者提问")
+    return steps
 
 
 def _build_index(sig: RawSignals) -> RepoIndex:
@@ -85,9 +115,25 @@ def _build_index(sig: RawSignals) -> RepoIndex:
 
 def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
     kind = _STAGE_PERSPECTIVES.get(stage, "setup")
-    res = index.search(query, kind=kind, top_k=4)
+    res = index.search(query, kind=kind, top_k=20)
+    def rank(hit):
+        commands = [re.sub(r"^(?:\$|>)\s*", "", line.strip()) for line in hit.text.splitlines()]
+        relevant = any(re.match(_STAGE_CMD_PATTERNS[stage], line) for line in commands)
+        development = stage == "A" and any("-e " in line or "requirements-dev" in line or "uv sync" in line for line in commands)
+        return (development, relevant, hit.score)
+    hits = sorted(res.hits, key=rank, reverse=True)
+    # Diversity: a long generic file must not occupy every context slot.
+    selected, source_counts = [], {}
+    for hit in hits:
+        source = (hit.meta or {}).get("source", "")
+        if source_counts.get(source, 0) >= 2:
+            continue
+        selected.append(hit)
+        source_counts[source] = source_counts.get(source, 0) + 1
+        if len(selected) == 4:
+            break
     out: list[dict] = []
-    for h in res.hits:
+    for h in selected:
         # Prefer the chunk's real repo source (file path or issue ref) over the
         # perspective code; fall back to perspective only as a last resort.
         src = (h.meta or {}).get("source") or h.perspective
@@ -106,7 +152,7 @@ def _generate_with_llm(sig, index, client, start_id: int) -> list[GuideStep]:
         try:
             obj = client.chat_json(messages, temperature=0.2, max_tokens=1800)
         except LLMUnavailable:
-            return out + _generate_heuristic(sig, index, start_id=sid)
+            raise
         items = obj.get("steps") if isinstance(obj, dict) else None
         if not isinstance(items, list):
             items = [obj]
@@ -117,12 +163,14 @@ def _generate_with_llm(sig, index, client, start_id: int) -> list[GuideStep]:
             st.step_id = sid
             sid += 1
             out.append(st)
+        if not any(s.stage == stage for s in out):
+            raise LLMUnavailable(f"Stage {stage} 未输出有效步骤")
     return out
 
 
 _STAGE_QUERIES = {
-    "A": "how to install dependencies and get the project running locally",
-    "B": "how to run the test suite",
+    "A": "development environment editable install dependencies pip uv sync requirements-dev setup venv",
+    "B": "run test suite pytest tox nox unittest npm test make test cargo test go test",
     "C": "good first issue for a new contributor to pick up",
     "D": "contribution workflow fork clone branch commit pull request",
 }
@@ -157,7 +205,7 @@ _TITLES = {
 # git/PR). We now only accept a command whose family matches the stage, and
 # fall back to no command rather than mis-attributing one (无证据不宣称).
 _STAGE_CMD_PATTERNS = {
-    "A": r"^(pip|uv|poetry|conda|python -m (pip|venv)|virtualenv|npm|pnpm|yarn|cargo|go|bundle|gem|composer)\b",
+    "A": r"^(pip(?:3)? install|uv (?:sync|venv|pip install)|poetry (?:install|sync)|conda (?:create|env create|install)|python(?:3)? -m (?:pip install|venv)|virtualenv|npm (?:ci|install)|pnpm install|yarn(?: install)?$|cargo build|go mod (?:download|tidy)|bundle install|gem install|composer install)\b",
     "B": r"^(pytest|tox|nox|python -m pytest|python -m unittest|npm (test|run test)|pnpm (test|run test)|yarn (test|run test)|cargo test|go test|make (test|check)|bundle exec rspec)\b",
     "C": r"^(gh issue|git (log|branch))\b",
     "D": r"^(git (checkout|switch|add|commit|push|clone|remote|branch)|gh (pr|repo|fork))\b",
@@ -258,15 +306,11 @@ def _verify_and_relabel(sig: RawSignals, steps: list[GuideStep]) -> list[GuideSt
             st.evidence = Evidence(kind="missing", source="", quote="")
             out.append(st)
             continue
-        resolved = resolve_evidence_source(ev.source, sig)
+        resolved = verify_step_evidence(st, sig)
         if resolved.kind == ev.kind:
-            st.evidence = Evidence(
-                kind=resolved.kind,
-                source=resolved.source,
-                quote=ev.quote,
-            )
+            st.evidence = resolved
         else:
-            st.evidence = Evidence(kind="missing", source="", quote="")
+            st.evidence = resolved
         out.append(st)
     return out
 
@@ -311,10 +355,14 @@ def _backfill_evidence(sig, index: RepoIndex, steps: list[GuideStep]) -> list[Gu
             mkind = meta.get("kind") or "file"
             # Only real file/issue sources count; perspective codes are not.
             if mkind in ("file", "issue") and src and not src.startswith("v"):
-                found = (src, mkind)
-                break
+                candidate = st.model_copy(deep=True)
+                candidate.evidence = Evidence(kind=mkind, source=src, quote=st.evidence.quote)
+                checked = verify_step_evidence(candidate, sig)
+                # An arbitrary related source is insufficient for prose-only steps.
+                if checked.kind != "missing" and (st.command or checked.quote or (st.stage == "C" and checked.kind == "issue")):
+                    found = checked
+                    break
         if found:
-            src, mkind = found
-            st.evidence = Evidence(kind=mkind, source=src, quote="")  # type: ignore[arg-type]
+            st.evidence = found
         out.append(st)
     return out

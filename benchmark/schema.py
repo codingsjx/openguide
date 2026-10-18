@@ -13,6 +13,10 @@ class GenEvidence(BaseModel):
     kind: str = "file"  # file | issue | missing
     source: str = ""  # repo-relative "path#L" or issue ref
     quote: str = ""
+    verification: str = "missing"
+    line_start: int | None = None
+    line_end: int | None = None
+    reason: str = ""
 
 
 class GenStep(BaseModel):

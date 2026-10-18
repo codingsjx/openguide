@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Tabs, Input, Space, Typography, message, Tag } from 'antd'
+import { Button, Tabs, Input, Space, Typography, message, Tag, Upload } from 'antd'
 import {
   GithubOutlined,
   QuestionCircleOutlined,
@@ -19,6 +19,7 @@ import LlmSettings from '../components/LlmSettings'
 import GuidePage from './GuidePage'
 import GuideWizard from '../components/GuideWizard'
 import type { Guide } from '../types/guide'
+import { parseSavedGuide } from '../types/savedGuide'
 
 const { Title, Paragraph } = Typography
 
@@ -29,9 +30,9 @@ const demoProfile: Profile = {
   repo: 'requests',
   html_url: DEMO_URL,
   description: 'A simple, yet elegant, HTTP library for Python.',
-  stars: 53500,
-  forks: 9300,
-  open_issues: 210,
+  stars: 0,
+  forks: 0,
+  open_issues: 0,
   languages: { Python: 0.86, JavaScript: 0.08, Shell: 0.04, Makefile: 0.02 },
   license: 'Apache-2.0',
   default_branch: 'main',
@@ -39,25 +40,23 @@ const demoProfile: Profile = {
   has_contributing: true,
   has_docs: true,
   build: { tool: 'pyproject.toml', package_manager: 'pip', test_cmd: 'pytest', has_makefile: true, has_dockerfile: false },
-  gfi: { count: 6, oldest_days: 12 },
-  activity: { commits_30d: 41, last_release_days: 18 },
+  gfi: { count: 0, oldest_days: null },
+  activity: { commits_30d: 0, last_release_days: null },
   suitability: 'promising',
   reasons: ['文档入口清晰，贡献约定完整', '存在适合新手的 issue 信号', '测试命令和开发依赖可以被识别'],
 }
 
 const demoGuide: Guide = {
-  repo_url: DEMO_URL,
-  owner: 'psf',
-  repo: 'requests',
-  default_branch: 'main',
-  unsuitable: false,
-  reasons: [],
-  steps: [
-    { step_id: 1, stage: 'A', stage_label: '环境搭建', title: '创建开发环境并安装依赖', command: 'python -m venv .venv\nsource .venv/bin/activate\npip install -e ".[test]"', expected: '依赖安装完成，没有红色错误信息。', fail_hints: ['Windows 用户请使用 .venv\\Scripts\\activate。'], evidence: { kind: 'file', source: 'CONTRIBUTING.md#L22', quote: 'Install the development dependencies before running tests.' } },
-    { step_id: 2, stage: 'B', stage_label: '测试基线', title: '跑通完整测试套件', command: 'pytest', expected: '终端显示测试全部通过，记录基线耗时。', fail_hints: ['先确认当前 Python 版本和虚拟环境是否正确。'], evidence: { kind: 'file', source: 'README.md#L86', quote: 'Run pytest to execute the test suite.' } },
-    { step_id: 3, stage: 'C', stage_label: '挑选 issue', title: '从 good first issue 中选择任务', command: null, expected: '找到一个范围明确、已有复现方式的 issue。', fail_hints: ['优先选择可以在一个文件内完成的文档或测试改进。'], evidence: { kind: 'issue', source: '#1234', quote: 'A small, well-scoped issue is recommended for first-time contributors.' } },
-    { step_id: 4, stage: 'D', stage_label: '首次 PR 路径', title: '创建分支并提交首个 PR', command: 'git checkout -b docs/first-contribution\ngit add .\ngit commit -m "docs: improve contribution guide"', expected: '分支推送成功，并在 GitHub 页面打开 PR。', fail_hints: ['提交前再次运行测试，并检查 PR 模板中的清单。'], evidence: { kind: 'file', source: 'CONTRIBUTING.md#L64', quote: 'Open a pull request with a clear description and test results.' } },
-  ],
+  repo_url: DEMO_URL, owner: 'psf', repo: 'requests', default_branch: 'main',
+  unsuitable: false, reasons: [], generation_mode: 'heuristic', is_demo: true,
+  warnings: ['静态交互示例，不代表对当前仓库的实时分析；请正式分析后核对原文。'],
+  steps: (['A', 'B', 'C', 'D'] as const).map((stage, i) => ({
+    step_id: i + 1, stage,
+    stage_label: ['环境搭建', '测试基线', '挑选 issue', '首次 PR 路径'][i],
+    title: ['确认开发环境与安装方式', '确认最小测试路径', '核对任务当前状态', '阅读贡献约定并准备 PR'][i],
+    command: null, expected: '正式分析后，根据仓库原文确认操作与成功标准。',
+    fail_hints: [], evidence: { kind: 'missing', source: '', quote: '' },
+  })),
 }
 
 export default function HomePage() {
@@ -67,11 +66,13 @@ export default function HomePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [submittedUrl, setSubmittedUrl] = useState('')
   const [demoMode, setDemoMode] = useState(false)
+  const [savedGuide, setSavedGuide] = useState<Guide | null>(null)
 
   async function handleSubmit() {
     const trimmed = url.trim()
     if (!trimmed) return
     setLoading(true)
+    setSavedGuide(null)
     setDemoMode(false)
     setTab('guide')
     setProfile(null)
@@ -84,10 +85,7 @@ export default function HomePage() {
       if (error instanceof ApiError) {
         void message.error(error.message)
       } else {
-        setProfile(demoProfile)
-        setSubmittedUrl(trimmed)
-        setDemoMode(true)
-        void message.info('后端暂未连接，已切换到本地演示模式')
+        void message.error('后端连接失败，请启动服务后重试；也可手动选择交互示例。')
       }
     } finally {
       setLoading(false)
@@ -95,6 +93,7 @@ export default function HomePage() {
   }
 
   function startDemo() {
+    setSavedGuide(null)
     setUrl(DEMO_URL)
     setProfile(demoProfile)
     setSubmittedUrl(DEMO_URL)
@@ -102,7 +101,7 @@ export default function HomePage() {
     setTab('guide')
   }
 
-  const showGuide = Boolean(profile && submittedUrl)
+  const showGuide = Boolean(savedGuide || (profile && submittedUrl))
 
   return (
     <div className="app-shell">
@@ -117,7 +116,7 @@ export default function HomePage() {
           <div className="hero-copy">
             <Tag className="eyebrow" icon={<CodeOutlined />}>OPEN SOURCE ONBOARDING</Tag>
             <Title>让第一个 PR<br /><span>不再是一座山</span></Title>
-            <Paragraph>把陌生仓库变成一条可执行、可验证、有人陪你走完的贡献路线。</Paragraph>
+            <Paragraph>从仓库资料中查找上手步骤，核对原文，再走向第一次贡献。</Paragraph>
             <div className="trust-row"><span><CheckCircleOutlined /> 真实仓库证据</span><span><CheckCircleOutlined /> 分步操作指引</span><span><CheckCircleOutlined /> 新手友好</span></div>
           </div>
           <div className="hero-orbit" aria-hidden="true">
@@ -134,9 +133,20 @@ export default function HomePage() {
             <Button type="primary" size="large" icon={<RocketOutlined />} loading={loading} onClick={handleSubmit}>生成路线图 <ArrowRightOutlined /></Button>
           </Space.Compact>
           <div className="search-foot"><span>不知道用哪个？</span><button onClick={startDemo}>体验 requests 示例 <ArrowRightOutlined /></button><span className="shortcut">Enter</span></div>
+          <Upload accept=".json" showUploadList={false} beforeUpload={async (file) => {
+            try {
+              if (file.size > 2_000_000) throw new Error('指南文件不能超过 2 MB')
+              const imported = parseSavedGuide(await file.text())
+              setSavedGuide(imported)
+              setSubmittedUrl(imported.repo_url)
+              setDemoMode(false)
+              setTab('guide')
+            } catch (error) { void message.error(error instanceof Error ? error.message : '导入失败') }
+            return false
+          }}><Button type="link" style={{ paddingLeft: 0 }}>导入已保存指南（本机离线查看）</Button></Upload>
         </section>
 
-        {!showGuide && !loading && <section className="feature-grid"><div><span className="feature-number">01</span><h3>先做仓库体检</h3><p>识别语言、构建方式、活跃度和 good-first-issue 信号。</p></div><div><span className="feature-number">02</span><h3>再生成贡献路线</h3><p>从环境搭建到首个 PR，每一步都写清楚预期结果。</p></div><div><span className="feature-number">03</span><h3>证据始终在场</h3><p>每条建议都能回到 README、issue 或真实代码来源。</p></div></section>}
+        {!showGuide && !loading && <section className="feature-grid"><div><span className="feature-number">01</span><h3>先做仓库体检</h3><p>识别语言、构建方式、活跃度和 good-first-issue 信号。</p></div><div><span className="feature-number">02</span><h3>再生成贡献路线</h3><p>分阶段查看操作建议，缺少资料时明确提示。</p></div><div><span className="feature-number">03</span><h3>核对原文依据</h3><p>区分来源存在、原文匹配与尚未验证的内容。</p></div></section>}
       </main>
 
       {showGuide && (
@@ -154,10 +164,11 @@ export default function HomePage() {
                   <ThunderboltOutlined /> 贡献指南
                 </Space>
               ),
-              children: demoMode ? <GuideWizard guide={demoGuide} url={submittedUrl} /> : <GuideGenerator initialUrl={submittedUrl} />,
+              children: savedGuide ? <GuideWizard guide={savedGuide} url={savedGuide.repo_url} /> : demoMode ? <GuideWizard guide={demoGuide} url={submittedUrl} /> : <GuideGenerator initialUrl={submittedUrl} />,
             },
             {
               key: 'health',
+              disabled: Boolean(savedGuide),
               label: (
                 <Space>
                   <RocketOutlined /> 仓库体检
@@ -167,6 +178,7 @@ export default function HomePage() {
             },
             {
               key: 'ask',
+              disabled: Boolean(savedGuide),
               label: (
                 <Space>
                   <QuestionCircleOutlined /> 贡献问答

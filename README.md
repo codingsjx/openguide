@@ -5,7 +5,7 @@
 
 输入一个 GitHub 仓库 URL，OpenGuide 输出一份**带证据、可执行、会陪你走完每一步**的新手贡献路线图：环境怎么搭、测试怎么跑、第一个 issue 怎么选、首个 PR 怎么提。
 
-> 核心边界：**无证据不宣称**。每条建议都要能回溯到仓库里的真实文件或 issue；不能确认的，宁可标 `missing` 并建议提问，也不编造安装命令或 issue 编号。
+> 证据分级：分别显示来源存在、引用原文匹配、命令原文匹配；未通过原文核验的命令隐藏。原文匹配不代表命令已执行或建议语义正确。当前验收与待补证据见 [国赛完善记录](docs/competition_readiness.md)。
 
 ## 四段管线
 
@@ -42,7 +42,7 @@ docker compose up --build
 ```bash
 cd backend
 uv sync                        # 按 uv.lock 安装依赖
-uv run pytest tests/ -q        # 69 个单测（评测体系另有 14 个：pytest benchmark/tests）
+uv run pytest tests/ -q        # 测试数量以当前运行记录为准（另运行 benchmark/tests）
 uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -93,6 +93,8 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 | L3 消融 | `python -m benchmark.l3_ablation.runner` | 同批仓库对比「朴素单次生成」vs「分层四视角管线」 |
 | L4 真实贡献 | `python -m benchmark.l4_contribution.runner` | 用本产品实际提交 PR 的记录 |
 
+新增真实模型受控实验：`python -m benchmark.controlled_ablation --repos pallets/click`，保存固定源码快照与原始模型输出；无密钥或模型失败时不会静默回退。旧实验分数与当前严格指标不可直接比较。
+
 **口径红线（见 [benchmark/README.md](benchmark/README.md)）**：仓库内样例与烟测**不得**宣称生成质量；任何质量数字必须能回溯到人工复核过的 golden 仓库集。
 
 指标定义在 `benchmark/metrics.py`：步骤完整率、证据命中率、命令正确率、命令可执行率、有据断言率。
@@ -104,6 +106,9 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 本项目**不自称纯开源**：编排、分层索引、证据校验、评测体系为自主实现；通用大模型走商业 API。本地嵌入与向量检索使用开源组件，不依赖外部服务。
 
 ## 文档
+
+- [本轮真实模型发现与验收](docs/real_model_findings_20261018.md)：五仓库探索性实验、当前限制与下一步验收。
+- 离线查看真实输出：前端点击“导入已保存指南”，选择 `output/guides/requests-20261018.json`。此模式不联网重验，不执行命令。
 
 **面向评审**
 

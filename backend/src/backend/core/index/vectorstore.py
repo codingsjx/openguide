@@ -19,6 +19,7 @@ from backend.core.index.embedder import get_embedder
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]+")
 _WORD_RE = re.compile(r"[a-z0-9]+")
+_STOPWORDS = set("a an the how to and of in for on is with this that it be or as by are from at can you your we our will get what do does i s".split())
 
 # A line that looks like a runnable command. Used to give V3 (executable path)
 # chunks a ranking boost: that perspective exists to answer "how do I run
@@ -58,7 +59,7 @@ def _tokens(text: str) -> set[str]:
     hermetic fallback useful for Chinese newcomers.
     """
     s = text.lower()
-    out = set(_WORD_RE.findall(s))
+    out = set(_WORD_RE.findall(s)) - _STOPWORDS
     for seg in _CJK_RE.findall(s):
         out.add(seg)
         if len(seg) > 1:
@@ -104,8 +105,6 @@ class Store:
     # -- writes -------------------------------------------------------------
 
     def upsert(self, perspective: str, texts: list[str], metadatas: list[dict] | None = None) -> None:
-        if not texts:
-            return
         if metadatas is None:
             metadatas = [{"perspective": perspective}] * len(texts)
         # chromadb rejects empty metadata dicts; guarantee at least one key.
@@ -115,13 +114,16 @@ class Store:
         ]
         if self._client is not None:
             coll = self._get_coll(perspective, create=True)
+            old = coll.get().get("ids", [])
+            if old:
+                coll.delete(ids=old)
+            if not texts:
+                return
             ids = [f"{perspective}_{i}" for i in range(len(texts))]
             # Deterministic per-call ids; in a real pipeline you'd compute a hash.
             coll.upsert(ids=ids, documents=texts, embeddings=self._embed_fn(texts), metadatas=metas)
         else:
-            self._rows.setdefault(perspective, []).extend(
-                [{"text": t, "meta": m} for t, m in zip(texts, metas)]
-            )
+            self._rows[perspective] = [{"text": t, "meta": m} for t, m in zip(texts, metas)]
 
     def _get_coll(self, perspective: str, create: bool = False):
         from chromadb.config import Settings as CdbSettings  # type: ignore
@@ -163,7 +165,7 @@ class Store:
                 Hit(
                     text=docs[i],
                     perspective=perspective,
-                    score=float(distances[i]) if i < len(distances) else 0.0,
+                    score=1.0 / (1.0 + max(0.0, float(distances[i]))) if i < len(distances) else 0.0,
                     meta=metas[i] if i < len(metas) else {},
                 )
             )

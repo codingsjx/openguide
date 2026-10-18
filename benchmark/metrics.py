@@ -68,6 +68,10 @@ def _step_matches(g_step, gen_steps) -> bool:
     for gs in gen_steps:
         if _stage_of(gs.stage) != g_stage:
             continue
+        if g_step.expected_commands:
+            if gs.command and _command_matches_stage(gs.command, g_step.expected_commands):
+                return True
+            continue
         # Title-token overlap.
         if g_tokens and g_tokens & _tokens(_norm(gs.title)):
             return True
@@ -76,7 +80,7 @@ def _step_matches(g_step, gen_steps) -> bool:
             g_verb = _norm(gs.command).split()
             for ref in g_step.expected_commands:
                 r = _norm(ref).split()
-                if g_verb and r and g_verb[0] == r[0]:
+                if _command_matches_stage(gs.command, [ref]):
                     return True
     return False
 
@@ -100,7 +104,7 @@ def _path_in_repo(path: str, available_paths: set[str]) -> bool:
     return p.lstrip(".") in normalised
 
 
-def _evidence_valid(ev_source: str, available_paths: set[str], issue_numbers: set[str] | None = None) -> bool:
+def _evidence_valid(ev_source: str, available_paths: set[str], issue_numbers: set[str] | None = None, repo_url: str = "") -> bool:
     """Does evidence.source resolve to something real in the repo?
 
     Accepts BOTH kinds the pipeline can emit:
@@ -116,6 +120,8 @@ def _evidence_valid(ev_source: str, available_paths: set[str], issue_numbers: se
 
     m = _ISSUE_URL_RE.search(src)
     if m:
+        if repo_url and not src.startswith(repo_url.rstrip("/") + "/issues/"):
+            return False
         return m.group(1) in issue_numbers
     if src.startswith("#") and src[1:].isdigit():
         return src[1:] in issue_numbers
@@ -129,31 +135,31 @@ def _evidence_valid(ev_source: str, available_paths: set[str], issue_numbers: se
 
 
 def _command_matches_stage(gen_cmd: str, golden_commands: list[str]) -> bool:
-    """Does a generated command match any golden reference command for the same
-    step? Normalise both, then require a shared *verb* (first token) — this
-    catches 'pip install' vs 'pytest' drift while tolerating flag/whitespace
-    differences. If the golden step has no reference commands, the generated
-    command cannot be 'correct' (there is nothing to match against)."""
-    if not golden_commands:
-        return False
-    g = _norm(gen_cmd)
-    for ref in golden_commands:
-        r = _norm(ref)
-        if not r:
-            continue
-        # Exact or substring match is the strong signal.
-        if g == r or r in g or g in r:
-            return True
-        # Verb-level match: 'python -m pytest tests' vs 'pytest -q' share 'pytest'.
-        g_verb = g.split()[0]
-        r_verb = r.split()[0]
-        if g_verb == r_verb:
-            return True
-    return False
+    """Conservative reference match, not semantic equivalence or execution.
+
+    Preserve case, actions, targets and flags. Only pytest's Python wrapper
+    and verbosity flags are normalized. Human review handles other equivalences.
+    """
+    def canonical(command: str) -> tuple[str, ...]:
+        try:
+            tokens = shlex.split(command.strip())
+        except ValueError:
+            return ()
+        if not tokens or any(c in command for c in (";", "&&", "||", "|", "`", "$(", "\n", ">", "<")):
+            return ()
+        if tokens[:3] in (["python", "-m", "pytest"], ["python3", "-m", "pytest"]):
+            tokens = ["pytest", *tokens[3:]]
+        if tokens and tokens[0] == "pytest":
+            tokens = [t for t in tokens if t not in {"-q", "--quiet", "-v", "--verbose"}]
+        return tuple(tokens)
+
+    generated = canonical(gen_cmd)
+    return bool(generated) and any(generated == canonical(ref) for ref in golden_commands)
 
 
 @dataclass
 class MetricsResult:
+    repo_id: str = ""
     n_golden: int = 0
     n_gen: int = 0
     step_coverage: float = 0.0
@@ -163,6 +169,7 @@ class MetricsResult:
     assert_rate: float = 1.0  # if no steps, treat as no assertions
     missing_commands: list[str] = field(default_factory=list)
     elapsed_s: float = 0.0  # wall-clock generation time, filled by the runner
+    command_coverage: float = 0.0
 
 
 def compute(
@@ -172,12 +179,27 @@ def compute(
     issue_numbers: set[str] | None = None,
 ) -> MetricsResult:
     available_paths = available_paths or set()
-    r = MetricsResult(n_golden=len(golden.steps), n_gen=len(generated.stages))
+    r = MetricsResult(repo_id=f"{golden.owner}/{golden.repo}", n_golden=len(golden.steps), n_gen=len(generated.stages))
     if not golden.steps:
         return r
 
-    covered = sum(1 for gs in golden.steps if _step_matches(gs, generated.stages))
+    # Maximum one-to-one matching: a single broad step cannot cover every
+    # reference step of a stage. Do not reward deleting all hard commands.
+    matched: dict[int, int] = {}
+    def assign(gi: int, seen: set[int]) -> bool:
+        for si, candidate in enumerate(generated.stages):
+            if si in seen or not _step_matches(golden.steps[gi], [candidate]):
+                continue
+            seen.add(si)
+            if si not in matched or assign(matched[si], seen):
+                matched[si] = gi
+                return True
+        return False
+    covered = sum(assign(i, set()) for i in range(len(golden.steps)))
     r.step_coverage = covered / len(golden.steps)
+    command_refs = [i for i, s in enumerate(golden.steps) if s.expected_commands]
+    if command_refs:
+        r.command_coverage = sum(i in matched.values() for i in command_refs) / len(command_refs)
 
     # Evidence hit across ALL generated steps, not just command-carrying ones.
     # The C (选 issue) / D (首 PR) stages carry no command but are exactly where
@@ -188,7 +210,7 @@ def compute(
         hits = sum(
             1
             for s in generated.stages
-            if _evidence_valid(s.evidence.source, available_paths, issue_numbers)
+            if s.evidence.kind not in _MISSING_KINDS and _evidence_valid(s.evidence.source, available_paths, issue_numbers, generated.repo_url)
         )
         r.evidence_hit = hits / len(generated.stages)
 
@@ -226,12 +248,14 @@ def merge_summary(results: list[MetricsResult]) -> dict:
     """Aggregate a list of per-repo metrics into one summary dict."""
     if not results:
         return {}
-    keys = ["step_coverage", "evidence_hit", "command_exec", "command_correct", "assert_rate"]
+    keys = ["step_coverage", "evidence_hit", "command_exec", "command_correct", "assert_rate", "command_coverage"]
     agg: dict[str, float] = {}
     for k in keys:
         vals = [getattr(r, k) for r in results]
         agg[k] = round(sum(vals) / len(vals), 3)
-    agg["n_repos"] = len(results)
+    identities = {r.repo_id for r in results if r.repo_id}
+    agg["n_repos"] = len(identities) if identities else len(results)
+    agg["n_runs"] = len(results)
     agg["total_golden_steps"] = sum(r.n_golden for r in results)
     agg["total_gen_steps"] = sum(r.n_gen for r in results)
     # Latency: per-repo mean (comparable across arms) + total (cost of the run).

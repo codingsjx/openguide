@@ -64,7 +64,7 @@ class _LayeredArm:
 
         idx = RepoIndex(owner, repo)
         idx.index(sig)
-        guide = build_guide(sig, index=idx, use_llm=self._use_llm)
+        guide = build_guide(sig, index=idx, use_llm=self._use_llm, strict_llm=self._use_llm)
         from benchmark.verify_generated_guide import to_generated_guide
 
         return to_generated_guide(guide)
@@ -144,7 +144,7 @@ def main() -> int:
         return 1
 
     arm = make_arm(args.provider)
-    layered_arm = _LayeredArm(use_llm=args.layered_llm)
+    layered_arm = _LayeredArm(use_llm=args.provider == "auto" or args.layered_llm)
     print(f"L3 消融：baseline = {arm.name} | grounded = {layered_arm.name}")
     if arm.is_fake:
         print("⚠ fake 臂是确定性替身，只证明指标能检出『无据断言』，不代表模型质量\n")
@@ -200,7 +200,9 @@ def main() -> int:
         "ts": datetime.now().strftime("%Y%m%d_%H%M%S"),
         "baseline_arm": arm.name,
         "baseline_is_fake": arm.is_fake,
-        "layered_llm": args.layered_llm,
+        "layered_llm": args.provider == "auto" or args.layered_llm,
+        "metric_version": "2-strict-command",
+        "quality_claim_eligible": not arm.is_fake,
         "repos": per_repo,
         "naive_summary": merge_summary(naive_rows),
         "layered_summary": merge_summary(layered_rows),

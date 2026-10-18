@@ -24,7 +24,7 @@ jobs:
           python -m pip install -q --upgrade pip
           python -m pip install -q fastapi "uvicorn[standard]" httpx pydantic pydantic-settings pytest
       - name: 运行单元测试
-        run: python -m pytest backend/tests -q
+        run: python -m pytest backend/tests benchmark/tests -q
       - name: 校验 uv.lock 与 pyproject 一致
         run: |
           python -m pip install -q uv
@@ -52,6 +52,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Lint
         run: pnpm lint
+      - name: Saved guide import validation
+        run: pnpm test
       - name: 类型检查与生产构建
         run: pnpm build
 

@@ -69,6 +69,16 @@ def _age_days(iso: str | None) -> int | None:
         return None
 
 
+def _commit_recent(item: dict, cutoff: datetime) -> bool:
+    date = ((item.get("commit") or {}).get("committer") or {}).get("date")
+    if not date:
+        return False
+    try:
+        return datetime.fromisoformat(date.replace("Z", "+00:00")) >= cutoff
+    except (ValueError, TypeError):
+        return False
+
+
 def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSignals:
     """Collect the raw signal bundle for (owner, repo)."""
     client = client or GitHubClient()
@@ -131,7 +141,10 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
     # Recent commits for activity signal.
     commits = 0
     try:
-        commits = len(client.list_commits(owner, repo, per_page=30))
+        from datetime import timedelta
+        cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+        recent = client.list_commits(owner, repo, per_page=30)
+        commits = sum(1 for item in recent if _commit_recent(item, cutoff))
     except GitHubClientError:
         commits = 0
 
@@ -190,6 +203,9 @@ def enrich_docs_and_tree(
     keyed: list[str] = []
     for p in file_tree:
         low = p.lower()
+        if low.startswith(".github/workflows/") and low.endswith((".yml", ".yaml")):
+            keyed.append(p)
+            continue
         if not low.endswith(_TEXT_EXT):
             continue
         if low.startswith(".") or low.startswith(("node_modules", "vendor", "dist", "build", "static", "assets")):
@@ -204,8 +220,8 @@ def enrich_docs_and_tree(
         if len(picked) >= 40:
             break
         (keyed if is_key else picked).append(p)
-    fetch_paths.extend(keyed)
-    fetch_paths.extend(picked)
+    fetch_paths.extend(keyed[:30])
+    fetch_paths.extend(picked[:10])
 
     for path in fetch_paths:
         if path.lower() in {d.path.lower() for d in doc_files}:

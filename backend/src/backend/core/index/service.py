@@ -33,7 +33,8 @@ class RepoIndex:
                     "perspective": c.perspective,
                 }
             )
-        for perspective, rows in per_perspective.items():
+        for perspective in ("v1", "v2", "v3", "v4"):
+            rows = per_perspective.get(perspective, [])
             texts = [r["text"] for r in rows]
             metas = [
                 {

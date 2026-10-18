@@ -44,6 +44,13 @@ class LLMClient:
         self._key = _OVERRIDE_KEY or s.llm_api_key
         self._base = (_OVERRIDE_BASE or s.llm_base_url).rstrip("/")
         self._model = _OVERRIDE_MODEL or s.llm_model
+        self.trace: list[dict] = []
+
+    def public_config(self) -> dict:
+        """Non-secret experiment metadata. Never include credentials or URL query."""
+        from urllib.parse import urlsplit
+        url = urlsplit(self._base)
+        return {"model": self._model, "endpoint_host": url.hostname}
 
     def available(self) -> bool:
         return bool(self._key)
@@ -91,10 +98,18 @@ class LLMClient:
                     time.sleep(1.5 * (attempt + 1))
                     continue
                 raise LLMUnavailable(f"LLM 调用失败: {exc}") from exc
-            data = resp.json()
-            content = data["choices"][0]["message"]["content"]
             try:
-                return json.loads(content)
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+            except (ValueError, KeyError, IndexError, TypeError) as exc:
+                raise LLMUnavailable("LLM 响应结构无效") from exc
+            self.trace.append({"messages": messages, "content": content,
+                               "usage": data.get("usage", {}), "model": data.get("model", self._model)})
+            try:
+                parsed = json.loads(content)
+                if not isinstance(parsed, dict):
+                    raise LLMUnavailable("LLM 必须返回包含 steps 的 JSON 对象")
+                return parsed
             except json.JSONDecodeError as exc:
                 # Bad JSON on a late attempt is not worth retrying whole payloads.
                 raise LLMUnavailable(f"LLM 返回非 JSON: {content[:200]}") from exc

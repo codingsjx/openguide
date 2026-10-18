@@ -95,12 +95,12 @@ def test_evidence_verify_accepts_real_issue_reference_formats():
             stage="C",
             stage_label="挑选 issue",
             title="选择真实 issue",
-            evidence=Evidence(kind="issue", source=source, quote="真实来源"),
+            evidence=Evidence(kind="issue", source=source, quote="Add docs"),
         )
         out = _verify_and_relabel(sig, [step])
         assert out[0].evidence.kind == "issue"
         assert out[0].evidence.source == "#3"
-        assert out[0].evidence.quote == "真实来源"
+        assert out[0].evidence.quote == "Add docs"
 
 
 def test_heuristic_stage_commands_are_not_all_the_same():
