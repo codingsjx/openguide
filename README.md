@@ -3,7 +3,7 @@
 [![CI](https://github.com/codingsjx/openguide/actions/workflows/ci.yml/badge.svg)](https://github.com/codingsjx/openguide/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-输入一个 GitHub 仓库 URL，OpenGuide 输出一份**带证据、可执行、会陪你走完每一步**的新手贡献路线图：环境怎么搭、测试怎么跑、第一个 issue 怎么选、首个 PR 怎么提。
+输入一个 GitHub 仓库 URL，OpenGuide 从实际取得的资料生成**带原文证据、可逐步核对**的新手贡献路线图：环境怎么搭、测试怎么跑、issue 如何筛选、PR 如何准备。资料缺失时明确待确认，不保证自动完成贡献。
 
 > 证据分级：分别显示来源存在、引用原文匹配、命令原文匹配；未通过原文核验的命令隐藏。原文匹配不代表命令已执行或建议语义正确。当前验收与待补证据见 [国赛完善记录](docs/competition_readiness.md)。
 
@@ -107,6 +107,8 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 
 ## 文档
 
+- [当前验收与待办](docs/competition_readiness.md)：含追问原文核验、2026-10-21 报告更新及仍待人工完成的事项。
+
 - [第四轮：固定参考与公平对照](docs/evidence_round4_20261018.md)：原文复核、对照协议修正和任务漏项修复。
 
 - [第三轮连续流程优化](docs/workflow_round3_20261018.md)：克隆顺序、执行目录、输入路径、前置步骤和通用完成检查。
@@ -119,10 +121,10 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 **面向评审**
 
 - [docs/submission.md](docs/submission.md) — **作品说明**（选题论证 / 系统设计 / 验证证据 / 路线图）
-- [output/pdf/OpenGuide-作品说明.pdf](output/pdf/OpenGuide-作品说明.pdf) — 作品说明 PDF（提交用，由 `tools/render_submission_pdf.py` 从 Markdown 生成）
+- [output/pdf/OpenGuide-作品说明.pdf](output/pdf/OpenGuide-作品说明.pdf) — 作品说明 PDF 工作稿（由 Markdown 生成，待团队审核后定稿）
 - [docs/demo_script.md](docs/demo_script.md) — 现场演示脚本（3 个真实仓库 + 兜底方案）
 - [docs/video_script.md](docs/video_script.md) — 演示视频分镜脚本
-- [docs/cold_start_checklist.md](docs/cold_start_checklist.md) — 提交包冷启动演练记录（7/7 通过）
+- [docs/cold_start_checklist.md](docs/cold_start_checklist.md) — 2026-10-06 历史环境检查，不能替代当前版本的干净环境部署验收
 - [docs/privacy_and_license.md](docs/privacy_and_license.md) — 隐私与授权说明
 - [docs/evaluation_report.md](docs/evaluation_report.md) — **评测报告**（L2/L3 实测数字与归因）
 - [benchmark/README.md](benchmark/README.md) — 评测方法论与口径红线

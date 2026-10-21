@@ -25,7 +25,7 @@
 **原始数据**：`benchmark/reports/`（`l2_results.jsonl`、`summary_l2_*.json`、`l3_ablation_*.json`）
 
 > **口径红线**（见 [`../benchmark/README.md`](../benchmark/README.md)）：
-> 本报告的数字全部来自**人工复核过的 golden 仓库集**；L1 烟测不产出质量数字。
+> 历史集合曾标记 `verified: true`，但该字段不能证明已完成独立人工复核；当前固定参考仍为 pending。以下历史数字不能作为已人工验证的当前效果结论；L1 烟测不产出质量数字。
 > L3 本次使用确定性替身臂（无 LLM Key），报告中标注为 fake，**不得当作模型质量引用**。
 
 ---

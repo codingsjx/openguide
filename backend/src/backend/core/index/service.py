@@ -23,6 +23,7 @@ class RepoIndex:
 
     def index(self, sig: RawSignals) -> None:
         """Assemble perspective chunks (each with a real source) + upsert."""
+        self.signals = sig
         per_perspective: dict[str, list[dict]] = {}
         for c in assemble_perspective_chunks(sig):
             per_perspective.setdefault(c.perspective, []).append(

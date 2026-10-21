@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from fastapi import APIRouter, HTTPException
 
 from backend.core.followup.service import FollowupResult, diagnose, explain, granular
@@ -30,8 +30,9 @@ class FollowupRequest(BaseModel):
     url: str = Field(min_length=3)
     intent: Intent
     step: dict  # GuideStep as dict (title/stage/command enough)
-    query: str = ""
-    log_text: str = ""
+    query: str = Field(default="", max_length=2000)
+    log_text: str = Field(default="", max_length=10000)
+    revision: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
 
 
 @router.post("/followup", response_model=dict)
@@ -43,21 +44,15 @@ def follow_up(req: FollowupRequest) -> dict:
 
     # Best-effort step reconstruction from the dict.
     try:
-        step = GuideStep.model_validate(req.step)
-    except Exception:  # noqa: BLE001
-        step = GuideStep(
-            step_id=0,
-            stage="A",
-            stage_label="",
-            title=str((req.step or {}).get("title") or "当前步骤"),
-            command=(req.step or {}).get("command"),
-            expected=str((req.step or {}).get("expected") or ""),
-            fail_hints=[],
-        )
+        step = GuideStep.model_validate({"step_id": 0, **req.step})
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail="追问步骤格式无效，请重新生成指南") from exc
 
     client = GitHubClient()
     try:
         sig = recon(owner, repo, client=client)
+        if req.revision:
+            sig.meta = sig.meta.model_copy(update={"default_branch": req.revision})
         sig = enrich_docs_and_tree(sig, client=client)
     except GitHubClientError as exc:
         raise HTTPException(status_code=502, detail=f"抓取仓库失败: {exc}") from exc
@@ -72,7 +67,7 @@ def follow_up(req: FollowupRequest) -> dict:
     elif req.intent == "explain":
         r = explain(idx, step, req.query)
     else:
-        r = diagnose(idx, step, req.log_text, LLMClient())
+        r = diagnose(idx, step, req.log_text, LLMClient(timeout_s=25.0, retry_limit=0))
 
     # FollowupResult is a dataclass, not a Pydantic model, so it has no
     # model_dump(); serialise its GuideStep sub-steps explicitly.
@@ -81,4 +76,8 @@ def follow_up(req: FollowupRequest) -> dict:
         "text": r.text,
         "sub_steps": [s.model_dump() for s in r.sub_steps],
         "sources": r.sources,
+        "evidence": [ev.model_dump() for ev in r.evidence],
+        "revision": sig.meta.default_branch,
+        "mode": r.mode,
+        "warnings": list(dict.fromkeys(sig.collection_warnings + r.warnings)),
     }

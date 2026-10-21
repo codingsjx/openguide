@@ -290,7 +290,7 @@ def build(md_path: Path, out_path: Path) -> Path:
         ("作品名称", "OpenGuide开源贡献向导"),
         ("验证状态", "工程验证已进行；用户效果与上游贡献闭环待补充"),
         ("许可", "MIT"),
-        ("文档版本", "2026-10-18 · 修订工作稿"),
+        ("文档版本", "2026-10-21 · 修订工作稿"),
     ]
     mt = Table([[Paragraph(f"<b>{k}</b>", S["table"]), Paragraph(v, S["table"])] for k, v in meta],
                colWidths=[26 * mm, CONTENT_W - 26 * mm], hAlign="LEFT")

@@ -67,6 +67,17 @@ export interface SearchResult {
   hits: SearchHit[]
 }
 
+export interface FollowupResult {
+  intent: string
+  text: string
+  sub_steps: unknown[]
+  sources: string[]
+  evidence: import('../types/guide').Evidence[]
+  revision: string
+  mode: 'retrieval' | 'rules' | 'llm_evidence_selection'
+  warnings: string[]
+}
+
 export const api = {
   postProfile: (url: string) =>
     request<import('../types/profile').Profile>('/api/profile', {
@@ -96,12 +107,14 @@ export const api = {
     step: Record<string, unknown>
     query?: string
     log_text?: string
+    revision?: string
   }) =>
-    request<{ intent: string; text: string; sub_steps: unknown[]; sources: string[] }>(
+    request<FollowupResult>(
       '/api/followup',
       {
         method: 'POST',
         body: JSON.stringify(payload),
       },
+      90_000,
     ),
 }

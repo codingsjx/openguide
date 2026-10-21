@@ -23,7 +23,7 @@ import {
   LeftOutlined,
 } from '@ant-design/icons'
 
-import { api } from '../../api/client'
+import { api, type FollowupResult } from '../../api/client'
 import type { Evidence, Guide, GuideStep } from '../../types/guide'
 
 const { Paragraph, Text, Title } = Typography
@@ -84,16 +84,19 @@ function EvidenceBadge({ guide, ev }: { guide: Guide; ev: Evidence }) {
 function FollowupBar({
   step,
   url,
+  guide,
 }: {
   step: GuideStep
   url: string
+  guide: Guide
 }) {
   const [logOpen, setLogOpen] = useState(false)
   const [logText, setLogText] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
-  const [result, setResult] = useState<{ intent: string; text: string } | null>(null)
+  const [result, setResult] = useState<FollowupResult | null>(null)
 
   async function run(intent: 'granular' | 'explain' | 'diagnose') {
+    if (busy) return
     if (intent === 'diagnose' && !logText.trim()) {
       void message.warning('先粘贴报错日志')
       return
@@ -104,10 +107,11 @@ function FollowupBar({
       const r = await api.postFollowup({
         url,
         intent,
-        step: { title: step.title, command: step.command, stage: step.stage, expected: step.expected },
+        step: { ...step },
+        revision: /^[0-9a-f]{40}$/.test(guide.default_branch) ? guide.default_branch : undefined,
         log_text: intent === 'diagnose' ? logText : '',
       })
-      setResult({ intent, text: r.text })
+      setResult(r)
     } catch (e) {
       void message.error(e instanceof Error ? e.message : '追问失败')
     } finally {
@@ -118,19 +122,20 @@ function FollowupBar({
   return (
     <div style={{ marginTop: 8 }}>
       <Space wrap size={6}>
-        <Button size="small" icon={<ZoomInOutlined />} loading={busy === 'granular'} onClick={() => run('granular')}>
+        <Button size="small" disabled={!!busy} icon={<ZoomInOutlined />} loading={busy === 'granular'} onClick={() => run('granular')}>
           这步太粗
         </Button>
-        <Button size="small" icon={<QuestionCircleOutlined />} loading={busy === 'explain'} onClick={() => run('explain')}>
+        <Button size="small" disabled={!!busy} icon={<QuestionCircleOutlined />} loading={busy === 'explain'} onClick={() => run('explain')}>
           看不懂为什么
         </Button>
-        <Button size="small" icon={<BugOutlined />} loading={busy === 'diagnose'} onClick={() => setLogOpen((v) => !v)}>
+        <Button size="small" disabled={!!busy} icon={<BugOutlined />} loading={busy === 'diagnose'} onClick={() => setLogOpen((v) => !v)}>
           报错了
         </Button>
       </Space>
 
       {logOpen && (
         <div style={{ marginTop: 8 }}>
+          <Paragraph type="secondary">日志可能交给当前配置的模型服务分析；粘贴前请移除密钥、账号及个人信息。</Paragraph>
           <Input.TextArea
             rows={3}
             value={logText}
@@ -142,6 +147,7 @@ function FollowupBar({
             type="primary"
             style={{ marginTop: 6 }}
             loading={busy === 'diagnose'}
+            disabled={!!busy}
             onClick={() => run('diagnose')}
           >
             定位问题
@@ -155,6 +161,15 @@ function FollowupBar({
           <Paragraph style={{ marginTop: 6, whiteSpace: 'pre-wrap', marginBottom: 0 }}>
             {result.text}
           </Paragraph>
+          <Paragraph type="secondary" style={{ marginTop: 8 }}>原文匹配只证明出处存在，不代表已确认根因或执行过命令。{result.mode === 'rules' ? '本次使用本地规则与检索。' : result.mode === 'llm_evidence_selection' ? '本次由 AI 选择原文，再逐字核验。' : '本次展示已核验的检索原文。'}</Paragraph>
+          {result.warnings?.map((warning, i) => <Alert key={i} type="warning" message={warning} style={{ marginBottom: 8 }} />)}
+          {result.evidence?.length ? result.evidence.map((ev, i) => <div key={i} style={{ marginTop: 10 }}>
+            <EvidenceBadge guide={{ ...guide, default_branch: result.revision }} ev={ev} />
+            <details open={i === 0}>
+              <summary style={{ cursor: 'pointer', marginTop: 4 }}>原文摘录{ev.line_start ? `（L${ev.line_start}${ev.line_end && ev.line_end !== ev.line_start ? `-L${ev.line_end}` : ''}）` : ''}</summary>
+              <Paragraph style={{ whiteSpace: 'pre-wrap', marginTop: 4 }}>{ev.quote}</Paragraph>
+            </details>
+          </div>) : <Text type="secondary">未找到可核验的仓库原文，请先核对资料。</Text>}
         </Card>
       )}
     </div>
@@ -362,7 +377,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
               <EvidenceBadge guide={guide} ev={step.evidence} />
             </div>
 
-            {!guide.is_demo && !guide.is_saved && <FollowupBar step={step} url={url} />}
+            {!guide.is_demo && !guide.is_saved && <FollowupBar key={`${guide.default_branch}:${step.step_id}`} step={step} url={url} guide={guide} />}
           </Card>
         )}
 

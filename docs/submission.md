@@ -4,7 +4,7 @@
 
 **作品名称**：OpenGuide开源贡献向导
 **申报方向**：保持现有方向一（开源赋能的 AI 应用创新）；申报分类如需调整，先由团队确认。项目服务于开源新手贡献场景。
-**一句话定位**：输入一个 GitHub 仓库 URL，输出一份**带证据、可执行、会陪你走完每一步**的新手贡献路线图。
+**一句话定位**：输入一个 GitHub 仓库 URL，从实际取得的资料生成带原文证据、可逐步核对的新手贡献路线图；资料缺失时待确认，不保证自动完成贡献。
 
 ---
 
@@ -119,7 +119,7 @@ GitHub 仓库 URL
 
 | 决策 | 理由 |
 |---|---|
-| 不 clone 全文，只走 GitHub API | 省带宽、可缓存、能在无 git 环境运行；配合 TTL 磁盘缓存规避限流 |
+| 不 clone 全文，API 配合固定提交原文下载 | 省带宽、可缓存、能在无 git 环境运行；减少文件请求占用 API 额度，元信息和 issue 仍可能限流 |
 | 向量检索可降级 | chromadb 不可用或嵌入模型缺失时，回退到确定性的词元重叠检索，测试与演示在离线环境仍可跑 |
 | 证据来源保留仓库真实大小写 | 前端据此拼"打开原始出处"链接，大小写错了会 404 |
 | 意图路由用整词匹配 | 早期用子串匹配，短词 `pr` 会命中 `improve`/`progress`，把问题错误路由到"贡献流程" |
@@ -145,7 +145,7 @@ GitHub 仓库 URL
 | 层 | 命令 | 作用 | 是否产出质量数字 |
 |---|---|---|---|
 | **L1 烟测** | `python -m benchmark.l1_smoke` | 离线验证 URL→画像→决策树→索引→生成→schema→证据 全链路通 | **否**（明确不产出） |
-| **L2 黄金评估** | `python -m benchmark.l2_golden.runner` | 对 golden 仓库跑真实生成，按五维度打分 | 是（人工复核集） |
+| **L2 黄金评估** | `python -m benchmark.l2_golden.runner` | 对参考仓库生成并按规则打分 | 探索性，独立人工复核待完成 |
 | **L3 消融** | `python -m benchmark.l3_ablation.runner` | 同批仓库对比「朴素单次生成」vs「分层四视角管线」，含耗时 | 是（同基准防漂移） |
 | **L4 真实贡献** | `python -m benchmark.l4_contribution.runner` | 用本产品实际提交 PR 的记录 | 记录，非评分 |
 
@@ -217,6 +217,12 @@ Requests 的 Windows 符号链接问题经定位，证书单例复测通过；�
 对照发现克隆说明可能被安装资料挤出，已为环境阶段保留克隆、依赖和运行时资料位置。随后 4 次请求的 Requests 单例覆盖三项参考命令，不能推广为一般提升。
 本轮未新增上游命令执行，模型对照、单例修复和历史实跑分开记录，详见 `evidence_round4_20261018.md`。
 
+### 5.8 当前产品可靠性与追问核验（2026-10-21）
+
+在线 Requests 文档采集在此前验收中从 2 份恢复至 24 份，现场 AI 请求恢复测试命令和贡献规范；新仓库元信息 API 仍可能限流。追问沿用指南的固定提交，返回已逐字核验的来源、行号与摘录。错误定位中 AI 仅选择相关原文，自由生成的根因断言或新命令不作为回答展示；本地规则提示和原文核验均不证明语义正确或问题已修复。
+
+在线主指南和错误定位均使用单次 HTTP 25 秒、不重试的模型策略；不是端到端总时限。指南支持取消等待，后台处理可能继续。无真人试用结果，独立人工复核仍待完成；本轮不将测试通过数作为新手贡献成功率。
+
 ## 6. 真实贡献记录（方向三佐证）
 
 L4 记录"用本产品自己走通一个真实 PR"的闭环证据，落盘于
@@ -277,7 +283,7 @@ cd frontend && pnpm install && pnpm dev     # http://127.0.0.1:5173
 ### 8.1 已交付
 
 - 四段管线（M0 勘探 / M1 分层索引 / M2 结构化生成 / M3 分步引导）全部打通
-- 四层评测体系（L1–L4）+ 5 个已人工复核的 golden 仓库
+- 四层评测工具（L1–L4）、5 个历史参考仓库及 2 份固定提交参考；独立人工复核待完成，L4 无真实贡献记录
 - Docker 一键部署、演示脚本、第三方许可披露、变更记录
 
 ### 8.2 后续计划
@@ -315,7 +321,7 @@ cd frontend && pnpm install && pnpm dev     # http://127.0.0.1:5173
 | [`privacy_and_license.md`](privacy_and_license.md) | 隐私与授权说明 |
 | [`cold_start_checklist.md`](cold_start_checklist.md) | 提交包冷启动演练记录 |
 | [`evaluation_report.md`](evaluation_report.md) | 评测报告（L2/L3 实测数字与归因） |
-| [`../output/pdf/OpenGuide-作品说明.pdf`](../output/pdf/OpenGuide-作品说明.pdf) | 本说明的 PDF 版本（提交用） |
+| [`../output/pdf/OpenGuide-作品说明.pdf`](../output/pdf/OpenGuide-作品说明.pdf) | 本说明的 PDF 工作稿，待团队审核后定稿 |
 | [`../tools/render_submission_pdf.py`](../tools/render_submission_pdf.py) | PDF 生成脚本（改完 Markdown 后重新生成） |
 | [`changelog.md`](changelog.md) | 变更记录（含修复根因与验证口径） |
 | [`../benchmark/README.md`](../benchmark/README.md) | 评测方法论与口径红线 |
