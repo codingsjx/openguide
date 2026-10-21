@@ -78,6 +78,7 @@ class Guide(BaseModel):
     reasons: list[str] = Field(default_factory=list)
     steps: list[GuideStep] = Field(default_factory=list)
     generation_mode: Literal["heuristic", "llm", "mixed"] = "heuristic"
+    stage_modes: dict[Literal["A", "B", "C", "D"], Literal["heuristic", "llm"]] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")

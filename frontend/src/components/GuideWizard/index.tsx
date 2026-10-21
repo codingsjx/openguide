@@ -296,7 +296,8 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 16, alignItems: 'flex-start' }}>
       {/* Main column: steps + current card */}
       <div style={{ flex: 1, minWidth: 280 }}>
-        <Alert type="info" showIcon style={{ marginBottom: 12 }} message={guide.is_saved ? '已保存指南，未重新联网核验' : guide.is_demo ? '静态交互示例，未分析仓库' : guide.generation_mode === 'mixed' ? 'AI 生成与仓库原文展开；命令仍需本地验证' : guide.generation_mode === 'llm' ? '本次使用 AI 生成；命令仍需在本地验证' : '本次使用规则生成；配置模型后可启用 AI 生成'} />
+        <Alert type="info" showIcon style={{ marginBottom: 12 }} message={guide.is_saved ? '已保存指南，未重新联网核验' : guide.is_demo ? '静态交互示例，未分析仓库' : guide.generation_mode === 'mixed' ? '本指南含 AI 生成与规则处理，请查看各阶段来源；命令仍需本地验证' : guide.generation_mode === 'llm' ? '本次使用 AI 生成；命令仍需在本地验证' : '本次使用规则生成；依据已取得的资料核对操作'} />
+        {step && guide.stage_modes?.[step.stage] && <Tag style={{ marginBottom: 8 }} color={guide.stage_modes[step.stage] === 'llm' ? 'blue' : 'gold'}>当前阶段来源：{guide.stage_modes[step.stage] === 'llm' ? 'AI 生成' : '规则整理（可能含待确认项）'}</Tag>}
         {guide.warnings?.map((warning) => <Alert key={warning} type="warning" message={warning} style={{ marginBottom: 8 }} />)}
         <Steps
           current={['A', 'B', 'C', 'D'].indexOf(step?.stage ?? 'A')}

@@ -1,0 +1,76 @@
+{
+  "repo": "psf/requests",
+  "revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "generation_mode": "heuristic",
+  "stage_modes": {
+    "A": "heuristic",
+    "B": "heuristic",
+    "C": "heuristic",
+    "D": "heuristic"
+  },
+  "stages": {
+    "A": [
+      {
+        "title": "按原文克隆仓库",
+        "command": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+        "source": "README.md",
+        "verification": "command_verified"
+      },
+      {
+        "title": "核对运行时版本与开发环境要求",
+        "command": null,
+        "source": "",
+        "verification": "missing"
+      },
+      {
+        "title": "按原文安装依赖（请核对开发用途）",
+        "command": "python -m pip install -r requirements-dev.txt",
+        "source": "Makefile",
+        "verification": "command_verified"
+      }
+    ],
+    "B": [
+      {
+        "title": "按原文运行测试（先核对范围）",
+        "command": "python -m pytest tests",
+        "source": "Makefile",
+        "verification": "command_verified"
+      }
+    ],
+    "C": [
+      {
+        "title": "待确认可参与的 issue；不要直接认领",
+        "command": null,
+        "source": "",
+        "verification": "missing"
+      }
+    ],
+    "D": [
+      {
+        "title": "确认 Fork 与分支要求",
+        "command": null,
+        "source": "docs/dev/contributing.rst",
+        "verification": "quote_verified"
+      },
+      {
+        "title": "确认提交前的测试与检查要求",
+        "command": null,
+        "source": "docs/dev/contributing.rst",
+        "verification": "quote_verified"
+      },
+      {
+        "title": "确认 PR 提交及模板要求",
+        "command": null,
+        "source": "docs/dev/contributing.rst",
+        "verification": "quote_verified"
+      },
+      {
+        "title": "确认审查与社区沟通要求",
+        "command": null,
+        "source": "docs/dev/contributing.rst",
+        "verification": "quote_verified"
+      }
+    ]
+  },
+  "scope": "Real GitHub sources, deterministic generation and audit; no model calls or command execution"
+}

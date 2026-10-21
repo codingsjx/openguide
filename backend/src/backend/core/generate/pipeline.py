@@ -22,6 +22,7 @@ from backend.core.generate.evidence import verify_step_evidence
 from backend.core.generate.llm import LLMClient, LLMUnavailable
 from backend.core.generate.make_recipe import expand_make_recipe
 from backend.core.generate.workflow import prepare_workflow
+from backend.core.generate.heuristic import generate_stage
 from backend.core.generate.prompts import build_stage_messages, step_from_llm_json
 from backend.core.generate.schemas import Evidence, Guide, GuideStep
 from backend.core.github.recon import RawSignals
@@ -75,24 +76,42 @@ def build_guide(
         try:
             client = llm_client or LLMClient()
             if client.available():
-                steps = _generate_with_llm(sig, index, client, start_id=step_id)
-                guide.generation_mode = "llm"
+                steps = _generate_with_llm(sig, index, client, start_id=step_id,
+                    allow_fallback=not strict_llm, stage_modes=guide.stage_modes, warnings=guide.warnings)
+                model_stages = sum(mode == 'llm' for mode in guide.stage_modes.values())
+                guide.generation_mode = 'llm' if model_stages == 4 else 'mixed' if model_stages else 'heuristic'
             else:
                 if strict_llm:
                     raise LLMUnavailable("真实模型评测禁止无 Key 回退")
                 steps = _generate_heuristic(sig, index, start_id=step_id)
+                guide.stage_modes = {stage: 'heuristic' for stage in _STAGE_QUERIES}
         except LLMUnavailable:
             if strict_llm:
                 raise
             steps = _generate_heuristic(sig, index, start_id=step_id)
+            guide.stage_modes = {stage: 'heuristic' for stage in _STAGE_QUERIES}
             guide.warnings.append("模型不可用，本次使用规则生成")
     else:
         steps = _generate_heuristic(sig, index, start_id=step_id)
+        guide.stage_modes = {stage: 'heuristic' for stage in _STAGE_QUERIES}
 
     if not verify_evidence:
         guide.steps = steps
         return guide
     guide.steps = audit_steps(sig, index, steps)
+    if not strict_llm:
+        # Auditing can move a model's clone step out of D and deduplicate it.
+        # Restore an honest entry point instead of leaving that stage empty.
+        missing_stages = [stage for stage in _STAGE_QUERIES if not any(s.stage == stage for s in guide.steps)]
+        if missing_stages:
+            for stage in missing_stages:
+                snippets = _retrieve_for_stage(index, stage, _STAGE_QUERIES[stage])
+                guide.steps.extend(generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]))
+                guide.stage_modes[stage] = 'heuristic'
+                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段在核验后没有保留步骤，已补充规则入口或待确认项。')
+            guide.steps = audit_steps(sig, index, guide.steps)
+            model_stages = sum(mode == 'llm' for mode in guide.stage_modes.values())
+            guide.generation_mode = 'mixed' if model_stages else 'heuristic'
     if guide.generation_mode == "llm" and any(s.command_derivation for s in guide.steps):
         guide.generation_mode = "mixed"
         guide.warnings.append("部分 make 命令已按仓库原文展开，展开过程可查看；尚未执行")
@@ -194,7 +213,7 @@ def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
     return out
 
 
-def _generate_with_llm(sig, index, client, start_id: int) -> list[GuideStep]:
+def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=False, stage_modes=None, warnings=None) -> list[GuideStep]:
     """Stage-by-stage LLM generation, one request per stage."""
     out: list[GuideStep] = []
     sid = start_id
@@ -203,20 +222,30 @@ def _generate_with_llm(sig, index, client, start_id: int) -> list[GuideStep]:
         messages = build_stage_messages(stage, snippets)
         try:
             obj = client.chat_json(messages, temperature=0.2, max_tokens=1800)
+            items = obj.get('steps') if isinstance(obj, dict) else None
+            if not isinstance(items, list):
+                items = [obj]
+            stage_steps = []
+            for item in items:
+                step = step_from_llm_json(stage, item if isinstance(item, dict) else {}, sid + len(stage_steps))
+                if step is not None:
+                    stage_steps.append(step)
+            if not stage_steps:
+                raise LLMUnavailable(f'Stage {stage} 未输出有效步骤')
+            mode = 'llm'
         except LLMUnavailable:
-            raise
-        items = obj.get("steps") if isinstance(obj, dict) else None
-        if not isinstance(items, list):
-            items = [obj]
-        for it in items:
-            st = step_from_llm_json(stage, it if isinstance(it, dict) else {}, sid)
-            if st is None:
-                continue
-            st.step_id = sid
+            if not allow_fallback:
+                raise
+            stage_steps = generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage])
+            mode = 'heuristic'
+            if warnings is not None:
+                warnings.append(f'{_STAGE_LABELS[stage]}阶段模型未完成，已仅对该阶段使用规则；其他阶段继续生成。')
+        if stage_modes is not None:
+            stage_modes[stage] = mode
+        for step in stage_steps:
+            step.step_id = sid
             sid += 1
-            out.append(st)
-        if not any(s.stage == stage for s in out):
-            raise LLMUnavailable(f"Stage {stage} 未输出有效步骤")
+            out.append(step)
     return out
 
 
@@ -234,21 +263,12 @@ def _generate_heuristic(sig: RawSignals, index: RepoIndex, start_id: int) -> lis
     sid = start_id
     for stage, q in _STAGE_QUERIES.items():
         snippets = _retrieve_for_stage(index, stage, q)
-        text = " ".join(s["text"] for s in snippets).lower()
-        step = _heuristic_one(sig, stage, snippets, text)
-        if step:
+        for step in generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]):
             step.step_id = sid
             sid += 1
             out.append(step)
     return out
 
-
-_TITLES = {
-    "A": "本地搭建并跑起来",
-    "B": "运行测试基线",
-    "C": "挑一个 good-first-issue",
-    "D": "提交首个 PR",
-}
 
 # Stage -> command families that actually belong to that stage. The heuristic
 # generator used to take the *first* command it found in the retrieved text, so
@@ -262,83 +282,6 @@ _STAGE_CMD_PATTERNS = {
     "C": r"^(gh issue|git (log|branch))\b",
     "D": r"^(git (checkout|switch|add|commit|push|clone|remote|branch)|gh (pr|repo|fork))\b",
 }
-
-
-def _heuristic_one(sig, stage: str, snippets: list[dict], text: str) -> GuideStep | None:
-    """Deterministic fallback: honest steps + a real command if one is found.
-
-    Scans line-by-line for shell commands (anchored, case-sensitive) so prose
-    like "Python 3.10+" is not mistaken for a command. Evidence is attributed
-    only when the snippet maps to a real source; otherwise kind=missing
-    (无证据不宣称).
-    """
-    import re
-
-    _CMD_PREFIX = re.compile(
-        r"^(pip|python|python3|npm|npx|yarn|pnpm|cargo|make|git|docker|go|uv|poetry|"
-        r"pytest|tox|nox|jest|vitest|mocha|rspec|gradle|mvn|"
-        r"gh|bundle|gem|composer|virtualenv|conda)\b"
-    )
-    stage_re = _STAGE_CMD_PATTERNS.get(stage)
-
-    # Scan per snippet so each command keeps the *real* file it came from. A
-    # flat scan used to pair stage B's `pytest` with whatever file ranked first
-    # (often a CONTRIBUTING.md that contains no test command), which broke the
-    # 无证据不宣称 contract: the cited source did not actually back the command.
-    chosen: tuple[str, str, str] | None = None  # (command, source, kind)
-    seen: set[str] = set()
-    for sn in snippets:
-        src = sn.get("source", "")
-        mkind = sn.get("meta_kind", "file")
-        if not src or src.startswith("v") or mkind not in ("file", "issue"):
-            continue
-        for line in sn["text"].splitlines():
-            stripped = re.sub(r"^[$>]\s*", "", line.strip()).strip()
-            if not stripped or not _CMD_PREFIX.match(stripped):
-                continue
-            cleaned = stripped.split("```")[0].strip()
-            if not cleaned or len(cleaned) >= 140 or cleaned in seen:
-                continue
-            seen.add(cleaned)
-            if stage_re and not re.match(stage_re, cleaned):
-                continue
-            chosen = (cleaned, src, mkind)
-            break
-        if chosen:
-            break
-
-    # With no stage-appropriate command, fall back to the best real source for
-    # the step (so C/D still carry a verifiable provenance) but leave the
-    # command empty rather than mis-attributing an unrelated one.
-    ev_source = ""
-    ev_kind = "missing"
-    if chosen:
-        cmds = [chosen[0]]
-        ev_source, ev_kind = chosen[1], chosen[2]
-    else:
-        cmds = []
-        for sn in snippets:
-            src = sn.get("source", "")
-            mkind = sn.get("meta_kind", "file")
-            if mkind in ("file", "issue") and src and not src.startswith("v"):
-                ev_source, ev_kind = src, mkind
-                break
-
-    expected = (
-        f"运行 {cmds[0]} 并确认成功（无报错）" if cmds else "见仓库原文确认成功标志"
-    )
-    return GuideStep(
-        step_id=0,
-        stage=stage,  # type: ignore[arg-type]
-        stage_label=_STAGE_LABELS[stage],
-        title=_TITLES[stage],
-        command=cmds[0] if cmds else None,
-        expected=expected,
-        fail_hints=["如卡住，把报错贴给 OpenGuide 的‘报错了’追问"],
-        # Heuristic fallback marks evidence missing only when no real source is
-        # retrievable (无证据不宣称).
-        evidence=Evidence(kind=ev_kind, source=ev_source, quote=""),  # type: ignore[arg-type]
-    )
 
 
 def _verify_and_relabel(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]:

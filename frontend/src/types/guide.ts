@@ -49,6 +49,7 @@ export interface Guide {
   reasons: string[]
   steps: GuideStep[]
   generation_mode?: 'heuristic' | 'llm' | 'mixed'
+  stage_modes?: Partial<Record<'A' | 'B' | 'C' | 'D', 'heuristic' | 'llm'>>
   warnings?: string[]
   is_demo?: boolean
   is_saved?: boolean

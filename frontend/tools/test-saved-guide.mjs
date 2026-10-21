@@ -28,6 +28,15 @@ test('non-text expected output cannot crash the React renderer', () => {
 test('invalid JSON fails without side effects', () => {
   assert.throws(() => parseSavedGuide('{bad json'))
 })
+
+test('stage generation modes are preserved and invalid modes rejected', () => {
+  const f = fixture(); f.stage_modes = { A: 'llm', B: 'heuristic' }
+  assert.deepEqual(parseSavedGuide(JSON.stringify(f)).stage_modes, f.stage_modes)
+  f.stage_modes = { A: 'executed' }
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+  f.stage_modes = { Z: 'llm' }
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})
 test('invalid command derivation cannot crash rendering', () => {
   const f = fixture(); f.steps[0].command_derivation = { unexpected: true }
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))

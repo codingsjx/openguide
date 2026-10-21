@@ -7,6 +7,10 @@ export function parseSavedGuide(text: string): Guide {
     throw new Error('指南格式无效，需要 GitHub 仓库地址和 steps 列表')
   }
   const ids = new Set<number>()
+  if (data.stage_modes != null && (typeof data.stage_modes !== 'object' || Array.isArray(data.stage_modes) ||
+      Object.entries(data.stage_modes).some(([stage, mode]) => !['A', 'B', 'C', 'D'].includes(stage) || !['heuristic', 'llm'].includes(mode as string)))) {
+    throw new Error('阶段生成来源格式无效')
+  }
   const relativePath = (value: unknown) => typeof value === 'string' && value.length > 0 && !/^(?:\/|[A-Za-z]:)/.test(value) && !value.includes('\\') && !value.split('/').includes('..')
   for (const step of data.steps) {
     if (!step || !Number.isInteger(step.step_id) || ids.has(step.step_id) ||
