@@ -29,7 +29,12 @@ class Model:
             raise LLMUnavailable('synthetic timeout')
         if stage in self.empty:
             return {'steps': []}
-        return {'steps': [{'title': f'Preserved AI {stage}', 'evidence': {'kind':'missing'}}]}
+        evidence = {'kind':'missing'}
+        if stage == 'A':
+            evidence = {'kind':'file','source':'README.md','quote':'pip install -e .[dev]'}
+        elif stage == 'D':
+            evidence = {'kind':'file','source':'CONTRIBUTING.md','quote':'Fork the repository and create a branch.'}
+        return {'steps': [{'title': f'Preserved AI {stage}', 'evidence': evidence}]}
 
 
 def generate(client=None, **kwargs):
@@ -105,3 +110,42 @@ def test_tox_templates_and_publish_environments_are_not_direct_setup_commands():
     tests=generate_stage(sig,'B',snippets,_STAGE_CMD_PATTERNS['B'])
     assert not any(s.command and 'publish' in s.command for s in setup)
     assert all(s.command is None for s in tests)
+
+
+def test_placeholder_clone_and_version_queries_are_not_onboarding_commands():
+    from backend.core.generate.heuristic import generate_stage
+    from backend.core.generate.pipeline import _STAGE_CMD_PATTERNS
+    text='git clone git@github.com:your_name_here/repo.git\nnox --version\npytest -k TestFindHooks\n'
+    sig=RawSignals(meta=RepoMeta(owner='o',repo='r'),doc_files=[DocFile(path='CONTRIBUTING.md',name='CONTRIBUTING.md',text=text)])
+    snippets=[{'source':'CONTRIBUTING.md','text':text}]
+    setup=generate_stage(sig,'A',snippets,_STAGE_CMD_PATTERNS['A'])
+    tests=generate_stage(sig,'B',snippets,_STAGE_CMD_PATTERNS['B'])
+    assert all(s.command is None for s in setup)
+    assert tests[0].command=='pytest -k TestFindHooks'
+    assert '局部测试' in tests[0].title
+
+
+def test_product_replaces_unsubstantiated_pr_stage_but_strict_model_keeps_it():
+    class UnsupportedPR(Model):
+        def chat_json(self, *args, **kwargs):
+            result = super().chat_json(*args, **kwargs)
+            if self.calls[-1] == 'D':
+                result['steps'][0]['evidence'] = {'kind':'missing'}
+            return result
+    product = generate(UnsupportedPR(failing=()))
+    assert product.stage_modes['D'] == 'heuristic'
+    assert all(s.evidence.verification == 'quote_verified' for s in product.steps if s.stage == 'D')
+    strict = generate(UnsupportedPR(failing=()), strict_llm=True)
+    assert strict.stage_modes['D'] == 'llm'
+    assert any(s.stage == 'D' and s.evidence.kind == 'missing' for s in strict.steps)
+
+
+def test_special_ci_install_is_not_a_required_setup_command():
+    from backend.core.generate.pipeline import audit_steps, _build_index
+    from backend.core.generate.schemas import GuideStep, Evidence
+    sig=signals()
+    path='.github/workflows/typecheck.yml'
+    sig.doc_files.append(DocFile(path=path,name='typecheck.yml',text='run: python -m pip install -e . --group typecheck'))
+    step=GuideStep(step_id=1,stage='A',title='Install project',command='python -m pip install -e . --group typecheck',evidence=Evidence(source=path))
+    result=audit_steps(sig,_build_index(sig),[step])[0]
+    assert result.command is None and '专项 CI' in result.expected

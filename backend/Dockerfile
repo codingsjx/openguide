@@ -17,13 +17,15 @@ RUN pip install --no-cache-dir "uv==0.12.23"
 WORKDIR /app
 
 # Dependency layer first so source edits don't bust the cache.
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen
+COPY pyproject.toml uv.lock README.md ./
+ARG INSTALL_VECTOR=false
+RUN if [ "$INSTALL_VECTOR" = "true" ]; then uv sync --frozen --no-dev --no-install-project --extra vector; else uv sync --frozen --no-dev --no-install-project; fi
 
 COPY README.md ./
 COPY src ./src
 COPY tests ./tests
 COPY conftest.py ./
+RUN if [ "$INSTALL_VECTOR" = "true" ]; then uv sync --frozen --no-dev --extra vector; else uv sync --frozen --no-dev; fi
 
 # Vector store persists here; docker-compose mounts a named volume on it.
 ENV VECTORSTORE_DIR=/app/.chroma
@@ -32,4 +34,4 @@ RUN mkdir -p /app/.chroma
 EXPOSE 8000
 
 # 0.0.0.0 is required so the port is reachable from outside the container.
-CMD ["uv", "run", "uvicorn", "backend.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/.venv/bin/uvicorn", "backend.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

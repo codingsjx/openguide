@@ -30,8 +30,8 @@ docker compose up --build
 浏览器打开 http://127.0.0.1:5173 即可。前端由 nginx 提供静态站点并把 `/api`
 反向代理到后端容器（同源，无需 CORS / 额外配置）。
 
-- 默认 `USE_CHROMA=false`：走**确定性检索**，零模型下载、秒级启动，适合离线评审。
-  需要本地向量检索时在 `.env` 里设 `USE_CHROMA=true`（首次会下载嵌入模型）。
+- 默认 `USE_CHROMA=false`：走**确定性检索**，核心安装不包含向量库或模型依赖。
+  Docker 启用向量检索时，在 `.env` 同时设 `INSTALL_VECTOR=true` 和 `USE_CHROMA=true` 后重新构建；首次使用会下载模型。
 - 向量库与 GitHub 响应缓存挂在命名卷上，重启不丢、不重抓。
 - 详细演示流程见 [docs/demo_script.md](docs/demo_script.md)。
 
@@ -47,6 +47,10 @@ uv sync                        # 按 uv.lock 安装依赖
 uv run pytest tests/ -q        # 测试数量以当前运行记录为准（另运行 benchmark/tests）
 uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 ```
+
+默认依赖不安装 Chroma 和 sentence-transformers。需要向量功能时先运行
+`uv sync --extra vector`，再配置 `USE_CHROMA=true`；后续运行也使用
+`uv run --extra vector uvicorn backend.api.main:app --host 127.0.0.1 --port 8000`。
 
 可选：`backend/.env`（复制 `.env.example`）填 `GITHUB_TOKEN` 提升限流；不填也能跑（限流更低）。
 

@@ -5,14 +5,15 @@ description = "Evidence-grounded onboarding guide generator for open-source cont
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "chromadb>=1.5.9",
     "fastapi>=0.115",
     "httpx>=0.27",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
-    "sentence-transformers>=6.0.1",
     "uvicorn[standard]>=0.52.4",
 ]
+
+[project.optional-dependencies]
+vector = ["chromadb>=1.5.9", "sentence-transformers>=6.0.1"]
 
 [project.scripts]
 backend = "backend:main"

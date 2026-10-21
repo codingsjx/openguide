@@ -25,7 +25,8 @@ def _commands(sig, snippets, pattern):
         for line in lines:
             command = re.sub(r'^[$>]\s*', '', line.strip()).strip()
             if (not re.match(pattern, command) or command in seen or len(command) > 300
-                    or re.search(r'<[^>]+>|\{[^}]*\}|\$\(|&&|\|\||[;`]', command)):
+                    or re.search(r'<[^>]+>|\{[^}]*\}|\$\(|&&|\|\||[;`]', command)
+                    or re.search(r'\byour[_-]?(?:user)?name(?:[_-]here)?\b|\byour[-_]org\b', command, re.I)):
                 continue
             step = GuideStep(step_id=0, stage='A', title='原文命令', command=command,
                 evidence=Evidence(source=source))
@@ -60,11 +61,14 @@ def generate_stage(sig, stage, snippets, command_pattern):
         return output
     if stage == 'B':
         candidates = _commands(sig, snippets, command_pattern)
+        candidates = [s for s in candidates if not re.search(r'(?:^|\s)(?:--version|--help|-V|-h)(?:\s|$)', s.command)]
         candidates.sort(key=lambda s: bool(re.search(r'\b(?:stress|random|coverage|browser)\b|--numprocesses', s.command)))
         if candidates:
             step = _operation(candidates[0], 'B', '按原文运行测试（先核对范围）')
             if re.search(r'\b(?:stress|random|coverage|browser)\b|--numprocesses', step.command):
                 step.title = '核对仓库专项测试命令及运行条件'
+            elif re.search(r'(?:^|\s)(?:-k|-m|--deselect|--lf|--last-failed)|tests/[^ ]+\.py', step.command):
+                step.title = '核对局部测试范围（不等同完整测试基线）'
             return [step]
         return [pending('B', '待确认测试命令与测试范围')]
     if stage == 'C':

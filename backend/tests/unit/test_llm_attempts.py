@@ -2,6 +2,26 @@ import httpx
 from backend.core.generate.llm import LLMClient
 
 
+def test_json_fence_removal_is_lossless_and_does_not_repair_invalid_content():
+    import pytest
+    from backend.core.generate.llm import parse_json_object, LLMUnavailable
+    obj, mode = parse_json_object('```json\n{"quote":"a\\nb", "steps":[]}\n```')
+    assert obj['quote'] == 'a\nb' and mode == 'single_json_fence'
+    for content in ('prefix\n```json\n{}\n```', '```json\n{}\n``` suffix', '{"quote":"a\nb"}', '```json\n{"steps":\n```'):
+        with pytest.raises(LLMUnavailable): parse_json_object(content)
+
+
+def test_product_linebreak_compatibility_keeps_values_and_rejects_truncation():
+    import pytest
+    from backend.core.generate.llm import parse_json_object, LLMUnavailable
+    raw='{"quote":"line one\nline two\tend"}'
+    obj, mode=parse_json_object(raw,allow_literal_linebreaks=True)
+    assert obj['quote']=='line one\nline two\tend'
+    assert mode=='literal_string_linebreaks'
+    for broken in ('{"quote":"line\n', '{"quote":"line\x00other"}'):
+        with pytest.raises(LLMUnavailable):parse_json_object(broken,allow_literal_linebreaks=True)
+
+
 def test_interactive_timeout_does_not_retry(monkeypatch):
     import pytest
     import httpx

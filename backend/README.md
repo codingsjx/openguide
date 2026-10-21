@@ -25,7 +25,9 @@ API 令牌不会发往原文服务。此优化只减少文件请求占用的 API
 只在本机 `.env` 填令牌，不要放入指南、报告或仓库。资料不完整时页面保留警告。
 
 > 测试默认走 hermetic 路径（`conftest.py` 设 `USE_CHROMA=false`），
-> 不下载嵌入模型，秒级完成。需要真实向量检索时设 `USE_CHROMA=true`。
+> 不下载嵌入模型。默认核心依赖不含 Chroma 或 sentence-transformers。
+> 需要向量功能时先 `uv sync --extra vector`，设置 `USE_CHROMA=true`，
+> 再以 `uv run --extra vector uvicorn backend.api.main:app --host 127.0.0.1 --port 8000` 启动。
 
 ## 目录
 

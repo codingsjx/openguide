@@ -1,0 +1,12 @@
+{
+  "clean_environment": "_run_cache/cold-start-20261021/backend/.venv",
+  "health_status": 200,
+  "health": {
+    "status": "ok"
+  },
+  "no_secrets_copied": true,
+  "invalid_repo_status": 422,
+  "optional_dependencies_installed": false,
+  "docker_runtime_tested": false,
+  "package_cache": "Existing download caches may be reused; checkout and virtual environment were new"
+}

@@ -1,0 +1,315 @@
+{
+  "captured_at": "2026-10-21T13:50:32.722171+00:00",
+  "mode": "fixed-source-rule-structural-audit",
+  "repositories_requested": 5,
+  "repositories_inspected": 5,
+  "structural_checks_passed": true,
+  "records": [
+    {
+      "repo": "psf/requests",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "9e3c3086e255ba9070bcd9b172ead8bb65e9712a8e5012507ac25526251bfcff",
+      "documents": 16,
+      "status": "inspected",
+      "structural_checks_passed": true,
+      "errors": [],
+      "stage_coverage": {
+        "A": {
+          "steps": 3,
+          "literal_commands": 2,
+          "pending_items": 1,
+          "steps_with_source": 2
+        },
+        "B": {
+          "steps": 1,
+          "literal_commands": 1,
+          "pending_items": 0,
+          "steps_with_source": 1
+        },
+        "C": {
+          "steps": 1,
+          "literal_commands": 0,
+          "pending_items": 1,
+          "steps_with_source": 0
+        },
+        "D": {
+          "steps": 4,
+          "literal_commands": 0,
+          "pending_items": 0,
+          "steps_with_source": 4
+        }
+      },
+      "commands": [
+        {
+          "stage": "A",
+          "command": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+          "source": "README.md",
+          "line_start": 65,
+          "verification": "command_verified",
+          "working_directory": null,
+          "missing_inputs": []
+        },
+        {
+          "stage": "A",
+          "command": "python -m pip install -r requirements-dev.txt",
+          "source": "Makefile",
+          "line_start": 3,
+          "verification": "command_verified",
+          "working_directory": ".",
+          "missing_inputs": []
+        },
+        {
+          "stage": "B",
+          "command": "python -m pytest tests",
+          "source": "Makefile",
+          "line_start": 5,
+          "verification": "command_verified",
+          "working_directory": ".",
+          "missing_inputs": []
+        }
+      ],
+      "unknown_command_directories": 0,
+      "missing_input_paths": [],
+      "independent_human_review": "pending",
+      "commands_executed": false,
+      "user_task_success_measured": false
+    },
+    {
+      "repo": "pallets/click",
+      "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "ad115e6842832e6eec074916a94ee95ebeaeca57da80332014a0889c4c8b0749",
+      "documents": 10,
+      "status": "inspected",
+      "structural_checks_passed": true,
+      "errors": [],
+      "stage_coverage": {
+        "A": {
+          "steps": 3,
+          "literal_commands": 0,
+          "pending_items": 3,
+          "steps_with_source": 0
+        },
+        "B": {
+          "steps": 1,
+          "literal_commands": 1,
+          "pending_items": 0,
+          "steps_with_source": 1
+        },
+        "C": {
+          "steps": 1,
+          "literal_commands": 0,
+          "pending_items": 1,
+          "steps_with_source": 0
+        },
+        "D": {
+          "steps": 1,
+          "literal_commands": 0,
+          "pending_items": 0,
+          "steps_with_source": 1
+        }
+      },
+      "commands": [
+        {
+          "stage": "B",
+          "command": "tox r -e random",
+          "source": "docs/contributing.md",
+          "line_start": 25,
+          "verification": "command_verified",
+          "working_directory": null,
+          "missing_inputs": []
+        }
+      ],
+      "unknown_command_directories": 1,
+      "missing_input_paths": [],
+      "independent_human_review": "pending",
+      "commands_executed": false,
+      "user_task_success_measured": false
+    },
+    {
+      "repo": "cookiecutter/cookiecutter",
+      "commit_sha": "c88fbe921c97c58b65f1883ba90a0ab53cc91b34",
+      "snapshot_sha256": "d11406679a0fd44a97f75ae04efa378276eb383069bb0730e26392c52abde644",
+      "documents": 10,
+      "status": "inspected",
+      "structural_checks_passed": true,
+      "errors": [],
+      "stage_coverage": {
+        "A": {
+          "steps": 3,
+          "literal_commands": 2,
+          "pending_items": 1,
+          "steps_with_source": 2
+        },
+        "B": {
+          "steps": 1,
+          "literal_commands": 1,
+          "pending_items": 0,
+          "steps_with_source": 1
+        },
+        "C": {
+          "steps": 1,
+          "literal_commands": 0,
+          "pending_items": 1,
+          "steps_with_source": 0
+        },
+        "D": {
+          "steps": 4,
+          "literal_commands": 0,
+          "pending_items": 0,
+          "steps_with_source": 4
+        }
+      },
+      "commands": [
+        {
+          "stage": "A",
+          "command": "git clone git@github.com:your_name_here/cookiecutter.git",
+          "source": "CONTRIBUTING.md",
+          "line_start": 75,
+          "verification": "command_verified",
+          "working_directory": null,
+          "missing_inputs": []
+        },
+        {
+          "stage": "A",
+          "command": "pip install -e .",
+          "source": "CONTRIBUTING.md",
+          "line_start": 83,
+          "verification": "command_verified",
+          "working_directory": null,
+          "missing_inputs": []
+        },
+        {
+          "stage": "B",
+          "command": "pytest -k TestFindHooks",
+          "source": "CONTRIBUTING.md",
+          "line_start": 169,
+          "verification": "command_verified",
+          "working_directory": null,
+          "missing_inputs": []
+        }
+      ],
+      "unknown_command_directories": 2,
+      "missing_input_paths": [],
+      "independent_human_review": "pending",
+      "commands_executed": false,
+      "user_task_success_measured": false
+    },
+    {
+      "repo": "mochajs/mocha",
+      "commit_sha": "2c2b89600e3ba8225bf11d7919e698060a55c86e",
+      "snapshot_sha256": "7fa6aa907187b51c09eaf2f1ece47a5b270a3966034bdc47b0447051707bfdcf",
+      "documents": 11,
+      "status": "inspected",
+      "structural_checks_passed": true,
+      "errors": [],
+      "stage_coverage": {
+        "A": {
+          "steps": 3,
+          "literal_commands": 0,
+          "pending_items": 3,
+          "steps_with_source": 0
+        },
+        "B": {
+          "steps": 1,
+          "literal_commands": 0,
+          "pending_items": 1,
+          "steps_with_source": 0
+        },
+        "C": {
+          "steps": 1,
+          "literal_commands": 0,
+          "pending_items": 1,
+          "steps_with_source": 0
+        },
+        "D": {
+          "steps": 4,
+          "literal_commands": 0,
+          "pending_items": 0,
+          "steps_with_source": 4
+        }
+      },
+      "commands": [],
+      "unknown_command_directories": 0,
+      "missing_input_paths": [],
+      "independent_human_review": "pending",
+      "commands_executed": false,
+      "user_task_success_measured": false
+    },
+    {
+      "repo": "camelot-dev/camelot",
+      "commit_sha": "92777b852e00933a5c4b9ba642601784604356cd",
+      "snapshot_sha256": "9a87c9abbee5c47d4bfad827856b8894f4ec95d8f05e88bff9b3879ad247edc4",
+      "documents": 11,
+      "status": "inspected",
+      "structural_checks_passed": true,
+      "errors": [],
+      "stage_coverage": {
+        "A": {
+          "steps": 3,
+          "literal_commands": 2,
+          "pending_items": 1,
+          "steps_with_source": 2
+        },
+        "B": {
+          "steps": 1,
+          "literal_commands": 1,
+          "pending_items": 0,
+          "steps_with_source": 1
+        },
+        "C": {
+          "steps": 1,
+          "literal_commands": 0,
+          "pending_items": 1,
+          "steps_with_source": 0
+        },
+        "D": {
+          "steps": 4,
+          "literal_commands": 0,
+          "pending_items": 0,
+          "steps_with_source": 4
+        }
+      },
+      "commands": [
+        {
+          "stage": "A",
+          "command": "git clone https://github.com/camelot-dev/camelot.git",
+          "source": "README.md",
+          "line_start": 131,
+          "verification": "command_verified",
+          "working_directory": null,
+          "missing_inputs": []
+        },
+        {
+          "stage": "A",
+          "command": "pip install \"camelot-py[dev]\"",
+          "source": "docs/dev/contributing.rst",
+          "line_start": 38,
+          "verification": "command_verified",
+          "working_directory": null,
+          "missing_inputs": []
+        },
+        {
+          "stage": "B",
+          "command": "nox --version",
+          "source": ".github/workflows/tests.yml",
+          "line_start": 139,
+          "verification": "command_verified",
+          "working_directory": null,
+          "missing_inputs": []
+        }
+      ],
+      "unknown_command_directories": 2,
+      "missing_input_paths": [],
+      "independent_human_review": "pending",
+      "commands_executed": false,
+      "user_task_success_measured": false
+    }
+  ],
+  "limitations": [
+    "No model calls or command execution.",
+    "Git source capture does not measure live issue availability or community activity.",
+    "Literal source matching does not establish semantic correctness or a successful setup.",
+    "Pending steps and unknown directories are retained; structural success is not functional completeness.",
+    "No independent human review or participant outcomes."
+  ]
+}

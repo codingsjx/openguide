@@ -32,6 +32,7 @@ def summarize(folder: Path) -> dict:
         pairs.append(pair)
     return {'kind':'controlled-reference-exploration','run_id':folder.name,'manifest':manifest,
         'status':summary['status'],'reference_checks':summary.get('reference_checks',{}),
+        'source_code_unchanged':summary.get('source_code_unchanged'),
         'quality_claim_eligible':summary.get('quality_claim_eligible',False),
         'model_attempts':sum(r['model_attempts'] or 0 for r in records),
         'recorded_responses':sum(r['recorded_responses'] for r in records),

@@ -9,6 +9,7 @@ kept in-process only (module-level) — never written to disk, never logged.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from backend.config import get_settings
@@ -20,6 +21,39 @@ _OVERRIDE_MODEL = ""
 
 class LLMUnavailable(RuntimeError):
     pass
+
+
+def parse_json_object(content: str, *, allow_literal_linebreaks: bool = False) -> tuple[dict[str, Any], str]:
+    """Accept a whole JSON object, optionally one complete JSON fence.
+
+    Strict by default; product compatibility may retain literal LF/CR/TAB
+    inside strings. No values or missing syntax are invented. The original
+    response remains in the trace.
+    """
+    if not isinstance(content, str):
+        raise LLMUnavailable('LLM 响应正文不是文本')
+    fence = re.fullmatch(r'\s*```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n```\s*', content, re.I)
+    text = fence.group(1) if fence else content
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as exc:
+        # Product-only compatibility for providers that put literal LF/CR/TAB
+        # inside strings. Preserve those exact characters; never fill missing
+        # braces, change quotes, or accept other control characters. Research
+        # clients keep strict JSON parsing by default.
+        if not allow_literal_linebreaks or any(ord(ch) < 32 and ch not in '\n\r\t' for ch in text):
+            raise LLMUnavailable('LLM 返回的内容不是完整、合法的 JSON') from exc
+        try:
+            parsed = json.loads(text, strict=False)
+        except json.JSONDecodeError as second:
+            raise LLMUnavailable('LLM 返回的内容不是完整、合法的 JSON') from second
+        return_mode = 'literal_string_linebreaks'
+    else:
+        return_mode = 'none'
+    if not isinstance(parsed, dict):
+        raise LLMUnavailable('LLM 必须返回 JSON 对象')
+    mode = ('single_json_fence+' if fence else '') + return_mode
+    return parsed, 'single_json_fence' if mode == 'single_json_fence+none' else mode
 
 
 def configure_llm(api_key: str = "", base_url: str = "", model: str = "") -> None:
@@ -39,7 +73,7 @@ def llm_configured() -> bool:
 
 
 class LLMClient:
-    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2) -> None:
+    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2, allow_literal_linebreaks: bool = False) -> None:
         s = get_settings()
         self._key = _OVERRIDE_KEY or s.llm_api_key
         self._base = (_OVERRIDE_BASE or s.llm_base_url).rstrip("/")
@@ -48,6 +82,7 @@ class LLMClient:
         self.attempt_count = 0
         self._timeout_s = timeout_s
         self._retry_limit = retry_limit
+        self._allow_literal_linebreaks = allow_literal_linebreaks
 
     def public_config(self) -> dict:
         """Non-secret experiment metadata. Never include credentials or URL query."""
@@ -111,14 +146,9 @@ class LLMClient:
             self.trace.append({"messages": messages, "content": content,
                                "usage": data.get("usage", {}), "model": data.get("model", self._model),
                                "response_id": data.get("id"), "attempt": attempt + 1})
-            try:
-                parsed = json.loads(content)
-                if not isinstance(parsed, dict):
-                    raise LLMUnavailable("LLM 必须返回包含 steps 的 JSON 对象")
-                return parsed
-            except json.JSONDecodeError as exc:
-                # Bad JSON on a late attempt is not worth retrying whole payloads.
-                raise LLMUnavailable(f"LLM 返回非 JSON: {content[:200]}") from exc
+            parsed, normalization = parse_json_object(content, allow_literal_linebreaks=self._allow_literal_linebreaks)
+            self.trace[-1]['format_normalization'] = normalization
+            return parsed
         raise LLMUnavailable(f"LLM 调用失败: {last_exc}")
 
     def chat_text(

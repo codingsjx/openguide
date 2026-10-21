@@ -1,0 +1,8 @@
+{
+  "configured": true,
+  "request_scope": "Connectivity probe only; no repository quality conclusions",
+  "success": true,
+  "attempts": 1,
+  "responses": 1,
+  "elapsed_seconds": 5.41
+}

@@ -1,0 +1,21 @@
+{
+  "candidate_source_sha256": "7f922e5823fe0ca104068fd8792b2b52f54567b5afcb27ac4e5a32fc6ecd9d95",
+  "working_tree_candidate": true,
+  "environment": "new checkout and virtual environment",
+  "python": "3.12.8",
+  "default_installed_packages": 23,
+  "vector_packages_installed": false,
+  "health_status": 200,
+  "credentials_not_copied": true,
+  "docker_runtime_tested_locally": false,
+  "cache_note": "Download caches were reused; source directory and virtual environment were new.",
+  "locked_environment_tests_passed": 191,
+  "frontend_import_tests_passed": 10,
+  "frontend_production_build_passed": true,
+  "pnpm_version": "10.34.7",
+  "frontend_lint_passed": true,
+  "frontend_lint_environment": "Fresh frontend directory outside parent Git ignore rules",
+  "frontend_lint_initial_attempt": "Nested ignored _run_cache directory yielded no files; preserved as harness failure, then rerun outside that repository",
+  "canonical_lf_source_sha256": "94566322101bcf07b3f30a277838a8572ed59ab159ed8ca05e78abd2cdd7c273",
+  "tested_copy_matches_current_candidate": true
+}

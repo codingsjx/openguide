@@ -102,13 +102,20 @@ def build_guide(
     if not strict_llm:
         # Auditing can move a model's clone step out of D and deduplicate it.
         # Restore an honest entry point instead of leaving that stage empty.
-        missing_stages = [stage for stage in _STAGE_QUERIES if not any(s.stage == stage for s in guide.steps)]
-        if missing_stages:
-            for stage in missing_stages:
+        fallback_stages = [stage for stage in _STAGE_QUERIES
+            if not any(s.stage == stage and s.evidence.kind != 'missing' for s in guide.steps)]
+        replaced = False
+        if fallback_stages:
+            for stage in fallback_stages:
                 snippets = _retrieve_for_stage(index, stage, _STAGE_QUERIES[stage])
-                guide.steps.extend(generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]))
+                rules = audit_steps(sig, index, generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]))
+                if any(s.stage == stage for s in guide.steps) and not any(s.evidence.kind != 'missing' for s in rules):
+                    continue
+                guide.steps = [s for s in guide.steps if s.stage != stage] + rules
                 guide.stage_modes[stage] = 'heuristic'
-                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段在核验后没有保留步骤，已补充规则入口或待确认项。')
+                replaced = True
+                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段未保留可核验依据，已补充仓库原文规则入口或待确认项。')
+        if replaced:
             guide.steps = audit_steps(sig, index, guide.steps)
             model_stages = sum(mode == 'llm' for mode in guide.stage_modes.values())
             guide.generation_mode = 'mixed' if model_stages else 'heuristic'
@@ -126,6 +133,12 @@ def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> li
     # re-searching the index with the step's own title/command.
     steps = _backfill_evidence(sig, index, steps)
     for st in steps:
+        source_path = st.evidence.source.split('#', 1)[0].lower()
+        if st.command and st.stage == 'A' and source_path.startswith('.github/workflows/') and re.search(r'typecheck|publish|release|coverage|lint', source_path):
+            st.command = None
+            st.execution_record = None
+            st.title = '核对专项 CI 安装示例（待确认是否适用）'
+            st.expected = '该来源属于专项 CI，尚不能作为普通开发环境的必需安装步骤；请核对仓库开发说明。'
         if st.command and not re.match(_STAGE_CMD_PATTERNS[st.stage], st.command):
             st.evidence = Evidence(kind="missing", reason="命令动作不属于当前阶段")
         if st.command and st.evidence.verification != "command_verified":

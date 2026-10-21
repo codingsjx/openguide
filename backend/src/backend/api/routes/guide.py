@@ -47,4 +47,4 @@ def make_guide(req: GuideRequest) -> Guide:
     # Interactive requests should not retry a slow model for many minutes.
     # Offline experiment clients retain their own default timeout policy.
     return build_guide(sig, index=idx, use_llm=req.use_llm,
-        llm_client=LLMClient(timeout_s=25.0, retry_limit=0) if req.use_llm else None)
+        llm_client=LLMClient(timeout_s=25.0, retry_limit=0, allow_literal_linebreaks=True) if req.use_llm else None)

@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -174,13 +174,17 @@ name = "backend"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "chromadb" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "sentence-transformers" },
     { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.optional-dependencies]
+vector = [
+    { name = "chromadb" },
+    { name = "sentence-transformers" },
 ]
 
 [package.dev-dependencies]
@@ -190,14 +194,15 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "chromadb", specifier = ">=1.5.9" },
+    { name = "chromadb", marker = "extra == 'vector'", specifier = ">=1.5.9" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pydantic-settings", specifier = ">=2.3" },
-    { name = "sentence-transformers", specifier = ">=6.0.1" },
+    { name = "sentence-transformers", marker = "extra == 'vector'", specifier = ">=6.0.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.52.4" },
 ]
+provides-extras = ["vector"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=9.1.1" }]

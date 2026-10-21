@@ -52,6 +52,11 @@ def write(path, obj):
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def source_digest():
+    sources = sorted((ROOT / "backend/src").rglob("*.py")) + sorted((ROOT / "benchmark").rglob("*.py"))
+    return hashlib.sha256(b"\n".join(str(p.relative_to(ROOT)).encode() + b"\0" + p.read_bytes() for p in sources)).hexdigest()
+
+
 def run(args):
     _load_backend_env()
     if not LLMClient().available():
@@ -59,8 +64,9 @@ def run(args):
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out = ROOT / "benchmark/reports" / f"controlled_{stamp}"
     out.mkdir(parents=True)
-    sources = sorted((ROOT / "backend/src").rglob("*.py")) + sorted((ROOT / "benchmark").rglob("*.py"))
-    code_hash = hashlib.sha256(b"\n".join(str(p.relative_to(ROOT)).encode() + b"\0" + p.read_bytes() for p in sources)).hexdigest()
+    code_hash = source_digest()
+    timeout_s = getattr(args, 'timeout_seconds', 300.0)
+    retry_limit = getattr(args, 'model_retries', 2)
     write(out / "manifest.json", {"started_at": stamp, "code_sha256": code_hash,
           "repeats": args.repeats, "retrieval": "local-token-overlap", "model": LLMClient().public_config(),
           "paired_audit": True, "golden_review_status": "pending_independent_human_review",
@@ -69,6 +75,10 @@ def run(args):
               "flat_deduplicated": True, "stage_calls": 4, "snippets_per_stage": 4,
               "snippet_character_cap": 1200, "max_output_tokens_per_stage": 1800,
               "temperature": 0.2, "counterbalanced_arm_order": True, "stage_a_task_slots": True}})
+    manifest = json.loads((out / 'manifest.json').read_text(encoding='utf-8'))
+    manifest['controls'].update(model_timeout_seconds=timeout_s, model_retry_limit=retry_limit,
+        response_normalization='accept_one_complete_json_fence; reject_broken_json')
+    write(out / 'manifest.json', manifest)
     rows, summaries, reference_checks = [], {}, {}
     arms = ("single_shot", "flat_rag", "layered_raw", "layered_verified")
     references = load_references(Path(args.reference_dir)) if args.reference_dir else iter_golden_guides()
@@ -124,7 +134,7 @@ def run(args):
             raw_elapsed, raw_attempts = 0.0, 0
             arm_order = arms if repeat % 2 == 0 else ("layered_raw", "layered_verified", "flat_rag", "single_shot")
             for arm in arm_order:
-                llm = LLMClient()
+                llm = LLMClient(timeout_s=timeout_s, retry_limit=retry_limit)
                 row = {"repo": key, "arm": arm, "repeat": repeat, "sha": snapshot["sha"],
                        "snapshot_sha256": digest, "config": llm.public_config(), "status": "failed",
                        "reference_validation": check, "arm_order": list(arm_order)}
@@ -174,6 +184,7 @@ def run(args):
                 write(out / "runs.json", rows)
                 print(key, arm, repeat, row["status"], flush=True)
     expected = len(guides) * args.repeats * len(arms)
+    source_unchanged = source_digest() == code_hash
     result = {"metric_version": "2-strict-command", "status": "complete" if len(rows) == expected and all(r['status']=='ok' for r in rows) else "incomplete",
         "expected_runs": expected, "successful_runs": sum(r['status']=='ok' for r in rows),
         "summaries_success_only": {k: merge_summary(v) for k,v in summaries.items()},
@@ -184,6 +195,9 @@ def run(args):
                         "API model identity is provider-reported, not independently verified",
                         "postprocess arm includes evidence audit, make expansion, workflow normalization and context derivation",
                         "agent-reviewed references are not independent human ground truth"]}
+    result['source_code_unchanged'] = source_unchanged
+    if not source_unchanged:
+        result.update(status='invalidated_source_changed', quality_claim_eligible=False)
     write(out / "summary.json", result)
     print(out, flush=True)
     return 0 if result["status"] == "complete" else 1
@@ -196,7 +210,11 @@ if __name__ == "__main__":
     p.add_argument("--snapshot-dir")
     p.add_argument("--reference-dir", help="固定 SHA 的源码复核参考集；缺省仍使用旧参考集并禁止最终质量声明")
     p.add_argument("--git-dir", help="读取已有 owner__repo Git 工作目录；不抓取 issue/星标元数据")
+    p.add_argument('--timeout-seconds', type=float, default=300.0)
+    p.add_argument('--model-retries', type=int, default=2)
     a = p.parse_args()
     if a.repeats < 1:
         p.error("repeats 必须至少为 1")
+    if a.timeout_seconds <= 0 or a.model_retries < 0:
+        p.error('模型超时必须大于零，重试次数不能为负数')
     raise SystemExit(run(a))

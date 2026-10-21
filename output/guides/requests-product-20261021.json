@@ -1,0 +1,373 @@
+{
+  "repo_url": "https://github.com/psf/requests",
+  "owner": "psf",
+  "repo": "requests",
+  "default_branch": "main",
+  "unsuitable": false,
+  "reasons": [
+    "实验跳过适用性门槛，不代表推荐贡献此仓库"
+  ],
+  "steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "克隆仓库到当前目录",
+      "command": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "clone_destination",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "在你选择的项目存放目录执行；克隆结束后再进入新建的仓库目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "仓库克隆完成并放置在当前工作目录中",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+        "verification": "command_verified",
+        "line_start": 65,
+        "line_end": 65,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 2,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "准备 Git 克隆仓库",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "请先在仓库文档中确认操作方法",
+      "fail_hints": [
+        "命令未通过原文核验，已隐藏；可打开仓库文档或向维护者提问"
+      ],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "命令动作不属于当前阶段"
+      }
+    },
+    {
+      "step_id": 3,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "安装开发环境依赖",
+      "command": "python -m pip install -r requirements-dev.txt",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "build_file",
+      "required_paths": [
+        "requirements-dev.txt"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        1
+      ],
+      "context_notes": [
+        "按在该 Makefile 所在目录运行的常见约定推导；请核对原文中的 -C/-f、子项目说明及运行时依赖。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "已安装所有开发依赖包",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "Makefile",
+        "quote": "python -m pip install -r requirements-dev.txt",
+        "verification": "command_verified",
+        "line_start": 3,
+        "line_end": 3,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 4,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "安装项目本身",
+      "command": "python -m pip install -e . --group typecheck",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        1
+      ],
+      "context_notes": [
+        "尚未确认执行目录；请先查看来源中的 cd、项目根目录或子项目说明。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "项目以可编辑模式安装完成",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": ".github/workflows/typecheck.yml",
+        "quote": "python -m pip install -e . --group typecheck",
+        "verification": "command_verified",
+        "line_start": 29,
+        "line_end": 29,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 5,
+      "stage": "B",
+      "stage_label": "测试基线",
+      "title": "运行测试基线",
+      "command": "python -m pytest tests --junitxml=report.xml",
+      "original_command": "make ci",
+      "command_derivation": "由 Makefile 的 ci 目标展开为单条原文命令（展开过程不执行命令）",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "build_file",
+      "required_paths": [
+        "tests"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        1,
+        3,
+        4
+      ],
+      "context_notes": [
+        "按在该 Makefile 所在目录运行的常见约定推导；请核对原文中的 -C/-f、子项目说明及运行时依赖。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。",
+        "核对测试输出中的失败、跳过与未选中项，并确认实际运行了预期用例。"
+      ],
+      "expected": "测试成功全部通过/passed",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "Makefile",
+        "quote": "python -m pytest tests --junitxml=report.xml",
+        "verification": "command_verified",
+        "line_start": 8,
+        "line_end": 8,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 6,
+      "stage": "B",
+      "stage_label": "测试基线",
+      "title": "确认测试基线期望",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "全部通过/passed",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    },
+    {
+      "step_id": 7,
+      "stage": "C",
+      "stage_label": "挑选 issue",
+      "title": "挑选 1-3 个待确认候选 issue",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "挑选与新手任务关联的 issue 并说明关联",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    },
+    {
+      "step_id": 8,
+      "stage": "D",
+      "stage_label": "首次PR路径",
+      "title": "创建本地分支",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    },
+    {
+      "step_id": 9,
+      "stage": "D",
+      "stage_label": "首次PR路径",
+      "title": "从分支修改代码",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    },
+    {
+      "step_id": 10,
+      "stage": "D",
+      "stage_label": "首次PR路径",
+      "title": "运行测试套件",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    },
+    {
+      "step_id": 11,
+      "stage": "D",
+      "stage_label": "首次PR路径",
+      "title": "创建并提交PR",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": ""
+      }
+    }
+  ],
+  "generation_mode": "mixed",
+  "stage_modes": {
+    "A": "llm",
+    "B": "llm",
+    "C": "llm",
+    "D": "llm"
+  },
+  "warnings": [
+    "历史单例：此文件保留语义审计修复前的问题，仅用于错误分析；当前修复结果见 requests-audited-replay-20261021.json。请勿直接照此执行专项 CI 安装。",
+    "部分 make 命令已按仓库原文展开，展开过程可查看；尚未执行"
+  ]
+}

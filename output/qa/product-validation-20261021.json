@@ -1,0 +1,24 @@
+{
+  "repo": "psf/requests",
+  "revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "generation_mode": "mixed",
+  "stage_modes": {
+    "A": "llm",
+    "B": "llm",
+    "C": "llm",
+    "D": "llm"
+  },
+  "steps": 11,
+  "model_attempts": 4,
+  "responses": 4,
+  "reported_total_tokens": 10030,
+  "response_normalizations": [
+    "single_json_fence+literal_string_linebreaks",
+    "single_json_fence+literal_string_linebreaks",
+    "none",
+    "none"
+  ],
+  "elapsed_seconds": 13.3,
+  "scope": "One real product generation, not a controlled comparison; commands not executed; independent human review pending",
+  "quality_claim_eligible": false
+}

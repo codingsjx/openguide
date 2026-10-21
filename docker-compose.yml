@@ -10,6 +10,8 @@ services:
   backend:
     build:
       context: ./backend
+      args:
+        INSTALL_VECTOR: ${INSTALL_VECTOR:-false}
     environment:
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       LLM_API_KEY: ${LLM_API_KEY:-}

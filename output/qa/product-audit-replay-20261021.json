@@ -1,0 +1,19 @@
+{
+  "kind": "deterministic-replay-of-recorded-model-responses",
+  "network_model_calls_this_replay": 0,
+  "recorded_upstream_responses": 4,
+  "revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "stage_modes": {
+    "A": "llm",
+    "B": "llm",
+    "C": "llm",
+    "D": "heuristic"
+  },
+  "steps": 11,
+  "pr_steps_with_verified_quotes": 4,
+  "special_ci_commands_recommended": 0,
+  "commands_executed": false,
+  "independent_human_review": "pending",
+  "scope": "Postprocessing of the same recorded outputs; not a fresh model sample or user outcome",
+  "quality_claim_eligible": false
+}
