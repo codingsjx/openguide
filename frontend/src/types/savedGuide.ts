@@ -12,6 +12,25 @@ export function parseSavedGuide(text: string): Guide {
     throw new Error('阶段生成来源格式无效')
   }
   const relativePath = (value: unknown) => typeof value === 'string' && value.length > 0 && !/^(?:\/|[A-Za-z]:)/.test(value) && !value.includes('\\') && !value.split('/').includes('..')
+  if (data.issue_discovery != null) {
+    const d = data.issue_discovery
+    const base = data.repo_url.replace(/\/$/, '')
+    const strings = (value: unknown) => Array.isArray(value) && value.every((s: unknown) => typeof s === 'string')
+    const searchUrl = (value: unknown) => {
+      try {
+        const u = new URL(value as string)
+        return u.origin === 'https://github.com' && !u.username && !u.password && u.pathname === new URL(base).pathname + '/issues'
+      } catch { return false }
+    }
+    if (!['candidates', 'untriaged', 'empty', 'unavailable', 'blocked'].includes(d.status) || typeof d.reason !== 'string' ||
+        typeof d.sampled_at !== 'string' || ![d.sampled_count, d.blocked_count].every((n) => Number.isInteger(n) && n >= 0) ||
+        !Array.isArray(d.candidates) || d.candidates.length > 3 || d.candidates.some((c: Record<string, unknown>) => !c ||
+          !Number.isSafeInteger(c.number) || Number(c.number) <= 0 || typeof c.title !== 'string' || c.url !== `${base}/issues/${c.number}` ||
+          !['labelled', 'untriaged'].includes(c.origin as string) || !strings(c.labels) || !strings(c.checks)) ||
+        !Array.isArray(d.search_links) || d.search_links.length > 10 || d.search_links.some((l: Record<string, unknown>) => !l || typeof l.label !== 'string' || !searchUrl(l.url))) {
+      throw new Error('任务候选或检索入口格式无效，链接必须属于当前仓库')
+    }
+  }
   for (const step of data.steps) {
     if (!step || !Number.isInteger(step.step_id) || ids.has(step.step_id) ||
         !['A', 'B', 'C', 'D'].includes(step.stage) || typeof step.title !== 'string' ||

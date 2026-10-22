@@ -38,6 +38,9 @@ class RawSignals(BaseModel):
     has_license_file: bool = False
     doc_files: list[DocFile] = Field(default_factory=list)
     issues: list[dict] = Field(default_factory=list)
+    # Exploratory samples never count as beginner-labelled issues in profiling.
+    issue_samples: list[dict] = Field(default_factory=list)
+    issues_collected_at: str = ""
     commits_30d: int = 0
     file_tree: list[str] = Field(default_factory=list)  # repo-relative file paths
     unavailable_signals: list[str] = Field(default_factory=list)
@@ -146,6 +149,16 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
         unavailable.append("issues")
         warnings.append("新手任务信息未完整取得，不能据此判断没有任务")
 
+    issue_samples = []
+    if not any(i.get('state') == 'open' and i.get('pull_request') is None and not i.get('locked')
+               and not i.get('assignees') and not i.get('assignee') for i in issues):
+        try:
+            issue_samples = client.list_issues(owner, repo, per_page=30)
+        except GitHubClientError:
+            unavailable.append("issue_samples")
+            warnings.append("普通开放 issue 采样失败，可通过 GitHub 检索入口人工核对")
+    issues_collected_at = datetime.now(timezone.utc).isoformat()
+
     # Recent commits for activity signal.
     commits = 0
     try:
@@ -165,6 +178,8 @@ def recon(owner: str, repo: str, client: GitHubClient | None = None) -> RawSigna
         has_docs_dir=has_docs_dir,
         has_license_file=has_license_file,
         issues=issues,
+        issue_samples=issue_samples,
+        issues_collected_at=issues_collected_at,
         commits_30d=commits,
         file_tree=[],
         unavailable_signals=unavailable,
@@ -284,6 +299,8 @@ def enrich_docs_and_tree(
         has_license_file=any(name.startswith("license") for name in root),
         doc_files=doc_files,
         issues=sig.issues,
+        issue_samples=sig.issue_samples,
+        issues_collected_at=sig.issues_collected_at,
         commits_30d=sig.commits_30d,
         file_tree=file_tree,
         unavailable_signals=unavailable,

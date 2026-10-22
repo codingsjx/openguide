@@ -53,4 +53,13 @@ export interface Guide {
   warnings?: string[]
   is_demo?: boolean
   is_saved?: boolean
+  issue_discovery?: {
+    status: 'candidates' | 'untriaged' | 'empty' | 'unavailable' | 'blocked'
+    reason: string
+    sampled_at: string
+    sampled_count: number
+    blocked_count: number
+    candidates: { number: number; title: string; url: string; labels: string[]; checks: string[]; origin: 'labelled' | 'untriaged' }[]
+    search_links: { label: string; url: string }[]
+  } | null
 }

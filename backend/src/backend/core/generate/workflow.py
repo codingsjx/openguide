@@ -50,7 +50,13 @@ def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]
                 continue
             clone_commands.add(step.command)
         unique.append(step)
-    prepared = unique
+    has_clone = any(s.command and _CLONE.match(s.command) and s.evidence.verification == 'command_verified' for s in unique)
+    has_test = any(s.stage == 'B' and s.command and s.evidence.verification == 'command_verified' for s in unique)
+    prepared = [s for s in unique if not (
+        not s.command and s.evidence.kind == 'missing' and (
+            (has_clone and s.stage == 'A' and re.fullmatch(r'(?:准备|进行|执行)(?:\s*Git\s*)?克隆仓库', s.title, re.I)) or
+            (has_test and s.stage == 'B' and re.fullmatch(r'(?:确认|核对)测试基线(?:期望|预期)(?:结果)?', s.title))
+        ))]
     for i, step in enumerate(prepared, 1):
         step.step_id = i
         step.stage_label = step.stage_label or _LABELS[step.stage]

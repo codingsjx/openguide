@@ -46,8 +46,10 @@ def test_one_failed_stage_retains_successful_output_and_continues():
     guide = generate(model)
     assert model.calls == list('ABCD')
     assert guide.generation_mode == 'mixed'
-    assert guide.stage_modes == {'A':'llm','B':'heuristic','C':'llm','D':'llm'}
-    assert {s.title for s in guide.steps if s.stage != 'B'} == {'Preserved AI A','Preserved AI C','Preserved AI D'}
+    assert guide.stage_modes == {'A':'llm','B':'heuristic','C':'heuristic','D':'llm'}
+    assert {s.title for s in guide.steps if s.stage in ('A', 'D')} == {'Preserved AI A','Preserved AI D'}
+    assert '检索入口' in next(s.title for s in guide.steps if s.stage == 'C')
+    assert guide.issue_discovery.status == 'empty'
     test = next(s for s in guide.steps if s.stage == 'B')
     assert test.command == 'python -m pytest tests'
     assert test.evidence.verification == 'command_verified'

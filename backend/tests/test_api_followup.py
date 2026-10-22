@@ -42,3 +42,18 @@ def test_diagnose_uses_interactive_timeout_without_retries(monkeypatch):
     response = TestClient(app).post('/api/followup', json={
         'url':'o/r', 'intent':'diagnose', 'step':{'stage':'B','title':'Tests'}, 'log_text':'fixture'})
     assert response.status_code == 200
+
+
+def test_github_outage_does_not_block_local_path_diagnosis(monkeypatch):
+    from backend.core.github.client import GitHubClientError
+    def unavailable(*args, **kwargs): raise GitHubClientError('fixture outage')
+    monkeypatch.setattr('backend.api.routes.followup.recon', unavailable)
+    response = TestClient(app).post('/api/followup', json={
+        'url':'o/r','intent':'diagnose','revision':'b' * 40,
+        'step':{'stage':'B','title':'Run tests'},
+        'log_text':'OSError: Could not find a suitable TLS CA certificate bundle, invalid path: tests/certs/ca.crt'})
+    assert response.status_code == 200
+    body = response.json()
+    assert body['revision'] == 'b' * 40
+    assert len(body['local_checks']) == 3 and not body['evidence']
+    assert any('仓库资料暂时无法取得' in w for w in body['warnings'])

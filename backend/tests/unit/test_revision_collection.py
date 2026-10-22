@@ -36,12 +36,14 @@ class PinnedClient:
 
 def test_all_files_and_citation_ref_use_same_resolved_revision():
     client = PinnedClient()
-    sig = RawSignals(meta=RepoMeta(owner="o", repo="r"), root_entries={"old.md": "old.md"})
+    sig = RawSignals(meta=RepoMeta(owner="o", repo="r"), root_entries={"old.md": "old.md"},
+        issue_samples=[{'number':7,'title':'Sample','state':'open'}], issues_collected_at='2026-10-22T00:00:00+00:00')
     result = enrich_docs_and_tree(sig, client)
     assert result.meta.default_branch == SHA
     assert sig.meta.default_branch == "main"  # caller's profile is not mutated
     assert set(client.refs) == {SHA}
     assert "old.md" not in result.root_entries
+    assert result.issue_samples == sig.issue_samples and result.issues_collected_at == sig.issues_collected_at
     assert {d.path for d in result.doc_files} == {
         "README.md", ".github/PULL_REQUEST_TEMPLATE.md", ".github/CONTRIBUTING.rst"}
 

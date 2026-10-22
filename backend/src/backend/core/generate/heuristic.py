@@ -79,7 +79,9 @@ def generate_stage(sig, stage, snippets, command_pattern):
             return [GuideStep(step_id=0, stage='C', stage_label=LABELS['C'], title='核对候选 issue',
                 expected='核对最新状态、讨论和维护者规则后再决定是否参与。',
                 evidence=Evidence(kind='issue', source=f"#{issue['number']}", quote=issue.get('title') or ''))]
-        return [pending('C', '待确认可参与的 issue；不要直接认领')]
+        step = pending('C', '查看任务检索入口，记录待核对的小范围任务')
+        step.expected = '查看任务候选与 GitHub 检索入口；没有候选时可人工选题，记录问题、范围和原始来源，再核对维护者规则。'
+        return [step]
 
     # PR preparation must never disappear when a clone command is moved to A.
     # Match prose only in actual contribution documents, not arbitrary READMEs.

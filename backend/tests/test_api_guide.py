@@ -43,6 +43,8 @@ def test_guide_route_heuristic(monkeypatch):
     assert body["repo"] == "lib"
     assert body["unsuitable"] is False
     assert body["steps"], "guide should contain steps"
+    assert body['issue_discovery']['candidates'][0]['url'] == 'https://github.com/o/lib/issues/3'
+    assert body['issue_discovery']['search_links']
     # Steps reference at least setup stage.
     assert any(s["stage"] == "A" for s in body["steps"])
     # Every step carries evidence with a valid kind.

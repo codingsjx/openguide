@@ -1,0 +1,21 @@
+{
+  "method": "Operator executed the three read-only checks shown by the repaired UI in the prior fresh Requests checkout; not human user study data",
+  "repository": "psf/requests",
+  "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "interpreter": "explicit existing scratch venv Python, not system Python",
+  "working_directory": "prior fresh Requests checkout root",
+  "checks": [
+    {"action": "interpreter and cwd", "exit_code": 0, "result": "scratch venv interpreter; correct repository root"},
+    {"action": "Path exists/is_file/is_dir/is_symlink", "exit_code": 0, "rows": [
+      ["tests/certs/valid/ca/ca.crt", false, false, false, false],
+      ["tests/certs/valid/ca", true, true, false, false],
+      ["tests/certs/valid", true, false, true, false],
+      ["tests/certs", true, false, true, false],
+      ["tests", true, false, true, false],
+      [".", true, false, true, false]
+    ]},
+    {"command": "git ls-files -s -- tests/certs/valid/ca", "exit_code": 0, "mode": "120000", "blob": "46f26c398207fffebbc6c25a355891773d81560c", "path": "tests/certs/valid/ca"}
+  ],
+  "observation": "Git records ca as a symlink; this Windows checkout has a regular file at that path, so ca/ca.crt cannot be reached.",
+  "limits": "No checkout repair, global Git/proxy change, or new full upstream test run was performed. This explains this certificate-path failure, not all six upstream failures."
+}

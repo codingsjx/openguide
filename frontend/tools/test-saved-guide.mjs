@@ -58,3 +58,19 @@ test('prerequisites cannot point forward or to nonexistent steps', () => {
   const f = fixture(); f.steps[0].prerequisite_step_ids = [2]
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))
 })
+
+test('saved issue entries retain their snapshot but reject hostile links and shapes', () => {
+  const f = fixture()
+  f.issue_discovery = { status: 'untriaged', reason: 'browse only', sampled_at: '', sampled_count: 1, blocked_count: 0,
+    candidates: [{ number: 3, title: 'Task', url: 'https://github.com/o/r/issues/3', labels: [], checks: ['check latest state'], origin: 'untriaged' }],
+    search_links: [{ label: 'Open issues', url: 'https://github.com/o/r/issues?q=is%3Aopen' }] }
+  assert.equal(parseSavedGuide(JSON.stringify(f)).issue_discovery.candidates[0].number, 3)
+  f.issue_discovery.candidates[0].url = 'javascript:alert(1)'
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+  f.issue_discovery.candidates[0].url = 'https://github.com/o/r/issues/3'
+  f.issue_discovery.search_links[0].url = 'https://evil.test/issues'
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+  f.issue_discovery.search_links[0].url = 'https://github.com/o/r/issues'
+  f.issue_discovery.candidates[0].checks = {}
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})

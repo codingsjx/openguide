@@ -76,6 +76,8 @@ export interface FollowupResult {
   revision: string
   mode: 'retrieval' | 'rules' | 'llm_evidence_selection'
   warnings: string[]
+  diagnostic_category?: string
+  local_checks?: { label: string; command: string; expected: string }[]
 }
 
 export const api = {

@@ -25,6 +25,7 @@ import {
 
 import { api, type FollowupResult } from '../../api/client'
 import type { Evidence, Guide, GuideStep } from '../../types/guide'
+import ContributionWorkbench from '../ContributionWorkbench'
 
 const { Paragraph, Text, Title } = Typography
 
@@ -163,6 +164,15 @@ function FollowupBar({
           </Paragraph>
           <Paragraph type="secondary" style={{ marginTop: 8 }}>原文匹配只证明出处存在，不代表已确认根因或执行过命令。{result.mode === 'rules' ? '本次使用本地规则与检索。' : result.mode === 'llm_evidence_selection' ? '本次由 AI 选择原文，再逐字核验。' : '本次展示已核验的检索原文。'}</Paragraph>
           {result.warnings?.map((warning, i) => <Alert key={i} type="warning" message={warning} style={{ marginBottom: 8 }} />)}
+          {Boolean(result.local_checks?.length) && <div style={{ marginTop: 12 }}>
+            <Text strong>通用本机检查（工具提供，非仓库原文）</Text>
+            <Paragraph type="secondary">以下命令只读检查本机状态，没有替你执行。请在当前步骤要求的目录和开发环境中运行，并依据实际输出判断。</Paragraph>
+            {result.local_checks!.map((check, i) => <div key={i} style={{ marginTop: 10 }}>
+              <Text strong>{i + 1}. {check.label}</Text>
+              <Paragraph copyable={{ text: check.command }} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', marginTop: 4 }}><Text code>{check.command}</Text></Paragraph>
+              <Paragraph>{check.expected}</Paragraph>
+            </div>)}
+          </div>}
           {result.evidence?.length ? result.evidence.map((ev, i) => <div key={i} style={{ marginTop: 10 }}>
             <EvidenceBadge guide={{ ...guide, default_branch: result.revision }} ev={ev} />
             <details open={i === 0}>
@@ -299,6 +309,18 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
         <Alert type="info" showIcon style={{ marginBottom: 12 }} message={guide.is_saved ? '已保存指南，未重新联网核验' : guide.is_demo ? '静态交互示例，未分析仓库' : guide.generation_mode === 'mixed' ? '本指南含 AI 生成与规则处理，请查看各阶段来源；命令仍需本地验证' : guide.generation_mode === 'llm' ? '本次使用 AI 生成；命令仍需在本地验证' : '本次使用规则生成；依据已取得的资料核对操作'} />
         {step && guide.stage_modes?.[step.stage] && <Tag style={{ marginBottom: 8 }} color={guide.stage_modes[step.stage] === 'llm' ? 'blue' : 'gold'}>当前阶段来源：{guide.stage_modes[step.stage] === 'llm' ? 'AI 生成' : '规则整理（可能含待确认项）'}</Tag>}
         {guide.warnings?.map((warning) => <Alert key={warning} type="warning" message={warning} style={{ marginBottom: 8 }} />)}
+        {step?.stage === 'A' && steps.some((s) => /^(?:python(?:3)?\b|pip(?:3)?\b)/.test(s.command || '')) && <details style={{ marginBottom: 12 }}>
+          <summary style={{ cursor: 'pointer' }}>Python 新手：先确认隔离环境与解释器</summary>
+          <Paragraph style={{ marginTop: 8 }}>优先遵循仓库指定的运行时和环境工具。以下是 OpenGuide 提供的通用 venv 方法，不是仓库原文；先进入仓库，再创建开发环境。发布环境不能代替开发环境。</Paragraph>
+          <Text strong>Windows PowerShell</Text>
+          <Paragraph copyable={{ text: 'python -m venv .venv' }}><Text code>python -m venv .venv</Text></Paragraph>
+          <Paragraph>无需修改执行策略或激活脚本，可直接指定环境解释器：</Paragraph>
+          <Paragraph copyable={{ text: '.\\.venv\\Scripts\\python.exe -m pip --version' }}><Text code>{'.\\.venv\\Scripts\\python.exe -m pip --version'}</Text></Paragraph>
+          <Paragraph>执行下面的 Python 命令时，把开头的 python 换成 <Text code>{'.\\.venv\\Scripts\\python.exe'}</Text>；若开头是 pip，改用该解释器的 <Text code>-m pip</Text>。</Paragraph>
+          <Text strong>macOS / Linux</Text>
+          <Paragraph copyable={{ text: 'python3 -m venv .venv\n.venv/bin/python -m pip --version' }} style={{ whiteSpace: 'pre-wrap' }}><Text code>{'python3 -m venv .venv\n.venv/bin/python -m pip --version'}</Text></Paragraph>
+          <Paragraph>继续使用 <Text code>.venv/bin/python</Text> 运行仓库要求的 Python 命令。创建失败时先检查运行时版本及系统 venv 支持，避免把依赖直接装进系统 Python。</Paragraph>
+        </details>}
         <Steps
           current={['A', 'B', 'C', 'D'].indexOf(step?.stage ?? 'A')}
           size="small"
@@ -337,6 +359,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
             {step.context_notes?.map((note, i) => <Paragraph type="secondary" key={i}>{note}</Paragraph>)}
 
             {step.command && (
+              <div>
               <pre
                 style={{
                   background: '#f6f8fa',
@@ -349,6 +372,8 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
               >
                 <code>{step.command}</code>
               </pre>
+              <Typography.Text copyable={{ text: step.command }}>复制完整命令</Typography.Text>
+              </div>
             )}
 
             {step.expected && (
@@ -382,6 +407,8 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
           </Card>
         )}
 
+        {!guide.is_demo && <ContributionWorkbench guide={guide} stage={step?.stage ?? ''} />}
+
         {allDone && (
           <Alert
             showIcon
@@ -397,7 +424,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
           />
         )}
 
-        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' }}>
           <Button
             icon={<LeftOutlined />}
             disabled={current === 0}
@@ -405,6 +432,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
           >
             上一步
           </Button>
+          {current < steps.length - 1 && <Button onClick={() => setCurrent((c) => c + 1)}>仅查看下一步</Button>}
           {current < steps.length - 1 ? (
             <Button type="primary" onClick={markDone}>
               完成并下一步 <RightOutlined />

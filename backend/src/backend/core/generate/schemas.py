@@ -10,6 +10,7 @@ from typing import Literal
 import re
 
 from pydantic import BaseModel, Field, model_validator
+from backend.core.generate.issues import IssueDiscovery
 
 
 class Evidence(BaseModel):
@@ -80,6 +81,7 @@ class Guide(BaseModel):
     generation_mode: Literal["heuristic", "llm", "mixed"] = "heuristic"
     stage_modes: dict[Literal["A", "B", "C", "D"], Literal["heuristic", "llm"]] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
+    issue_discovery: IssueDiscovery | None = None
 
     @model_validator(mode="after")
     def execution_matches_revision(self):

@@ -21,7 +21,7 @@ def test_missing_activity_and_issues_are_not_negative_facts():
     signals = recon("o", "r", PartialClient())
     profile = build_profile(signals)
     assert profile.has_readme
-    assert set(profile.unavailable_signals) == {"languages", "issues", "activity"}
+    assert set(profile.unavailable_signals) == {"languages", "issues", "issue_samples", "activity"}
     suitability, reasons = decide(profile)
     assert suitability == "unclear"
     assert not any("无人维护" in reason or "暂无标注" in reason for reason in reasons)

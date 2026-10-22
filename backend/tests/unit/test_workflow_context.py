@@ -73,3 +73,16 @@ def test_audited_stage_a_clone_is_no_longer_hidden():
     result = audit_steps(sig, idx, [step('A', command, 'README.md')])
     assert result[0].command == command
     assert result[0].directory_basis == 'clone_destination'
+
+
+def test_empty_repeated_clone_and_test_expectation_do_not_become_extra_tasks():
+    steps = [step('A', 'git clone https://github.com/o/lib.git'),
+        GuideStep(step_id=2,stage='A',title='准备 Git 克隆仓库',evidence=Evidence(kind='missing')),
+        step('B', 'pytest tests'),
+        GuideStep(step_id=4,stage='B',title='确认测试基线期望',evidence=Evidence(kind='missing'))]
+    result = prepare_workflow(make_signals(), steps)
+    assert len(result) == 2
+    assert result[-1].step_id == 2
+    assert result[-1].prerequisite_step_ids == [1]
+    # No verified action: retain the pending entry rather than erase the stage.
+    assert len(prepare_workflow(make_signals(), [steps[1]])) == 1

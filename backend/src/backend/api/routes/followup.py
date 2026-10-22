@@ -18,7 +18,8 @@ from backend.core.generate.llm import LLMClient
 from backend.core.generate.schemas import GuideStep
 from backend.core.github.client import GitHubClient, GitHubClientError
 from backend.core.github.parse import parse_github_url
-from backend.core.github.recon import enrich_docs_and_tree, recon
+from backend.core.github.recon import RawSignals, enrich_docs_and_tree, recon
+from backend.core.github.models import RepoMeta
 from backend.core.index.service import RepoIndex
 
 router = APIRouter(prefix="/api", tags=["followup"])
@@ -55,7 +56,13 @@ def follow_up(req: FollowupRequest) -> dict:
             sig.meta = sig.meta.model_copy(update={"default_branch": req.revision})
         sig = enrich_docs_and_tree(sig, client=client)
     except GitHubClientError as exc:
-        raise HTTPException(status_code=502, detail=f"抓取仓库失败: {exc}") from exc
+        if req.intent != 'diagnose':
+            raise HTTPException(status_code=502, detail=f"抓取仓库失败: {exc}") from exc
+        # A local path/environment check remains useful during GitHub outages;
+        # no stale or fabricated repository evidence is attached to this result.
+        sig = RawSignals(meta=RepoMeta(owner=owner, repo=repo, default_branch=req.revision or 'main'),
+            unavailable_signals=['docs', 'tree', 'issues'],
+            collection_warnings=['仓库资料暂时无法取得；本次仅提供通用本机排查，没有核验仓库原文。'])
     finally:
         client.close()
 
@@ -79,5 +86,7 @@ def follow_up(req: FollowupRequest) -> dict:
         "evidence": [ev.model_dump() for ev in r.evidence],
         "revision": sig.meta.default_branch,
         "mode": r.mode,
+        "diagnostic_category": r.diagnostic_category,
+        "local_checks": r.local_checks,
         "warnings": list(dict.fromkeys(sig.collection_warnings + r.warnings)),
     }

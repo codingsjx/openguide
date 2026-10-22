@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-22",
+  "timezone": "Asia/Shanghai",
+  "method": "AI agent implementation and UI acceptance; not human user study data",
+  "change_base": "5fb320ddacb64a929fc86b9b73bcc16cd9a592b0",
+  "automated_checks": {
+    "backend_and_benchmark": {"passed": 209, "warnings": 1, "exit_code": 0},
+    "frontend": {"passed": 19, "exit_code": 0},
+    "lint": {"exit_code": 0},
+    "build": {"exit_code": 0, "note": "bundle size warning remains"},
+    "l1": {"exit_code": 0, "scope": "offline chain only, not quality"}
+  },
+  "ui_acceptance": {
+    "requests_commit": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+    "guide_steps": 9,
+    "stage_modes": {"A": "llm", "B": "llm", "C": "heuristic", "D": "heuristic"},
+    "why": "verified current-source context returned",
+    "certificate_diagnosis": "local path checks returned; unrelated expired-certificate snippet suppressed",
+    "issue_sample_count": 15,
+    "displayed_issue_numbers": [7634, 7632, 7631],
+    "sample_scope": "untriaged browsing examples, not beginner recommendations",
+    "original_issue_checked": "https://github.com/psf/requests/issues/7632",
+    "issue_has_existing_proposal": true,
+    "task_preserved_between_c_and_d": true,
+    "draft_disabled_without_change_records": true,
+    "actual_openguide_change_draft_downloaded": true,
+    "empty_result_case": "codingsjx/openguide default master snapshot 8c21e6d43798c707b5aa5001112719e832ae95a8"
+  },
+  "upstream_actions": {"file_changes": false, "issue_comment": false, "pull_request_created": false},
+  "limits": [
+    "Requests baseline was not rerun or repaired; prior six failures remain unresolved as a full-suite result.",
+    "The downloaded draft is for actual local OpenGuide changes, not a Requests contribution.",
+    "Draft inputs are user-reported; the app did not independently execute their commands or verify their origin.",
+    "No new system package installation or global Git/proxy changes in this implementation turn.",
+    "Human trial and independent review remain pending."
+  ]
+}

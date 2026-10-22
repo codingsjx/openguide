@@ -25,6 +25,7 @@ from backend.core.generate.workflow import prepare_workflow
 from backend.core.generate.heuristic import generate_stage
 from backend.core.generate.prompts import build_stage_messages, step_from_llm_json
 from backend.core.generate.schemas import Evidence, Guide, GuideStep
+from backend.core.generate.issues import discover_issues
 from backend.core.github.recon import RawSignals
 from backend.core.index.service import RepoIndex
 from backend.core.profile.builder import build_profile
@@ -62,6 +63,7 @@ def build_guide(
         unsuitable=(suitability == "avoid"),
         reasons=reasons,
         warnings=list(sig.collection_warnings),
+        issue_discovery=discover_issues(sig),
     )
     if sig.symlink_paths:
         guide.warnings.append(f"仓库含 {len(sig.symlink_paths)} 个符号链接；Windows 克隆后请确认链接未变成普通文本文件，否则可能导致路径或证书测试失败")
@@ -109,7 +111,7 @@ def build_guide(
             for stage in fallback_stages:
                 snippets = _retrieve_for_stage(index, stage, _STAGE_QUERIES[stage])
                 rules = audit_steps(sig, index, generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]))
-                if any(s.stage == stage for s in guide.steps) and not any(s.evidence.kind != 'missing' for s in rules):
+                if stage != 'C' and any(s.stage == stage for s in guide.steps) and not any(s.evidence.kind != 'missing' for s in rules):
                     continue
                 guide.steps = [s for s in guide.steps if s.stage != stage] + rules
                 guide.stage_modes[stage] = 'heuristic'
