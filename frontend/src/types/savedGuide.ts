@@ -7,6 +7,12 @@ export function parseSavedGuide(text: string): Guide {
     throw new Error('指南格式无效，需要 GitHub 仓库地址和 steps 列表')
   }
   const ids = new Set<number>()
+  if (data.requested_mode != null && !['ai', 'rules', 'unknown'].includes(data.requested_mode)) throw new Error('生成请求模式无效')
+  if (data.stage_fallbacks != null && (typeof data.stage_fallbacks !== 'object' || Array.isArray(data.stage_fallbacks) ||
+      Object.entries(data.stage_fallbacks).some(([stage, reason]) => !['A', 'B', 'C', 'D'].includes(stage) ||
+        !['not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited', 'model_error', 'invalid_output', 'evidence_unverified'].includes(reason as string)))) {
+    throw new Error('阶段回退原因格式无效')
+  }
   if (data.stage_modes != null && (typeof data.stage_modes !== 'object' || Array.isArray(data.stage_modes) ||
       Object.entries(data.stage_modes).some(([stage, mode]) => !['A', 'B', 'C', 'D'].includes(stage) || !['heuristic', 'llm'].includes(mode as string)))) {
     throw new Error('阶段生成来源格式无效')

@@ -80,6 +80,10 @@ class Guide(BaseModel):
     steps: list[GuideStep] = Field(default_factory=list)
     generation_mode: Literal["heuristic", "llm", "mixed"] = "heuristic"
     stage_modes: dict[Literal["A", "B", "C", "D"], Literal["heuristic", "llm"]] = Field(default_factory=dict)
+    requested_mode: Literal['ai', 'rules', 'unknown'] = 'unknown'
+    stage_fallbacks: dict[Literal['A', 'B', 'C', 'D'], Literal[
+        'not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited',
+        'model_error', 'invalid_output', 'evidence_unverified']] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     issue_discovery: IssueDiscovery | None = None
 

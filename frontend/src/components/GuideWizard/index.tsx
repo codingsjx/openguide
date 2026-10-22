@@ -26,6 +26,7 @@ import {
 import { api, type FollowupResult } from '../../api/client'
 import type { Evidence, Guide, GuideStep } from '../../types/guide'
 import ContributionWorkbench from '../ContributionWorkbench'
+import GuideStatus, { GuideNotices } from '../GuideStatus'
 
 const { Paragraph, Text, Title } = Typography
 
@@ -163,7 +164,7 @@ function FollowupBar({
             {result.text}
           </Paragraph>
           <Paragraph type="secondary" style={{ marginTop: 8 }}>原文匹配只证明出处存在，不代表已确认根因或执行过命令。{result.mode === 'rules' ? '本次使用本地规则与检索。' : result.mode === 'llm_evidence_selection' ? '本次由 AI 选择原文，再逐字核验。' : '本次展示已核验的检索原文。'}</Paragraph>
-          {result.warnings?.map((warning, i) => <Alert key={i} type="warning" message={warning} style={{ marginBottom: 8 }} />)}
+          <GuideNotices guide={{ ...guide, default_branch: result.revision }} warnings={result.warnings} />
           {Boolean(result.local_checks?.length) && <div style={{ marginTop: 12 }}>
             <Text strong>通用本机检查（工具提供，非仓库原文）</Text>
             <Paragraph type="secondary">以下命令只读检查本机状态，没有替你执行。请在当前步骤要求的目录和开发环境中运行，并依据实际输出判断。</Paragraph>
@@ -242,7 +243,9 @@ function EvidencePanel({ guide, step }: { guide: Guide; step: GuideStep | null }
 
 // ---- Wizard body ----------------------------------------------------------
 
-export default function GuideWizard({ guide, url }: { guide: Guide; url: string }) {
+export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }: {
+  guide: Guide; url: string; onRegenerateAi?: () => void; onRegenerate?: () => void
+}) {
   const steps = guide.steps
   const [current, setCurrent] = useState(0)
   const [done, setDone] = useState<Set<number>>(new Set())
@@ -306,9 +309,7 @@ export default function GuideWizard({ guide, url }: { guide: Guide; url: string 
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 16, alignItems: 'flex-start' }}>
       {/* Main column: steps + current card */}
       <div style={{ flex: 1, minWidth: 280 }}>
-        <Alert type="info" showIcon style={{ marginBottom: 12 }} message={guide.is_saved ? '已保存指南，未重新联网核验' : guide.is_demo ? '静态交互示例，未分析仓库' : guide.generation_mode === 'mixed' ? '本指南含 AI 生成与规则处理，请查看各阶段来源；命令仍需本地验证' : guide.generation_mode === 'llm' ? '本次使用 AI 生成；命令仍需在本地验证' : '本次使用规则生成；依据已取得的资料核对操作'} />
-        {step && guide.stage_modes?.[step.stage] && <Tag style={{ marginBottom: 8 }} color={guide.stage_modes[step.stage] === 'llm' ? 'blue' : 'gold'}>当前阶段来源：{guide.stage_modes[step.stage] === 'llm' ? 'AI 生成' : '规则整理（可能含待确认项）'}</Tag>}
-        {guide.warnings?.map((warning) => <Alert key={warning} type="warning" message={warning} style={{ marginBottom: 8 }} />)}
+        <GuideStatus guide={guide} step={step} onRegenerateAi={onRegenerateAi} onRegenerate={onRegenerate} />
         {step?.stage === 'A' && steps.some((s) => /^(?:python(?:3)?\b|pip(?:3)?\b)/.test(s.command || '')) && <details style={{ marginBottom: 12 }}>
           <summary style={{ cursor: 'pointer' }}>Python 新手：先确认隔离环境与解释器</summary>
           <Paragraph style={{ marginTop: 8 }}>优先遵循仓库指定的运行时和环境工具。以下是 OpenGuide 提供的通用 venv 方法，不是仓库原文；先进入仓库，再创建开发环境。发布环境不能代替开发环境。</Paragraph>

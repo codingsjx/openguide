@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-22",
+  "timezone": "Asia/Shanghai",
+  "method": "AI agent implementation and browser acceptance; not human trial data",
+  "checks": {
+    "backend_and_benchmark_passed": 215,
+    "backend_warnings": 1,
+    "frontend_passed": 25,
+    "lint_exit_code": 0,
+    "build_exit_code": 0,
+    "build_note": "bundle size warning remains"
+  },
+  "live_rules": {"requested_mode": "rules", "stage_fallbacks": {}, "title": "规则模式 · 由你选择"},
+  "screenshot_replay": {
+    "kind": "explicitly labelled offline reconstruction, not a live failure",
+    "requested_mode": "unknown",
+    "visible_collection_warning_count": 1,
+    "preparation_generation_and_reference_details_expand": true,
+    "no_historical_button_choice_inferred": true
+  },
+  "live_ai": {
+    "requested_mode": "ai",
+    "stage_modes": {"A": "heuristic", "B": "llm", "C": "heuristic", "D": "heuristic"},
+    "stage_fallbacks": {"A": "model_timeout", "C": "evidence_unverified", "D": "evidence_unverified"},
+    "display_matches_export": true
+  },
+  "limits": [
+    "Model timeout and insufficient evidence are still present and are now explicitly explained.",
+    "Replay file is not a measurement of current GitHub availability.",
+    "No upstream command execution or contribution was performed in this turn."
+  ]
+}

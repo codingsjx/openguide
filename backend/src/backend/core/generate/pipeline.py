@@ -64,6 +64,7 @@ def build_guide(
         reasons=reasons,
         warnings=list(sig.collection_warnings),
         issue_discovery=discover_issues(sig),
+        requested_mode='ai' if use_llm else 'rules',
     )
     if sig.symlink_paths:
         guide.warnings.append(f"仓库含 {len(sig.symlink_paths)} 个符号链接；Windows 克隆后请确认链接未变成普通文本文件，否则可能导致路径或证书测试失败")
@@ -79,7 +80,8 @@ def build_guide(
             client = llm_client or LLMClient()
             if client.available():
                 steps = _generate_with_llm(sig, index, client, start_id=step_id,
-                    allow_fallback=not strict_llm, stage_modes=guide.stage_modes, warnings=guide.warnings)
+                    allow_fallback=not strict_llm, stage_modes=guide.stage_modes, warnings=guide.warnings,
+                    fallback_reasons=guide.stage_fallbacks)
                 model_stages = sum(mode == 'llm' for mode in guide.stage_modes.values())
                 guide.generation_mode = 'llm' if model_stages == 4 else 'mixed' if model_stages else 'heuristic'
             else:
@@ -87,11 +89,13 @@ def build_guide(
                     raise LLMUnavailable("真实模型评测禁止无 Key 回退")
                 steps = _generate_heuristic(sig, index, start_id=step_id)
                 guide.stage_modes = {stage: 'heuristic' for stage in _STAGE_QUERIES}
-        except LLMUnavailable:
+                guide.stage_fallbacks = {stage: 'not_configured' for stage in _STAGE_QUERIES}
+        except LLMUnavailable as exc:
             if strict_llm:
                 raise
             steps = _generate_heuristic(sig, index, start_id=step_id)
             guide.stage_modes = {stage: 'heuristic' for stage in _STAGE_QUERIES}
+            guide.stage_fallbacks = {stage: _fallback_reason(exc) for stage in _STAGE_QUERIES}
             guide.warnings.append("模型不可用，本次使用规则生成")
     else:
         steps = _generate_heuristic(sig, index, start_id=step_id)
@@ -114,6 +118,8 @@ def build_guide(
                 if stage != 'C' and any(s.stage == stage for s in guide.steps) and not any(s.evidence.kind != 'missing' for s in rules):
                     continue
                 guide.steps = [s for s in guide.steps if s.stage != stage] + rules
+                if guide.stage_modes.get(stage) == 'llm':
+                    guide.stage_fallbacks[stage] = 'evidence_unverified'
                 guide.stage_modes[stage] = 'heuristic'
                 replaced = True
                 guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段未保留可核验依据，已补充仓库原文规则入口或待确认项。')
@@ -228,7 +234,23 @@ def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
     return out
 
 
-def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=False, stage_modes=None, warnings=None) -> list[GuideStep]:
+def _fallback_reason(exc: LLMUnavailable) -> str:
+    """Return a safe code; provider errors/URLs are never exposed as metadata."""
+    import httpx
+    cause = exc.__cause__
+    if isinstance(cause, httpx.TimeoutException):
+        return 'model_timeout'
+    if isinstance(cause, httpx.HTTPStatusError):
+        if cause.response.status_code in (401, 403):
+            return 'model_auth_failed'
+        if cause.response.status_code == 429:
+            return 'model_rate_limited'
+    if str(exc).startswith(('LLM 返回', 'LLM 响应', 'LLM 必须')) or '未输出有效步骤' in str(exc):
+        return 'invalid_output'
+    return 'model_error'
+
+
+def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=False, stage_modes=None, warnings=None, fallback_reasons=None) -> list[GuideStep]:
     """Stage-by-stage LLM generation, one request per stage."""
     out: list[GuideStep] = []
     sid = start_id
@@ -248,11 +270,13 @@ def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=Fals
             if not stage_steps:
                 raise LLMUnavailable(f'Stage {stage} 未输出有效步骤')
             mode = 'llm'
-        except LLMUnavailable:
+        except LLMUnavailable as exc:
             if not allow_fallback:
                 raise
             stage_steps = generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage])
             mode = 'heuristic'
+            if fallback_reasons is not None:
+                fallback_reasons[stage] = _fallback_reason(exc)
             if warnings is not None:
                 warnings.append(f'{_STAGE_LABELS[stage]}阶段模型未完成，已仅对该阶段使用规则；其他阶段继续生成。')
         if stage_modes is not None:

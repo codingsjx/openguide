@@ -137,7 +137,9 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
             <Tag>{guide.steps.length} 步</Tag>
             <Button size="small" onClick={() => downloadGuide(guide)}>保存指南 JSON</Button>
           </Space>
-          <GuideWizard guide={guide} url={guide.repo_url} />
+          <GuideWizard guide={guide} url={guide.repo_url}
+            onRegenerateAi={() => generate(guide.repo_url, true)}
+            onRegenerate={() => generate(guide.repo_url, guide.requested_mode !== 'rules')} />
         </div>
       )}
     </div>

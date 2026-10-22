@@ -1,0 +1,370 @@
+{
+  "repo_url": "https://github.com/psf/requests",
+  "owner": "psf",
+  "repo": "requests",
+  "default_branch": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+  "unsuitable": false,
+  "reasons": [
+    "星标 54546 ≥ 10，社区认可度不错",
+    "采集到近 30 天 0 次提交；仅凭提交数量无法判断是否有人维护，请核对 issue 回复与发布记录",
+    "有 README，入门信息基础具备",
+    "本次未发现候选新手任务，需进一步查看社区贡献入口",
+    "综合信号偏弱，建议人工确认后再投入"
+  ],
+  "steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文克隆仓库",
+      "command": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "clone_destination",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "在你选择的项目存放目录执行；克隆结束后再进入新建的仓库目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "git clone -c fetch.fsck.badTimezone=ignore https://github.com/psf/requests.git",
+        "verification": "command_verified",
+        "line_start": 65,
+        "line_end": 65,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 2,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "核对运行时版本与开发环境要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "资料尚不足，请打开仓库文档确认；此项不代表已经完成操作。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "未取得可核验的对应操作说明"
+      }
+    },
+    {
+      "step_id": 3,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文安装依赖（请核对开发用途）",
+      "command": "python -m pip install -r requirements-dev.txt",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "build_file",
+      "required_paths": [
+        "requirements-dev.txt"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        1
+      ],
+      "context_notes": [
+        "按在该 Makefile 所在目录运行的常见约定推导；请核对原文中的 -C/-f、子项目说明及运行时依赖。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "Makefile",
+        "quote": "python -m pip install -r requirements-dev.txt",
+        "verification": "command_verified",
+        "line_start": 3,
+        "line_end": 3,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 4,
+      "stage": "B",
+      "stage_label": "测试基线",
+      "title": "核对局部测试范围（不等同完整测试基线）",
+      "command": "python -m pytest tests",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "build_file",
+      "required_paths": [
+        "tests"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        1,
+        3
+      ],
+      "context_notes": [
+        "按在该 Makefile 所在目录运行的常见约定推导；请核对原文中的 -C/-f、子项目说明及运行时依赖。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。",
+        "核对测试输出中的失败、跳过与未选中项，并确认实际运行了预期用例。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "Makefile",
+        "quote": "python -m pytest tests",
+        "verification": "command_verified",
+        "line_start": 5,
+        "line_end": 5,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 5,
+      "stage": "C",
+      "stage_label": "挑选 issue",
+      "title": "查看任务检索入口，记录待核对的小范围任务",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "查看任务候选与 GitHub 检索入口；没有候选时可人工选题，记录问题、范围和原始来源，再核对维护者规则。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "未取得可核验的对应操作说明"
+      }
+    },
+    {
+      "step_id": 6,
+      "stage": "D",
+      "stage_label": "首次 PR 路径",
+      "title": "确认 Fork 与分支要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "打开完整贡献规范核对要求；原文摘录不代表已提交或合并 PR。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "docs/dev/contributing.rst",
+        "quote": "1. Fork the repository on GitHub.",
+        "verification": "quote_verified",
+        "line_start": 70,
+        "line_end": 70,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 7,
+      "stage": "D",
+      "stage_label": "首次 PR 路径",
+      "title": "确认提交前的测试与检查要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "打开完整贡献规范核对要求；原文摘录不代表已提交或合并 PR。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "docs/dev/contributing.rst",
+        "quote": "2. Run the tests to confirm they all pass on your system. If they don't, you'll",
+        "verification": "quote_verified",
+        "line_start": 71,
+        "line_end": 71,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 8,
+      "stage": "D",
+      "stage_label": "首次 PR 路径",
+      "title": "确认 PR 提交及模板要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "打开完整贡献规范核对要求；原文摘录不代表已提交或合并 PR。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "docs/dev/contributing.rst",
+        "quote": "6. Send a GitHub Pull Request to the main repository's ``main`` branch.",
+        "verification": "quote_verified",
+        "line_start": 79,
+        "line_end": 79,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 9,
+      "stage": "D",
+      "stage_label": "首次 PR 路径",
+      "title": "确认审查与社区沟通要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "打开完整贡献规范核对要求；原文摘录不代表已提交或合并 PR。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "docs/dev/contributing.rst",
+        "quote": "Code Review",
+        "verification": "quote_verified",
+        "line_start": 85,
+        "line_end": 85,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    }
+  ],
+  "generation_mode": "heuristic",
+  "stage_modes": {
+    "A": "heuristic",
+    "B": "heuristic",
+    "C": "heuristic",
+    "D": "heuristic"
+  },
+  "requested_mode": "rules",
+  "stage_fallbacks": {},
+  "warnings": [
+    "文件证据固定于提交 611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60；issue 信息是独立采集的快照，操作前需核对最新状态。",
+    "仓库含 2 个符号链接；Windows 克隆后请确认链接未变成普通文本文件，否则可能导致路径或证书测试失败",
+    "挑选 issue阶段未保留可核验依据，已补充仓库原文规则入口或待确认项。"
+  ],
+  "issue_discovery": {
+    "status": "untriaged",
+    "reason": "未取得可用的标签候选；以下普通开放 issue 仅供浏览，不作为新手推荐。",
+    "sampled_at": "2026-10-22T10:36:43.497570+00:00",
+    "sampled_count": 15,
+    "blocked_count": 0,
+    "candidates": [
+      {
+        "number": 7634,
+        "title": "Non-string form field names raise AttributeError when files are attached",
+        "url": "https://github.com/psf/requests/issues/7634",
+        "labels": [],
+        "checks": [
+          "打开最新讨论，检查是否已有对应 PR、任务是否仍需处理，并遵循维护者参与规则。",
+          "这是普通开放 issue 的浏览样本，尚未确认适合新手；先评估复现难度和任务范围。"
+        ],
+        "origin": "untriaged"
+      },
+      {
+        "number": 7632,
+        "title": "Lingering docstring references to python2.7 cookielib",
+        "url": "https://github.com/psf/requests/issues/7632",
+        "labels": [],
+        "checks": [
+          "打开最新讨论，检查是否已有对应 PR、任务是否仍需处理，并遵循维护者参与规则。",
+          "这是普通开放 issue 的浏览样本，尚未确认适合新手；先评估复现难度和任务范围。",
+          "正文含 PR 或代码比较链接，可能已有相关实现；先核对现有方案及讨论，避免重复提交。"
+        ],
+        "origin": "untriaged"
+      },
+      {
+        "number": 7631,
+        "title": "TestTimeout abandons three delay/10 requests and later tests wait out the server",
+        "url": "https://github.com/psf/requests/issues/7631",
+        "labels": [],
+        "checks": [
+          "打开最新讨论，检查是否已有对应 PR、任务是否仍需处理，并遵循维护者参与规则。",
+          "这是普通开放 issue 的浏览样本，尚未确认适合新手；先评估复现难度和任务范围。"
+        ],
+        "origin": "untriaged"
+      }
+    ],
+    "search_links": [
+      {
+        "label": "good first issue",
+        "url": "https://github.com/psf/requests/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
+      },
+      {
+        "label": "help wanted",
+        "url": "https://github.com/psf/requests/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22"
+      },
+      {
+        "label": "全部开放 issue",
+        "url": "https://github.com/psf/requests/issues?q=is%3Aissue+is%3Aopen"
+      }
+    ]
+  }
+}

@@ -37,6 +37,15 @@ test('stage generation modes are preserved and invalid modes rejected', () => {
   f.stage_modes = { Z: 'llm' }
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))
 })
+
+test('request provenance and safe fallback codes survive export/import', () => {
+  const f = fixture(); f.requested_mode = 'ai'; f.stage_fallbacks = { A: 'model_timeout' }
+  assert.equal(parseSavedGuide(JSON.stringify(f)).stage_fallbacks.A, 'model_timeout')
+  f.requested_mode = 'guessed'
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+  f.requested_mode = 'ai'; f.stage_fallbacks = { A: 'raw provider error' }
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})
 test('invalid command derivation cannot crash rendering', () => {
   const f = fixture(); f.steps[0].command_derivation = { unexpected: true }
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))

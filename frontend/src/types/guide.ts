@@ -50,6 +50,8 @@ export interface Guide {
   steps: GuideStep[]
   generation_mode?: 'heuristic' | 'llm' | 'mixed'
   stage_modes?: Partial<Record<'A' | 'B' | 'C' | 'D', 'heuristic' | 'llm'>>
+  requested_mode?: 'ai' | 'rules' | 'unknown'
+  stage_fallbacks?: Partial<Record<'A' | 'B' | 'C' | 'D', 'not_configured' | 'model_timeout' | 'model_auth_failed' | 'model_rate_limited' | 'model_error' | 'invalid_output' | 'evidence_unverified'>>
   warnings?: string[]
   is_demo?: boolean
   is_saved?: boolean
