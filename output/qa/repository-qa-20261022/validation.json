@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-22",
+  "timezone": "Asia/Shanghai",
+  "method": "AI agent implementation, hermetic regressions and browser acceptance; not human trial data",
+  "checks": {"backend_and_benchmark_passed": 241, "backend_warnings": 1, "frontend_passed": 28, "lint_exit_code": 0, "build_exit_code": 0, "l1_exit_code": 0},
+  "browser": {
+    "repo": "https://github.com/psf/requests",
+    "revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+    "source_links_include_fixed_revision_and_line_ranges": true,
+    "full_returned_excerpt_can_be_read": true,
+    "repo_change_clears_previous_answers": true,
+    "final_conversation": [
+      {"question": "提交 PR 有哪些要求？", "mode": "ai"},
+      {"question": "再详细解释一下审查流程。", "mode": "extractive", "note": "model abstained; missing information message retained"},
+      {"question": "再详细解释一下审查流程。", "mode": "ai", "context_used": true}
+    ],
+    "downloaded_from_actual_ui": "requests-conversation.md"
+  },
+  "limits": [
+    "The quote verifier permits whitespace-only reflow; it does not verify semantic entailment of every Chinese explanation.",
+    "Some live attempts fell back or abstained; no universal AI success rate is claimed.",
+    "History contains recent questions, not trusted prior assistant facts; it is local to the page and is not restored after refresh.",
+    "Tree-only evidence proves file existence, not module behavior; issue snapshots do not prove beginner suitability or availability.",
+    "No upstream commands, issue comments, task claims or pull requests were performed.",
+    "Human trials and independent review remain pending."
+  ]
+}

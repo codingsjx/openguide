@@ -81,6 +81,8 @@ export interface FollowupResult {
 }
 
 export const api = {
+  postAsk: (payload: { url: string; question: string; history: string[]; revision?: string; use_llm: boolean }, signal?: AbortSignal) =>
+    request<import('../types/ask').AskResult>('/api/ask', { method: 'POST', body: JSON.stringify(payload), signal }, 90_000),
   postProfile: (url: string) =>
     request<import('../types/profile').Profile>('/api/profile', {
       method: 'POST',

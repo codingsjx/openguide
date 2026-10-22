@@ -15,6 +15,8 @@
 
 生成结果会区分手动规则模式与逐阶段 AI 回退，并展示已记录的原因。资料采集失败保持醒目，版本及环境说明可展开查看；旧指南不会被猜测为手动选择。[提示分层与实测记录](docs/status_clarity_20261022.md)。
 
+贡献问答支持中文解读、带行号的固定版本出处、同仓库连续追问、资料不足引导和记录下载。命令单独匹配原文，未通过核验的 AI 解读回退为原文整理；引用匹配不代表语义已独立复核。[问答功能及验证边界](docs/repository_qa_20261022.md)。
+
 ## 四段管线
 
 | 阶段 | 模块 | 做什么 |
@@ -89,6 +91,7 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 |---|---|---|
 | POST | `/api/profile` | `{url}` → 仓库画像（languages / build / gfi / activity / suitability / reasons） |
 | POST | `/api/search` | `{url, query, kind?}` → 按视角路由的检索结果（带证据来源） |
+| POST | `/api/ask` | `{url, question, history?, revision?, use_llm?}` → 中文解读、出处、命令入口、缺口与下一步；历史只传最近的问题 |
 | POST | `/api/guide` | `{url, use_llm}` → Stage A–D 结构化指南（每步带 `evidence`） |
 | POST | `/api/followup` | 三步追问：这步太粗 / 看不懂为什么 / 报错了 |
 | GET/POST | `/api/llm-config` | 读取 / 设置当前后端进程的 LLM 配置（不回显 Key；仅限本地单用户演示） |
