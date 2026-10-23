@@ -104,9 +104,11 @@ export default function RepoAskPage({ initialUrl }: { initialUrl: string }) {
     const a=document.createElement('a'); a.href=href; a.download='OpenGuide-仓库问答记录.md'; a.click(); URL.revokeObjectURL(href)
   }
 
-  return <div style={{ maxWidth: 900, margin: '0 auto', padding: '16px 0' }}>
+  return <div className="ask-page">
+    <div className="section-heading"><span className="section-kicker">REPOSITORY Q&A</span>
     <Title level={3}>仓库贡献问答</Title>
     <Paragraph type="secondary">围绕当前仓库提问或追问，先看回答，再核对原文。资料不足时会说明缺什么。</Paragraph>
+    </div>
     <Card>
       <label><Text strong>当前仓库</Text><Input aria-label="问答仓库" value={url} maxLength={500} onChange={(e) => { reset(); setUrl(e.target.value) }} placeholder="GitHub 仓库地址" /></label>
       <Space wrap style={{ marginTop: 12 }}><Switch checked={useAi} onChange={setUseAi} disabled={loading} checkedChildren="AI 整理" unCheckedChildren="仅原文" /><Button onClick={reset} disabled={!turns.length && !loading && !question.trim() && !error}>开始新对话</Button><Button onClick={download} disabled={!turns.length}>下载问答记录</Button></Space>

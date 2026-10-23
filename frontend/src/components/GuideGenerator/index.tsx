@@ -84,15 +84,17 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
   }, [generate, initialUrl])
 
   return (
-    <div style={{ maxWidth: 940, margin: '0 auto' }}>
+    <div className="guide-generator">
+      <div className="section-heading"><span className="section-kicker">CONTRIBUTION GUIDE</span>
       <Title level={4} style={{ marginTop: 0 }}>
         生成贡献指南
       </Title>
       <Paragraph type="secondary">
         输入仓库后生成<Text strong>结构化、带证据</Text>的分步新手贡献指南（Stage A 环境搭建 → B 测试 → C 挑 issue → D 首 PR）。
       </Paragraph>
+      </div>
 
-      <Card size="small">
+      <Card size="small" className="generation-controls">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           <Input
             value={url}
@@ -164,12 +166,12 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
 
       {guide && (
         <div style={{ marginTop: 8 }}>
-          <Space style={{ marginBottom: 4 }}>
+          <div className="guide-metadata">
             {guide.unsuitable && <Tag color="red">暂不建议贡献</Tag>}
             <Tag>{guide.steps.length} 步</Tag>
             {guide.model_timeout_s != null && <Tag>本次模型等待：{guide.model_timeout_s} 秒/阶段</Tag>}
             <Button size="small" onClick={() => downloadGuide(guide)}>保存指南 JSON</Button>
-          </Space>
+          </div>
           <GuideWizard guide={guide} url={guide.repo_url}
             onRegenerateAi={() => generate(guide.repo_url, true)}
             onRegenerate={() => generate(guide.repo_url, guide.requested_mode !== 'rules')} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Form, Input, Modal, Space, Tag, message } from 'antd'
+import { Button, Form, Input, Modal, Space, message } from 'antd'
 import { ApiOutlined } from '@ant-design/icons'
 
 import { api } from '../../api/client'
@@ -47,13 +47,13 @@ export default function LlmSettings() {
 
   return (
     <div style={{ display: 'inline-block' }}>
-      <Tag
+      <Button
+        className="llm-trigger"
         onClick={() => setOpen(true)}
-        color={configured ? 'green' : 'orange'}
-        style={{ cursor: 'pointer' }}
+        icon={<ApiOutlined />}
       >
-        <ApiOutlined /> {configured ? 'LLM 已配置' : '设置我的 LLM'}
-      </Tag>
+        <span className={`llm-status-dot${configured ? '' : ' unconfigured'}`} />{configured ? '模型已配置' : '配置模型'}
+      </Button>
       <Modal
         title="设置 LLM（你自己的中转/官方 API）"
         open={open}

@@ -28,7 +28,7 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
   const hasBuildInfo = Boolean(build?.tool || build?.test_cmd)
 
   return (
-    <Card style={{ maxWidth: 860, margin: '0 auto' }}>
+    <Card className="profile-card" style={{ maxWidth: 900, margin: '0 auto' }}>
       <div
         style={{
           display: 'flex',
@@ -90,7 +90,7 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
           <Text strong style={{ display: 'block', margin: '16px 0 4px' }}>
             语言构成
           </Text>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
+          <div className="profile-languages" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
             {langs.map((l) => (
               <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Text

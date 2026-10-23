@@ -306,9 +306,9 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
   }
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 16, alignItems: 'flex-start' }}>
+    <div className="guide-layout">
       {/* Main column: steps + current card */}
-      <div style={{ flex: 1, minWidth: 280 }}>
+      <div className="guide-main">
         <GuideStatus guide={guide} step={step} onRegenerateAi={onRegenerateAi} onRegenerate={onRegenerate} />
         {step?.stage === 'A' && steps.some((s) => /^(?:python(?:3)?\b|pip(?:3)?\b)/.test(s.command || '')) && <details style={{ marginBottom: 12 }}>
           <summary style={{ cursor: 'pointer' }}>Python 新手：先确认隔离环境与解释器</summary>
@@ -339,6 +339,7 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
 
         {step && (
           <Card
+            className="guide-step-card"
             style={{ marginTop: 16 }}
             title={
               <Space>
@@ -361,16 +362,7 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
 
             {step.command && (
               <div>
-              <pre
-                style={{
-                  background: '#f6f8fa',
-                  padding: '10px 12px',
-                  borderRadius: 6,
-                  overflowX: 'auto',
-                  fontSize: 13,
-                  margin: '8px 0',
-                }}
-              >
+              <pre className="command-block">
                 <code>{step.command}</code>
               </pre>
               <Typography.Text copyable={{ text: step.command }}>复制完整命令</Typography.Text>
@@ -447,7 +439,7 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
       </div>
 
       {/* Right rail: evidence panel */}
-      <div style={{ width: 260, flexShrink: 0, maxWidth: '100%' }}>
+      <div className="guide-evidence">
         <EvidencePanel guide={guide} step={step} />
       </div>
     </div>

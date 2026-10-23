@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, Button, Tabs, Input, Space, Typography, message, Tag, Upload } from 'antd'
+import { Alert, Button, Tabs, Input, Space, message, Upload } from 'antd'
 import {
   GithubOutlined,
   QuestionCircleOutlined,
@@ -7,8 +7,11 @@ import {
   ThunderboltOutlined,
   ArrowRightOutlined,
   SafetyCertificateOutlined,
-  CodeOutlined,
   CheckCircleOutlined,
+  FileSearchOutlined,
+  ApartmentOutlined,
+  UploadOutlined,
+  LinkOutlined,
 } from '@ant-design/icons'
 
 import { api } from '../api/client'
@@ -20,8 +23,7 @@ import RepoAskPage from './RepoAskPage'
 import GuideWizard from '../components/GuideWizard'
 import type { Guide } from '../types/guide'
 import { parseSavedGuide } from '../types/savedGuide'
-
-const { Title, Paragraph } = Typography
+import LandingJourney from '../components/LandingJourney'
 
 const DEMO_URL = 'https://github.com/psf/requests'
 
@@ -103,58 +105,64 @@ export default function HomePage() {
   }
 
   const showGuide = Boolean(savedGuide || (profile && submittedUrl))
+  const workspaceUrl = savedGuide?.repo_url || (profile ? `https://github.com/${profile.owner}/${profile.repo}` : '')
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${showGuide ? ' has-workspace' : ''}`}>
+      <a className="skip-link" href="#start">跳到仓库输入</a>
       <header className="topbar">
-        <div className="brand"><span className="brand-mark">O</span><span>OpenGuide</span></div>
-        <div className="topbar-note"><SafetyCertificateOutlined /> Evidence-first onboarding</div>
-        <LlmSettings />
+        <div className="topbar-inner">
+          <a className="brand" href="#start" aria-label="OpenGuide，前往仓库输入"><span className="brand-mark"><ApartmentOutlined /></span><span>OpenGuide<span className="brand-caption">开源贡献，从容开始</span></span></a>
+          <nav className="site-nav" aria-label="网站导航"><a href="#start">开始探索</a>{showGuide ? <a href="#workspace" className="nav-current">贡献工作台</a> : <a href="#how-it-works">使用流程</a>}</nav>
+          <div className="topbar-actions"><a className="github-link" href="https://github.com/codingsjx/openguide" target="_blank" rel="noreferrer" aria-label="在 GitHub 查看 OpenGuide 源码"><GithubOutlined /><span>GitHub</span></a><LlmSettings /></div>
+        </div>
       </header>
 
-      <main className="page-wrap">
-        <section className="hero">
+      <main>
+      <div className="page-wrap">
+        {!showGuide && !loading ? <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <Tag className="eyebrow" icon={<CodeOutlined />}>OPEN SOURCE ONBOARDING</Tag>
-            <Title>让第一个 PR<br /><span>不再是一座山</span></Title>
-            <Paragraph>从仓库资料中查找上手步骤，核对原文，再走向第一次贡献。</Paragraph>
-            <div className="trust-row"><span><CheckCircleOutlined /> 真实仓库证据</span><span><CheckCircleOutlined /> 分步操作指引</span><span><CheckCircleOutlined /> 新手友好</span></div>
+            <div className="eyebrow"><span className="eyebrow-dot" />让第一次开源贡献，有路可循</div>
+            <h1 id="hero-title">从读懂仓库，<br />到你的<span>第一个 PR<span className="headline-dot">.</span></span></h1>
+            <p className="hero-description">把陌生的项目，拆成清晰的下一步。<br />找到环境、测试和贡献入口，带着原文依据开始行动。</p>
+            <div className="trust-row"><span><CheckCircleOutlined /> 分步贡献路线</span><span><LinkOutlined /> 原文证据可查</span><span><QuestionCircleOutlined /> 随时继续追问</span></div>
           </div>
-          <div className="hero-orbit" aria-hidden="true">
-            <div className="orbit orbit-one" /><div className="orbit orbit-two" />
-            <div className="orbit-core"><GithubOutlined /></div>
-            <span className="orbit-label label-one">README</span><span className="orbit-label label-two">ISSUES</span><span className="orbit-label label-three">TESTS</span>
-          </div>
-        </section>
+          <LandingJourney />
+        </section> : <section className="workspace-intro"><div><div className="section-kicker">YOUR CONTRIBUTION WORKSPACE</div><h1>你的开源贡献工作台</h1><p>{loading ? '正在读取仓库资料，准备你的贡献路线。' : '一步一步向前，每个建议都值得核对。'}</p></div><span className="workspace-intro-badge"><SafetyCertificateOutlined /> 以仓库原文为依据</span></section>}
 
-        <section className="search-panel">
-          <div className="panel-heading"><div><span className="section-kicker">START HERE</span><h2>输入一个 GitHub 仓库</h2></div><span className="step-count">01 / 03</span></div>
+        <section className="search-panel" id="start" aria-labelledby="search-title" aria-busy={loading}>
+          <div className="panel-heading"><div><span className="section-kicker">{showGuide ? 'REPOSITORY' : 'START YOUR JOURNEY'}</span><h2 id="search-title">{showGuide ? '当前探索的仓库' : '你的第一站，是哪个仓库？'}</h2></div><span className="search-panel-hint"><GithubOutlined /> GitHub 公开仓库</span></div>
           <Space.Compact className="search-box">
-            <Input size="large" placeholder="https://github.com/owner/repo" value={url} onChange={(e) => setUrl(e.target.value)} onPressEnter={handleSubmit} disabled={loading} prefix={<GithubOutlined />} />
+            <Input aria-label="GitHub 仓库地址" size="large" placeholder="https://github.com/owner/repo" value={url} onChange={(e) => setUrl(e.target.value)} onPressEnter={handleSubmit} disabled={loading} prefix={<GithubOutlined />} />
             <Button type="primary" size="large" icon={<RocketOutlined />} loading={loading} onClick={handleSubmit}>生成路线图 <ArrowRightOutlined /></Button>
           </Space.Compact>
           {profileError && <Alert showIcon type="error" message="仓库读取失败" description={profileError} style={{ marginTop: 12 }} />}
-          <div className="search-foot"><span>不知道用哪个？</span><button onClick={startDemo}>体验 requests 示例 <ArrowRightOutlined /></button><span className="shortcut">Enter</span></div>
-          <Upload accept=".json" showUploadList={false} beforeUpload={async (file) => {
+          <div className="search-foot"><div className="search-example"><span>先看看怎么用</span><button onClick={startDemo} disabled={loading}>体验 requests 示例 <ArrowRightOutlined /></button></div><span className="search-separator" /><Upload accept=".json" showUploadList={false} beforeUpload={async (file) => {
             try {
               if (file.size > 2_000_000) throw new Error('指南文件不能超过 2 MB')
               const imported = parseSavedGuide(await file.text())
               setSavedGuide(imported)
               setGuideVersion((version) => version + 1)
               setSubmittedUrl(imported.repo_url)
+              setUrl(imported.repo_url)
               setDemoMode(false)
               setTab('guide')
             } catch (error) { void message.error(error instanceof Error ? error.message : '导入失败') }
             return false
-          }}><Button type="link" style={{ paddingLeft: 0 }}>导入已保存指南（本机离线查看）</Button></Upload>
+          }}><Button type="text" icon={<UploadOutlined />} disabled={loading}>导入已保存指南<span className="import-caption"> · 离线查看</span></Button></Upload><span className="shortcut">Enter ↵</span></div>
         </section>
 
-        {!showGuide && !loading && <section className="feature-grid"><div><span className="feature-number">01</span><h3>先做仓库体检</h3><p>识别语言、构建方式、活跃度和 good-first-issue 信号。</p></div><div><span className="feature-number">02</span><h3>再生成贡献路线</h3><p>分阶段查看操作建议，缺少资料时明确提示。</p></div><div><span className="feature-number">03</span><h3>核对原文依据</h3><p>区分来源存在、原文匹配与尚未验证的内容。</p></div></section>}
-      </main>
+        {!showGuide && !loading && <section className="how-it-works" id="how-it-works" aria-labelledby="how-title"><div className="feature-heading"><div><span className="section-kicker">A CLEARER WAY TO CONTRIBUTE</span><h2 id="how-title">不用一次读懂整个项目</h2></div><p>先找到起点，再走好每一步。</p></div><div className="feature-grid">
+          <article><div className="feature-top"><span className="feature-icon"><FileSearchOutlined /></span><span className="feature-number">01</span></div><h3>先了解，是否适合你</h3><p>查看仓库语言、构建方式与任务线索，识别上手前需要确认的信息。</p><a className="feature-link" href="#start">仓库体检 <ArrowRightOutlined /></a></article>
+          <article><div className="feature-top"><span className="feature-icon"><RocketOutlined /></span><span className="feature-number">02</span></div><h3>把大目标，拆成小步骤</h3><p>从环境搭建、测试到选题与 PR，按阶段查看操作入口和前置条件。</p><a className="feature-link" href="#start">贡献指南 <ArrowRightOutlined /></a></article>
+          <article><div className="feature-top"><span className="feature-icon"><LinkOutlined /></span><span className="feature-number">03</span></div><h3>有疑问，就回到原文</h3><p>展开出处、核对建议，也可以围绕当前仓库追问。资料不足时会明确说明。</p><a className="feature-link" href="#start">证据与问答 <ArrowRightOutlined /></a></article>
+        </div></section>}
+      </div>
 
       {showGuide && (
-        <div className="results-wrap">
-        {demoMode && <div className="demo-banner"><ThunderboltOutlined /> 贡献指南为固定的 requests 交互示例。点击「生成路线图」分析所填仓库；贡献问答会单独读取仓库资料。</div>}
+        <section className="results-wrap" id="workspace" aria-label="仓库贡献工作台">
+        <div className="workspace-heading"><div><span className="workspace-indicator" /><span>{savedGuide ? '已保存指南' : demoMode ? '交互示例' : '贡献工作区'}</span></div><a href={workspaceUrl} target="_blank" rel="noreferrer"><GithubOutlined /> {workspaceUrl.replace('https://github.com/', '')} <ArrowRightOutlined /></a></div>
+        {demoMode && <div className="demo-banner"><ThunderboltOutlined /><span>当前指南与体检为静态 requests 示例。点击「生成路线图」分析所填仓库；贡献问答会单独读取仓库资料。</span></div>}
         <Tabs
           activeKey={tab}
           onChange={setTab}
@@ -191,8 +199,10 @@ export default function HomePage() {
             },
           ]}
         />
-        </div>
+        </section>
       )}
+      </main>
+      <footer className="site-footer"><div><a href="#start" className="footer-brand"><ApartmentOutlined /> OpenGuide</a><span>让开源的第一步，更清晰一点。</span></div><div><span><SafetyCertificateOutlined /> 核对原文，再开始行动</span><a href="https://github.com/codingsjx/openguide#readme" target="_blank" rel="noreferrer">项目说明 <ArrowRightOutlined /></a></div></footer>
     </div>
   )
 }
