@@ -20,7 +20,7 @@ export interface GuideStep {
   command_derivation?: string
   original_stage?: 'A' | 'B' | 'C' | 'D' | null
   working_directory?: string | null
-  directory_basis?: 'build_file' | 'unknown' | 'clone_destination'
+  directory_basis?: 'build_file' | 'document_context' | 'unknown' | 'clone_destination'
   required_paths?: string[]
   missing_inputs?: string[]
   prerequisite_step_ids?: number[]
@@ -51,7 +51,7 @@ export interface Guide {
   generation_mode?: 'heuristic' | 'llm' | 'mixed'
   stage_modes?: Partial<Record<'A' | 'B' | 'C' | 'D', 'heuristic' | 'llm'>>
   requested_mode?: 'ai' | 'rules' | 'unknown'
-  stage_fallbacks?: Partial<Record<'A' | 'B' | 'C' | 'D', 'not_configured' | 'model_timeout' | 'model_auth_failed' | 'model_rate_limited' | 'model_error' | 'invalid_output' | 'evidence_unverified'>>
+  stage_fallbacks?: Partial<Record<'A' | 'B' | 'C' | 'D', 'not_configured' | 'model_timeout' | 'model_auth_failed' | 'model_rate_limited' | 'model_error' | 'invalid_output' | 'evidence_unverified' | 'incomplete_workflow'>>
   warnings?: string[]
   is_demo?: boolean
   is_saved?: boolean

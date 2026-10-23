@@ -55,8 +55,8 @@ def _is_changelog_like(path: str) -> bool:
 # back empty.
 _COMMAND_LINE_RE = re.compile(
     r"^(?:\$|>)?\s*(?:pip|pip3|python|python3|uv|poetry|conda|virtualenv|npm|npx|"
-    r"pnpm|yarn|cargo|go|make|git|docker|pytest|tox|nox|jest|vitest|mocha|rspec|"
-    r"bundle|gem|composer|gh|gradle|mvn)\b"
+    r"pnpm|yarn|corepack|cargo|go|make|git|docker|pytest|tox|nox|jest|vitest|mocha|rspec|"
+    r"bundle|gem|composer|gh|gradle|mvn)(?=\s|$)"
 )
 
 

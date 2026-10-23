@@ -6,33 +6,15 @@ repository root. This checks paths, not tool availability or runtime success.
 """
 from pathlib import PurePosixPath
 import re
-import shlex
 
 from backend.core.generate.schemas import GuideStep
 from backend.core.github.recon import RawSignals
+from backend.core.generate.command_context import input_paths as _input_paths, document_directory
 
 _LABELS = {"A": "环境搭建", "B": "测试基线", "C": "挑选 issue", "D": "首次 PR 路径"}
 _CLONE = re.compile(r"^git clone\b")
-_INSTALL = re.compile(r"^(?:python(?:3)? -m pip install|pip(?:3)? install|uv sync|npm (?:ci|install)|pnpm install|yarn install)\b")
-
-
-def _input_paths(command: str) -> list[tuple[str, bool]]:
-    try:
-        args = shlex.split(command)
-    except ValueError:
-        return []
-    result = []
-    if "pip" in args or args[:2] in (["pip", "install"], ["pip3", "install"]):
-        for i, arg in enumerate(args):
-            if arg in {"-r", "--requirement", "-c", "--constraint"} and i + 1 < len(args):
-                result.append((args[i + 1], False))
-            elif arg.startswith(("--requirement=", "--constraint=")):
-                result.append((arg.split("=", 1)[1], False))
-            elif arg.startswith(("-r", "-c")) and not arg.startswith("--") and len(arg) > 2:
-                result.append((arg[2:], False))
-    if "pytest" in args:
-        result.extend((arg.split("::", 1)[0], not arg.split("::", 1)[0].endswith(".py")) for arg in args if arg == "tests" or arg.startswith("tests/") or arg.endswith(".py"))
-    return list(dict.fromkeys(result))
+_INSTALL = re.compile(r"^(?:python(?:3)? -m pip install|pip(?:3)? install|uv (?:sync|pip install)|npm (?:ci|install)|pnpm install|yarn install)\b")
+_ENVIRONMENT = re.compile(r'^(?:uv venv|python(?:3)? -m venv|virtualenv|conda (?:create|env create))(?=\s|$)')
 
 
 def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]:
@@ -64,7 +46,7 @@ def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]
     directories = {"."}
     for path in known:
         directories.update(str(parent) for parent in PurePosixPath(path).parents)
-    clone_ids, install_ids = [], []
+    clone_ids, environment_ids, install_ids = [], [], []
     for step in prepared:
         step.working_directory = None
         step.directory_basis = "unknown"
@@ -75,7 +57,7 @@ def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]
         if not command:
             continue
         step.success_checks.append("命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。")
-        if step.stage == "B":
+        if step.stage == "B" and not re.match(r'^(?:pnpm|npm|yarn)\s+(?:run\s+)?build(?=\s|$)', command):
             step.success_checks.append("核对测试输出中的失败、跳过与未选中项，并确认实际运行了预期用例。")
         if _CLONE.match(command):
             step.directory_basis = "clone_destination"
@@ -92,23 +74,33 @@ def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]
             step.working_directory = str(path.parent)
             step.directory_basis = "build_file"
             step.context_notes.append("按在该 Makefile 所在目录运行的常见约定推导；请核对原文中的 -C/-f、子项目说明及运行时依赖。")
+        elif step.evidence.verification == 'command_verified' and (context := document_directory(sig, source, command, step.evidence.line_start)):
+            step.working_directory, note = context
+            step.directory_basis = 'document_context'
+            step.context_notes.append(note)
+        else:
+            step.context_notes.append("尚未确认执行目录；请先查看来源中的 cd、项目根目录或子项目说明。")
+        if step.working_directory is not None:
             for value, allow_directory in _input_paths(command):
                 if re.match(r"^[A-Za-z]:|^[\\/]", value) or "://" in value or ".." in PurePosixPath(value).parts or re.search(r"[*?${}]", value):
                     step.context_notes.append("命令含不能静态核对的输入路径，请结合原文确认。")
                     continue
-                full = str(path.parent / value)
+                full = str(PurePosixPath(step.working_directory) / value)
                 step.required_paths.append(full)
                 if full not in known and not (allow_directory and full in directories):
                     if sig.file_tree and "tree" not in sig.unavailable_signals:
                         step.missing_inputs.append(full)
                     else:
                         step.context_notes.append(f"文件树未完整取得，尚不能确认输入路径：{full}")
-        else:
-            step.context_notes.append("尚未确认执行目录；请先查看来源中的 cd、项目根目录或子项目说明。")
+        if step.stage == 'A' and _INSTALL.match(command):
+            step.prerequisite_step_ids.extend(environment_ids)
         if step.stage == "B":
+            step.prerequisite_step_ids.extend(environment_ids)
             step.prerequisite_step_ids.extend(install_ids)
             if not install_ids:
                 step.context_notes.append("本指南尚无可核验的安装步骤，运行测试前请先核对开发依赖。")
         if step.stage == "A" and _INSTALL.match(command):
             install_ids.append(step.step_id)
+        if step.stage == 'A' and _ENVIRONMENT.match(command):
+            environment_ids.append(step.step_id)
     return prepared

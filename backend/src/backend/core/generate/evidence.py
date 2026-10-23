@@ -16,6 +16,7 @@ from urllib.parse import urlsplit, unquote
 
 from backend.core.github.recon import RawSignals
 from backend.core.generate.schemas import Evidence
+from backend.core.generate.command_context import is_dependency_declaration
 
 # Issue refs like "#42" / "issues/42" / a full github issue url.
 _ISSUE_RE = re.compile(r"(?:issues?/)?(\d{1,6})$")
@@ -140,6 +141,11 @@ def verify_step_evidence(step, sig: RawSignals) -> Evidence:
         ev.quote, ev.verification = quote, "quote_verified"
     if step.command:
         command = step.command.strip()
+        dependency_file = ev.kind == 'file' and (
+            re.search(r'(?:^|/)(?:[\w.-]*requirements[\w.-]*\.(?:txt|in)|requirements/[^/]+\.(?:txt|in))$',
+                      ev.source.split('#',1)[0],re.I))
+        if dependency_file or is_dependency_declaration(command):
+            return Evidence(kind="missing", reason="依赖版本声明不是可执行命令")
         # A tool name inside a dependency/version string is not a command.
         candidates = []
         for line in text.splitlines():

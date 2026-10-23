@@ -10,7 +10,7 @@ export function parseSavedGuide(text: string): Guide {
   if (data.requested_mode != null && !['ai', 'rules', 'unknown'].includes(data.requested_mode)) throw new Error('生成请求模式无效')
   if (data.stage_fallbacks != null && (typeof data.stage_fallbacks !== 'object' || Array.isArray(data.stage_fallbacks) ||
       Object.entries(data.stage_fallbacks).some(([stage, reason]) => !['A', 'B', 'C', 'D'].includes(stage) ||
-        !['not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited', 'model_error', 'invalid_output', 'evidence_unverified'].includes(reason as string)))) {
+        !['not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited', 'model_error', 'invalid_output', 'evidence_unverified', 'incomplete_workflow'].includes(reason as string)))) {
     throw new Error('阶段回退原因格式无效')
   }
   if (data.stage_modes != null && (typeof data.stage_modes !== 'object' || Array.isArray(data.stage_modes) ||
@@ -52,7 +52,7 @@ export function parseSavedGuide(text: string): Guide {
     }
     ids.add(step.step_id)
     if ((step.working_directory != null && !relativePath(step.working_directory)) ||
-        (step.directory_basis != null && !['build_file', 'unknown', 'clone_destination'].includes(step.directory_basis)) ||
+        (step.directory_basis != null && !['build_file', 'document_context', 'unknown', 'clone_destination'].includes(step.directory_basis)) ||
         ['required_paths', 'missing_inputs'].some((field) => step[field] != null && (!Array.isArray(step[field]) || step[field].some((p: unknown) => !relativePath(p)))) ||
         (step.context_notes != null && (!Array.isArray(step.context_notes) || step.context_notes.some((n: unknown) => typeof n !== 'string'))) ||
         (step.success_checks != null && (!Array.isArray(step.success_checks) || step.success_checks.some((n: unknown) => typeof n !== 'string'))) ||

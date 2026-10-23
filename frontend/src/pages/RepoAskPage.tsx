@@ -33,7 +33,7 @@ function AnswerCard({ turn }: { turn: AskTurn }) {
       <Paragraph type="secondary">先核对工作目录、前置条件和运行范围，原文匹配不代表已在本机通过。</Paragraph>
       {r.commands.map((c, i) => <div key={i} style={{ marginTop: 8 }}>
         <Paragraph copyable={{ text: c.command }} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}><Text code>{c.command}</Text> [{c.citation}]</Paragraph>
-        <Paragraph type="secondary">{c.directory_basis === 'clone_destination' ? '执行位置：你选择的项目存放目录，克隆后再进入仓库。' : c.working_directory ? `执行位置（由构建文件推导）：${c.working_directory === '.' ? '仓库根目录' : c.working_directory}` : '执行目录尚未确认，请核对原文。'}</Paragraph>
+        <Paragraph type="secondary">{c.directory_basis === 'clone_destination' ? '执行位置：你选择的项目存放目录，克隆后再进入仓库。' : c.working_directory ? `执行位置（${c.directory_basis === 'document_context' ? '由原文上下文推导' : '由构建文件推导'}）：${c.working_directory === '.' ? '仓库根目录' : c.working_directory}` : '执行目录尚未确认，请核对原文。'}</Paragraph>
       </div>)}
     </div>}
     <div style={{ marginTop: 14 }}><Text strong>下一步（通用建议）</Text><ul>{r.next_actions.map((text) => <li key={text}>{text}</li>)}</ul><Space wrap>{r.links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer">{link.label}</a>)}</Space></div>

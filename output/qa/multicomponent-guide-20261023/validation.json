@@ -1,0 +1,60 @@
+{
+  "repository": "https://github.com/codingsjx/ai-software",
+  "revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "collected_files": [
+    "README.md",
+    "docker-compose.yml",
+    "backend/Dockerfile",
+    "backend/requirements.txt",
+    "frontend/Dockerfile",
+    "frontend/package.json",
+    "benchmark/README.md"
+  ],
+  "checks": {
+    "frontend_tests_passed": 29,
+    "frontend_lint_exit_code": 0,
+    "frontend_build_exit_code": 0,
+    "l1_offline_exit_code": 0,
+    "backend_and_benchmark_passed": 271,
+    "backend_dependency_warnings": 1,
+    "live_rules_assertions_passed": true,
+    "live_ai_request_assertions_passed": true
+  },
+  "limits": [
+    "AI agent regression and browser acceptance, not human trials.",
+    "No upstream commands executed.",
+    "Working directories are inferred, not runtime verification.",
+    "Live browser output retains a language collection failure."
+  ],
+  "live_ai": {
+    "generation_mode": "heuristic",
+    "stage_modes": {
+      "A": "heuristic",
+      "B": "heuristic",
+      "C": "heuristic",
+      "D": "heuristic"
+    },
+    "stage_fallbacks": {
+      "A": "model_timeout",
+      "B": "model_timeout",
+      "D": "model_timeout",
+      "C": "evidence_unverified"
+    }
+  },
+  "before_live_ai": {
+    "generation_mode": "mixed",
+    "stage_modes": {
+      "A": "heuristic",
+      "B": "heuristic",
+      "C": "heuristic",
+      "D": "llm"
+    },
+    "stage_fallbacks": {
+      "A": "model_timeout",
+      "B": "model_timeout",
+      "C": "evidence_unverified"
+    }
+  },
+  "live_rules_step_count": 10,
+  "model_success_claimed": false
+}

@@ -352,7 +352,7 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
             </Title>
 
             {step.command && <Paragraph>
-              <Text strong>{step.directory_basis === 'build_file' ? '建议执行位置（按构建文件推导）：' : '执行位置：'}</Text>{step.directory_basis === 'clone_destination' ? '你选择的项目存放目录（克隆后进入仓库）' : step.working_directory === '.' ? '仓库根目录' : step.working_directory || '待确认，请先核对来源中的目录说明'}
+              <Text strong>{step.directory_basis === 'build_file' ? '建议执行位置（按构建文件推导）：' : step.directory_basis === 'document_context' ? '建议执行位置（按原文上下文推导）：' : '执行位置：'}</Text>{step.directory_basis === 'clone_destination' ? '你选择的项目存放目录（克隆后进入仓库）' : step.working_directory === '.' ? '仓库根目录' : step.working_directory || '待确认，请先核对来源中的目录说明'}
             </Paragraph>}
             {Boolean(step.prerequisite_step_ids?.length) && <Paragraph><Text strong>建议先完成：</Text>第 {step.prerequisite_step_ids!.join('、')} 步（流程顺序，不代表依赖已验证）</Paragraph>}
             {Boolean(step.required_paths?.length) && <Paragraph><Text strong>所需输入路径：</Text>{step.required_paths!.join('、')}</Paragraph>}

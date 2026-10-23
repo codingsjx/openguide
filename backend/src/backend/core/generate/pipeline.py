@@ -22,6 +22,7 @@ from backend.core.generate.evidence import verify_step_evidence
 from backend.core.generate.llm import LLMClient, LLMUnavailable
 from backend.core.generate.make_recipe import expand_make_recipe
 from backend.core.generate.workflow import prepare_workflow
+from backend.core.generate.command_context import STAGE_COMMAND_PATTERNS
 from backend.core.generate.heuristic import generate_stage
 from backend.core.generate.prompts import build_stage_messages, step_from_llm_json
 from backend.core.generate.schemas import Evidence, Guide, GuideStep
@@ -127,6 +128,28 @@ def build_guide(
             guide.steps = audit_steps(sig, index, guide.steps)
             model_stages = sum(mode == 'llm' for mode in guide.stage_modes.values())
             guide.generation_mode = 'mixed' if model_stages else 'heuristic'
+    if use_llm and not strict_llm:
+        # A valid quote on one component must not conceal an omitted second
+        # component. Replace the affected stage transparently with audited
+        # source-only steps; don't count this as a complete AI generation.
+        completed = False
+        for stage in ('A', 'B'):
+            if guide.stage_modes.get(stage) != 'llm':
+                continue
+            snippets = _retrieve_for_stage(index, stage, _STAGE_QUERIES[stage])
+            rules = audit_steps(sig, index, generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]))
+            required = {s.command for s in rules if s.command and (stage == 'B' or
+                re.match(r'^(?:uv (?:pip install|sync)|pip\d? install|python\d? -m pip install|pnpm install|npm (?:ci|install)|yarn install)(?=\s|$)',s.command))}
+            current = {s.command for s in guide.steps if s.stage == stage and s.command}
+            if len(required) >= 2 and not required <= current:
+                guide.steps = [s for s in guide.steps if s.stage != stage] + rules
+                guide.stage_modes[stage] = 'heuristic'
+                guide.stage_fallbacks[stage] = 'incomplete_workflow'
+                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段未覆盖原文中的多组件操作，已使用核验后的原文步骤补齐该阶段。')
+                completed = True
+        if completed:
+            guide.steps = audit_steps(sig, index, guide.steps)
+            guide.generation_mode = 'mixed' if 'llm' in guide.stage_modes.values() else 'heuristic'
     if guide.generation_mode == "llm" and any(s.command_derivation for s in guide.steps):
         guide.generation_mode = "mixed"
         guide.warnings.append("部分 make 命令已按仓库原文展开，展开过程可查看；尚未执行")
@@ -154,6 +177,9 @@ def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> li
             st.execution_record = None
             st.expected = "请先在仓库文档中确认操作方法"
             st.fail_hints.append("命令未通过原文核验，已隐藏；可打开仓库文档或向维护者提问")
+        if st.command and st.stage == 'B' and re.match(r'^(?:pnpm|npm|yarn)\s+(?:run\s+)?build(?=\s|$)',st.command):
+            st.title = '按原文进行构建检查（不等同测试）'
+            st.expected = '核对组件目录与依赖后进行构建，记录退出码和构建输出；构建成功不等同测试通过，本指南未执行。'
     steps = prepare_workflow(sig, steps)
     for step in steps:
         if step.stage != "C" or step.evidence.kind != "issue":
@@ -289,8 +315,8 @@ def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=Fals
 
 
 _STAGE_QUERIES = {
-    "A": "development environment editable install dependencies pip uv sync requirements-dev setup venv",
-    "B": "run test suite pytest tox nox unittest npm test make test cargo test go test",
+    "A": "development environment editable install dependencies pip uv sync requirements-dev setup venv frontend backend pnpm npm install",
+    "B": "run test suite pytest tox nox unittest uv run pnpm test build npm test make test cargo test go test",
     "C": "good first issue for a new contributor to pick up",
     "D": "contribution workflow fork clone branch commit pull request",
 }
@@ -315,12 +341,7 @@ def _generate_heuristic(sig: RawSignals, index: RepoIndex, start_id: int) -> lis
 # A/B/D all emit the same install command (B should run tests, D should be
 # git/PR). We now only accept a command whose family matches the stage, and
 # fall back to no command rather than mis-attributing one (无证据不宣称).
-_STAGE_CMD_PATTERNS = {
-    "A": r"^(git clone|pip(?:3)? install|uv (?:sync|venv|pip install)|poetry (?:install|sync)|conda (?:create|env create|install)|python(?:3)? -m (?:pip install|venv)|virtualenv|npm (?:ci|install)|pnpm install|yarn(?: install)?$|cargo build|go mod (?:download|tidy)|bundle install|gem install|composer install)\b",
-    "B": r"^(pytest|tox|nox|python -m pytest|python -m unittest|npm (test|run test)|pnpm (test|run test)|yarn (test|run test)|cargo test|go test|make (test|check)|bundle exec rspec)\b",
-    "C": r"^(gh issue|git (log|branch))\b",
-    "D": r"^(git (checkout|switch|add|commit|push|clone|remote|branch)|gh (pr|repo|fork))\b",
-}
+_STAGE_CMD_PATTERNS = STAGE_COMMAND_PATTERNS
 
 
 def _verify_and_relabel(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]:

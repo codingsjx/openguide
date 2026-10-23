@@ -63,6 +63,15 @@ test('working directory cannot escape the checkout', () => {
   const f = fixture(); f.steps[0].working_directory = '../outside'
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))
 })
+
+test('document-derived directories survive saved guide import', () => {
+  const f = fixture(); f.steps[0].working_directory = 'frontend'; f.steps[0].directory_basis = 'document_context'
+  f.stage_fallbacks = { A: 'incomplete_workflow' }
+  assert.equal(parseSavedGuide(JSON.stringify(f)).stage_fallbacks.A, 'incomplete_workflow')
+  assert.equal(parseSavedGuide(JSON.stringify(f)).steps[0].directory_basis, 'document_context')
+  f.steps[0].directory_basis = 'model_guess'
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})
 test('prerequisites cannot point forward or to nonexistent steps', () => {
   const f = fixture(); f.steps[0].prerequisite_step_ids = [2]
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))

@@ -44,7 +44,7 @@ class GuideStep(BaseModel):
     execution_record: ExecutionRecord | None = None
     original_stage: Literal["A", "B", "C", "D"] | None = None
     working_directory: str | None = None
-    directory_basis: Literal["build_file", "unknown", "clone_destination"] = "unknown"
+    directory_basis: Literal["build_file", "document_context", "unknown", "clone_destination"] = "unknown"
     required_paths: list[str] = Field(default_factory=list)
     missing_inputs: list[str] = Field(default_factory=list)
     prerequisite_step_ids: list[int] = Field(default_factory=list)
@@ -83,7 +83,7 @@ class Guide(BaseModel):
     requested_mode: Literal['ai', 'rules', 'unknown'] = 'unknown'
     stage_fallbacks: dict[Literal['A', 'B', 'C', 'D'], Literal[
         'not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited',
-        'model_error', 'invalid_output', 'evidence_unverified']] = Field(default_factory=dict)
+        'model_error', 'invalid_output', 'evidence_unverified', 'incomplete_workflow']] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     issue_discovery: IssueDiscovery | None = None
 

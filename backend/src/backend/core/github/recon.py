@@ -60,7 +60,8 @@ _DOC_PATHS = ("README.md", "README.rst", "README", "CONTRIBUTING.md", "CONTRIBUT
 _BUILD_FILES = ("Makefile", "makefile", "GNUmakefile", "pyproject.toml",
                 "package.json", "tox.ini", "setup.cfg", "setup.py",
                 "Cargo.toml", "go.mod", "Gemfile", "composer.json",
-                "requirements.txt", "requirements-dev.txt")
+                "requirements.txt", "requirements-dev.txt", "Dockerfile",
+                "docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml")
 
 _MAX_DOC_SIZE = 200_000  # skip absurdly large docs
 
@@ -235,6 +236,21 @@ def enrich_docs_and_tree(
         unavailable.append("tree")
         warnings.append("文件树未取得，目录与引用覆盖可能不完整")
 
+    # Multi-component projects keep manifests below frontend/backend/packages.
+    # A bounded, shallow crawl avoids generated dependencies and vendored code.
+    config_names = {name.lower() for name in _BUILD_FILES}
+    excluded = {'node_modules', 'vendor', 'dist', 'build', 'static', 'assets',
+                '.venv', 'venv', '.git', '__pycache__', 'output', 'tmp', 'fixtures'}
+    configs = sorted((p for p in file_tree if
+        p.rsplit('/', 1)[-1].lower() in config_names
+        and len(p.split('/')) <= 4
+        and not any(part.lower() in excluded for part in p.split('/')[:-1])
+        and p not in symlink_paths), key=lambda p: (p.count('/'), p))
+    fetch_paths.extend(configs[:24])
+    if len(configs) > 24:
+        unavailable.append('build_configs')
+        warnings.append('构建配置超过采集上限（24 份），子项目覆盖不完整，请按目标组件核对。')
+
     # Pick key newcomer-relevant docs from the tree (dev/contributing/guide/
     # installation/tutorial under docs/ or at root), plus a cap of other docs.
     _TEXT_EXT = (".md", ".rst", ".txt")
@@ -253,7 +269,7 @@ def enrich_docs_and_tree(
             continue
         if not low.endswith(_TEXT_EXT):
             continue
-        if low.startswith(".") or low.startswith(("node_modules", "vendor", "dist", "build", "static", "assets")):
+        if low.startswith(".") or any(part in excluded for part in low.split('/')[:-1]):
             continue
         segs = low.split("/")
         # Key if under docs/dev|docs/contribut*|... or filename carries keyword.
