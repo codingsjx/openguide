@@ -17,6 +17,8 @@
 
 贡献问答支持中文解读、带行号的固定版本出处、同仓库连续追问、资料不足引导和记录下载。命令单独匹配原文，未通过核验的 AI 解读回退为原文整理；引用匹配不代表语义已独立复核。[问答功能及验证边界](docs/repository_qa_20261022.md)。
 
+入门流程支持子项目构建配置清单、带出处的运行时要求，以及“开始前核对 → 原文操作 → 结果检查”的步骤细化。通用 Git 起步与 PR 准备清单单独标为工具提示；体检不再仅凭配置文件名推测包管理器或测试命令。问答可独立选择 25–120 秒的模型等待时间，下载记录保留执行目录和本轮设置。验证记录见 [入门流程补齐](output/qa/onboarding-completion-20261023/README.md)。
+
 ## 四段管线
 
 | 阶段 | 模块 | 做什么 |
@@ -91,8 +93,8 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 |---|---|---|
 | POST | `/api/profile` | `{url}` → 仓库画像（languages / build / gfi / activity / suitability / reasons） |
 | POST | `/api/search` | `{url, query, kind?}` → 按视角路由的检索结果（带证据来源） |
-| POST | `/api/ask` | `{url, question, history?, revision?, use_llm?}` → 中文解读、出处、命令入口、缺口与下一步；历史只传最近的问题 |
-| POST | `/api/guide` | `{url, use_llm}` → Stage A–D 结构化指南（每步带 `evidence`） |
+| POST | `/api/ask` | `{url, question, history?, revision?, use_llm?, model_timeout_s?}` → 中文解读、出处、命令入口、缺口与下一步；模型等待默认 40 秒，范围 10–120 秒 |
+| POST | `/api/guide` | `{url, use_llm, model_timeout_s?}` → Stage A–D 结构化指南（每步带 `evidence`）；每阶段模型等待默认 25 秒，范围 10–120 秒 |
 | POST | `/api/followup` | 三步追问：这步太粗 / 看不懂为什么 / 报错了 |
 | GET/POST | `/api/llm-config` | 读取 / 设置当前后端进程的 LLM 配置（不回显 Key；仅限本地单用户演示） |
 | GET | `/health` | 存活检查 |

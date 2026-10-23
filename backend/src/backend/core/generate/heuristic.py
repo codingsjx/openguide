@@ -7,6 +7,7 @@ from pathlib import PurePosixPath
 from backend.core.generate.evidence import verify_step_evidence
 from backend.core.generate.schemas import Evidence, GuideStep
 from backend.core.generate.command_context import document_directory, input_paths, is_dependency_declaration, command_from_line
+from backend.core.generate.prerequisites import runtime_steps
 
 LABELS = {"A": "环境搭建", "B": "测试基线", "C": "挑选 issue", "D": "首次 PR 路径"}
 
@@ -86,7 +87,11 @@ def generate_stage(sig, stage, snippets, command_pattern):
         environment = [s for s in environment_commands if not re.search(r'publish|release|upload|deploy', s.command, re.I)]
         installs = [s for s in candidates if s not in clone and s not in environment_commands]
         installs.sort(key=lambda s: not bool(re.search(r'requirements-dev|(?:^|\s)-e\s|\[.*(?:dev|test)|uv sync|npm ci', s.command)))
-        output = [_operation(clone[0], 'A', '按原文克隆仓库')] if clone else [pending('A', '待确认仓库克隆方式')]
+        output = [_operation(clone[0], 'A', '按原文克隆仓库')] if clone else [pending('A', '取得本地副本，核对仓库获取方式')]
+        if not clone:
+            output[0].expected = '仓库原文未提供已核验的克隆说明，可查看下方“通用 Git 起步”。那是工具提供的标准操作提示，仓库特殊获取要求仍需核对。'
+        requirements = runtime_steps(sig)
+        output.extend(requirements)
         for doc in sig.doc_files:
             config = next((line.strip() for line in doc.text.splitlines()
                 if re.fullmatch(r'(?:Copy-Item|cp)\s+\.env\.example\s+\.env', line.strip())), None)
@@ -97,7 +102,7 @@ def generate_stage(sig, stage, snippets, command_pattern):
                 break
         if environment:
             output.append(_operation(environment[0], 'A', '按原文创建开发环境'))
-        else:
+        elif not requirements:
             output.append(pending('A', '核对运行时版本与开发环境要求'))
         selected = _complementary(sig, installs, 4)
         output.extend(_operation(step, 'A', '按原文启用前端包管理工具' if step.command.startswith('corepack enable') else '按原文安装依赖（请核对组件及开发用途）') for step in selected)
@@ -161,4 +166,5 @@ def generate_stage(sig, stage, snippets, command_pattern):
                 break
     if not output:
         output = [pending('D', '待确认仓库 PR 规范与提交要求')]
+        output[0].expected = '未取得可核验的仓库专属 PR 规范。可先按下方通用准备清单整理任务、实际改动和测试记录；提交前仍需核对维护者要求。'
     return output

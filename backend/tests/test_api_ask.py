@@ -4,6 +4,7 @@ from backend.api.main import app
 from backend.core.github.models import RepoMeta, DocFile
 from backend.core.github.recon import RawSignals
 from backend.core.github.client import GitHubClientError
+import pytest
 
 
 def test_fixed_revision_and_question_history_are_preserved(monkeypatch):
@@ -41,3 +42,25 @@ def test_history_and_question_limits_and_bad_repository_are_rejected():
         {'url':'o/r','question':'install','revision':'main'},
     ]:
         assert client.post('/api/ask',json=body).status_code==422
+
+
+@pytest.mark.parametrize('seconds',[None,10,60,120])
+def test_question_wait_setting_reaches_one_model_attempt(monkeypatch,seconds):
+    from backend.core.ask.service import AnswerResult
+    sig=RawSignals(meta=RepoMeta(owner='o',repo='r'))
+    monkeypatch.setattr('backend.api.routes.ask.recon',lambda *a,**k:sig)
+    monkeypatch.setattr('backend.api.routes.ask.enrich_docs_and_tree',lambda s,**k:s)
+    def answer(sig,index,question,history,client):
+        assert client._timeout_s==(40 if seconds is None else seconds)
+        assert client._retry_limit==0
+        return AnswerResult(repo_url='https://github.com/o/r',question=question,resolved_question=question)
+    monkeypatch.setattr('backend.api.routes.ask.answer_question',answer)
+    body={'url':'o/r','question':'tests?'}
+    if seconds is not None:body['model_timeout_s']=seconds
+    assert TestClient(app).post('/api/ask',json=body).status_code==200
+
+
+@pytest.mark.parametrize('seconds',[0,121,10.5])
+def test_invalid_question_wait_setting_is_rejected_before_network(monkeypatch,seconds):
+    monkeypatch.setattr('backend.api.routes.ask.recon',lambda *a,**k:pytest.fail('unexpected network collection'))
+    assert TestClient(app).post('/api/ask',json={'url':'o/r','question':'tests?','model_timeout_s':seconds}).status_code==422

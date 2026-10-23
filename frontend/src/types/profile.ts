@@ -7,6 +7,8 @@ export interface BuildInfo {
   test_cmd: string | null
   has_makefile: boolean
   has_dockerfile: boolean
+  manifest_paths?: string[]
+  scan_status?: 'root_only' | 'tree' | 'partial' | 'unavailable'
 }
 
 export interface GfiInfo {
@@ -32,6 +34,7 @@ export interface Profile {
   languages: Record<string, number>
   license: string | null
   default_branch: string
+  revision?: string
   has_readme: boolean
   has_contributing: boolean
   has_docs: boolean

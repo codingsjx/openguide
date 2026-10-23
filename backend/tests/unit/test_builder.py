@@ -38,9 +38,10 @@ def test_language_normalised_fractions():
 
 
 def test_build_detection_python():
-    p = build_profile(make_signals(root={"readme.md": "R", "pyproject.toml": "p"}))
+    p = build_profile(make_signals(root={"readme.md": "README.md", "pyproject.toml": "pyproject.toml"}))
     assert p.build.tool == "pyproject.toml"
-    assert p.build.test_cmd == "pytest"
+    assert p.build.test_cmd is None  # a manifest does not prove pytest exists
+    assert p.build.package_manager is None
     assert p.has_readme is True
 
 

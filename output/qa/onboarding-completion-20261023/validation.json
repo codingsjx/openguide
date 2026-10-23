@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-23",
+  "source_revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "checks": {
+    "backend_and_benchmark_passed": 323,
+    "frontend_passed": 39,
+    "lint_exit_code": 0,
+    "build_exit_code": 0,
+    "l1_smoke_passed": true,
+    "live_build_inventory_count": 5,
+    "live_final_rule_steps": 11,
+    "empty_context_guard_live": true
+  },
+  "live_60_second_ai_checkpoint": {
+    "C": "model_timeout",
+    "D": "model_timeout",
+    "A": "incomplete_workflow"
+  },
+  "live_question_mode": "extractive",
+  "live_question_reason": "AI interpretation did not pass source verification; retained scoped original commands",
+  "limits": [
+    "No analyzed-repository installation or test commands executed.",
+    "10-second guard check is a boundary test, not a speed comparison with the 60-second checkpoint.",
+    "AI service reliability and semantic correctness are not claimed solved.",
+    "Human trials, independent review and effective upstream contribution outcomes remain pending."
+  ]
+}

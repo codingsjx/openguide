@@ -1,0 +1,179 @@
+- link "跳到仓库输入":
+  - /url: "#start"
+- banner:
+  - link "OpenGuide，前往仓库输入":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+    - generic: 开源贡献，从容开始
+  - link "在 GitHub 查看 OpenGuide 源码":
+    - /url: https://github.com/codingsjx/openguide
+    - img "github":
+    - generic: GitHub
+  - button "api 模型已配置":
+    - img "api":
+    - generic: 模型已配置
+- main:
+  - region "仓库探索动态概览":
+    - generic: YOUR OPEN SOURCE JOURNEY
+    - heading "从理解项目，到开始贡献" [level=1]
+    - img "github":
+    - strong: codingsjx/openguide
+    - paragraph: 先读懂环境与测试入口，再选择一个范围明确的小任务。
+    - generic: 默认分支 master
+    - generic: Python · TypeScript
+    - generic: README 入口
+    - status: 仓库概况已取得
+    - link "查看贡献指南 arrow-right":
+      - /url: "#workspace"
+      - text: 查看贡献指南
+      - img "arrow-right":
+    - generic: 当前查看 · 贡献问答
+    - button "暂停动态装饰":
+      - img "pause":
+      - text: 暂停动效
+    - generic: 仓库资料
+    - generic: 项目说明
+    - generic: 构建与测试
+    - generic: 贡献约定
+    - generic "环境、测试、选题、PR，贡献路径示意":
+      - generic: A
+      - text: 环境
+      - img "arrow-right":
+      - generic: B
+      - text: 测试
+      - img "arrow-right":
+      - generic: C
+      - text: 选题
+      - img "arrow-right":
+      - generic: D
+      - text: PR
+      - emphasis: 路径示意
+  - region "当前探索的仓库":
+    - heading "当前探索的仓库" [level=2]
+    - img "github":
+    - text: GitHub 公开仓库
+    - img "github":
+    - textbox "GitHub 仓库地址":
+      - /placeholder: https://github.com/owner/repo
+      - text: https://github.com/codingsjx/openguide
+    - button "rocket 生成路线图 arrow-right":
+      - img "rocket":
+      - generic: 生成路线图
+      - img "arrow-right":
+    - generic: 先看看怎么用
+    - button "体验 requests 示例 arrow-right":
+      - text: 体验 requests 示例
+      - img "arrow-right":
+    - button "upload 导入已保存指南 · 离线查看":
+      - img "upload":
+      - generic: 导入已保存指南
+      - generic: · 离线查看
+    - generic: Enter ↵
+  - region "仓库贡献工作台":
+    - generic: 贡献工作区
+    - link "github codingsjx/openguide arrow-right":
+      - /url: https://github.com/codingsjx/openguide
+      - img "github":
+      - text: codingsjx/openguide
+      - img "arrow-right":
+    - tablist:
+      - tab "thunderbolt 贡献指南":
+        - img "thunderbolt":
+        - generic: 贡献指南
+      - tab "rocket 仓库体检":
+        - img "rocket":
+        - generic: 仓库体检
+      - tab "question-circle 贡献问答" [active] [selected]:
+        - img "question-circle":
+        - generic: 贡献问答
+    - tabpanel "question-circle 贡献问答":
+      - generic: REPOSITORY Q&A
+      - heading "仓库贡献问答" [level=3]
+      - generic: 围绕当前仓库提问或追问，先看回答，再核对原文。资料不足时会说明缺什么。
+      - strong: 当前仓库
+      - textbox "问答仓库":
+        - /placeholder: GitHub 仓库地址
+        - text: https://github.com/codingsjx/openguide
+      - switch "AI 整理 仅原文" [checked]:
+        - generic: AI 整理
+        - generic: 仅原文
+      - button "开始新对话":
+        - generic: 开始新对话
+      - button "下载问答记录":
+        - generic: 下载问答记录
+      - generic: 问答模型等待
+      - combobox "问答模型超时":
+        - option "25 秒"
+        - option "40 秒"
+        - option "60 秒" [selected]
+        - option "90 秒"
+        - option "120 秒"
+      - generic: 此设置只用于下一轮问答，独立于指南设置；延长等待不保证模型成功，超时后仍保留可核验原文。
+      - generic: 问题和检索片段可能交给当前配置的模型服务，请勿输入密钥或个人信息。上下文仅保留在本页，切换仓库会清空；追问沿用同一文件版本。
+      - generic: 问题 1
+      - strong: 后端测试应该在哪个目录运行？需要先安装什么依赖？
+      - generic: 原文整理
+      - generic: 本轮模型等待：60 秒。
+      - text: AI 解读未通过原文核验
+      - generic: 问答模型未完成或引用未通过核验，本次保留原文整理结果，可查看出处后继续追问。
+      - text: 已找到可核对的环境搭建入口：backend/README.md。
+      - link "[S1] 原文":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L1-L34
+      - text: 已找到可核对的测试入口：backend/README.md。
+      - link "[S1] 原文":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L1-L34
+      - text: 原文操作的建议执行位置：backend。这是按原文上下文推导的位置，命令尚未执行。
+      - link "[S1] 原文":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L1-L34
+      - strong: 原文操作入口（尚未执行）
+      - generic: 先核对工作目录、前置条件和运行范围，原文匹配不代表已在本机通过。
+      - code: uv sync
+      - text: "[S1]"
+      - button "复制":
+        - img "copy":
+      - generic: 执行位置（由原文上下文推导）：backend
+      - code: uv run pytest tests/ -q
+      - text: "[S1]"
+      - button "复制":
+        - img "copy":
+      - generic: 执行位置（由原文上下文推导）：backend
+      - strong: 下一步（通用建议）
+      - list:
+        - listitem: 打开下方原文，核对完整前置条件及当前开发环境。
+        - listitem: 若仍不明确，补充操作系统、具体任务或脱敏异常，并继续追问。
+        - listitem: 记录实际退出码、失败与跳过数量，区分局部测试和完整测试。
+      - link "仓库说明":
+        - /url: https://github.com/codingsjx/openguide#readme
+      - link "开放任务":
+        - /url: https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen
+      - strong: 原文与出处
+      - generic: 可查看完整片段及固定版本原文；引用匹配只核验文字来源，AI 解读仍需结合上下文判断。
+      - generic "[S1] backend/README.md · L1–L34"
+      - link "打开原始出处 ↗":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L1-L34
+      - generic: "# OpenGuide 后端（FastAPI） 仓库勘探 → 画像 → 四视角分层索引 → 结构化指南生成 + 证据校验 + 三步追问。 ## 运行 需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。 ```bash cd backend uv sync # 按 uv.lock 安装依赖 uv run pytest tests/ -q # 68 个单测 uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 ``` 可选：复制 `.env.example` 为 `.env`，填 `GITHUB_TOKEN` 提升 GitHub 限流； 填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` 启用 AI 生成。不填也能跑： 生成会走确定性启发式路径，测试与 CI 均在该路径下验证。 > 测试默认走 hermetic 路径（`conftest.py` 设 `USE_CHROMA=false`）， > 不下载嵌入模型，秒级完成。需要真实向量检索时设 `USE_CHROMA=true`。 ## 目录 | 路径 | 说明 | |---|---| | `src/backend/api/` | HTTP 层：profile / search / guide / followup / settings 路由 | | `src/backend/core/github/` | GitHub API 封装、限流缓存、仓库勘探（M0） | | `src/backend/core/profile/` | 画像 schema 与构建 | | `src/backend/core/index/` | 四视角分层索引与检索（M1） | | `src/backend/core/decide/` | 适不适合新手的决策树（纯规则，可单测） | | `src/backend/core/generate/` | Stage A–D 结构化生成 + 证据锚点校验（M2） | | `src/backend/core/followup/` | 三步追问：这步太粗 / 看不懂为什么 / 报错了 | | `tests/` | pytest（默认离线、无密钥） |"
+      - generic "[S2] backend/Dockerfile · L1–L26"
+      - generic "[S3] backend/pyproject.toml · L1–L27"
+      - generic "[S4] backend/README.md · L25–L36"
+      - generic "[S5] README.md · L38–L51"
+      - generic "资料版本与核验说明 · 8c21e6d43798"
+      - strong: 继续追问
+      - textbox "贡献问答问题":
+        - /placeholder: 例如：测试怎么运行？也可以接着问：这条命令在哪里执行？
+      - generic: 0 / 2000
+      - button "loading 发送问题" [disabled]:
+        - img "loading"
+        - generic: 发送问题
+- contentinfo:
+  - link "apartment OpenGuide":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+  - generic: 让开源的第一步，更清晰一点。
+  - img "safety-certificate":
+  - text: 核对原文，再开始行动
+  - link "项目说明 arrow-right":
+    - /url: https://github.com/codingsjx/openguide#readme
+    - text: 项目说明
+    - img "arrow-right":

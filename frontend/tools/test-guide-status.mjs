@@ -19,6 +19,14 @@ test('model request failures are visible, evidence fallback is explained without
   assert.equal(guideStatus({ requested_mode: 'ai', generation_mode: 'mixed', stage_fallbacks: { B: 'model_timeout' } }).type, 'warning')
   assert.equal(guideStatus({ requested_mode: 'ai', generation_mode: 'mixed', stage_fallbacks: { C: 'evidence_unverified' } }).type, 'info')
 })
+
+test('skipped empty stages are explicit without blaming the model service', () => {
+  const status=guideStatus({requested_mode:'ai',generation_mode:'mixed',stage_fallbacks:{C:'no_stage_evidence'}})
+  assert.equal(status.type,'info')
+  assert.match(status.title,/未调用模型/)
+  assert.doesNotMatch(status.description,/检查模型服务/)
+  assert.equal(groupGuideWarnings(['挑选 issue阶段没有取得可引用资料，未调用模型；已保留规则入口与待确认项。']).generation.length,1)
+})
 test('legacy saved guides never invent a historical button choice', () => {
   const status = guideStatus({ generation_mode: 'heuristic', is_saved: true })
   assert.match(status.title, /触发原因未记录/)

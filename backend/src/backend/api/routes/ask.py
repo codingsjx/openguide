@@ -23,6 +23,7 @@ class AskRequest(BaseModel):
     history: list[Question] = Field(default_factory=list, max_length=6)
     revision: str | None = Field(default=None, pattern=r'^[0-9a-f]{40}$')
     use_llm: bool = True
+    model_timeout_s: int = Field(default=40, ge=10, le=120)
 
 
 @router.post('/ask', response_model=AnswerResult)
@@ -54,4 +55,4 @@ def ask_repo(req: AskRequest) -> AnswerResult:
     index = RepoIndex(owner, repo)
     index.index(sig)
     return answer_question(sig,index,question,req.history,
-        LLMClient(timeout_s=40.0,retry_limit=0,allow_literal_linebreaks=True) if req.use_llm else None)
+        LLMClient(timeout_s=float(req.model_timeout_s),retry_limit=0,allow_literal_linebreaks=True) if req.use_llm else None)

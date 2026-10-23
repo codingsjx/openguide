@@ -16,6 +16,7 @@ Two execution modes:
 from __future__ import annotations
 
 import re
+from pathlib import PurePosixPath
 
 from backend.core.decide.decider import decide
 from backend.core.generate.evidence import verify_step_evidence
@@ -27,6 +28,7 @@ from backend.core.generate.heuristic import generate_stage
 from backend.core.generate.prompts import build_stage_messages, step_from_llm_json
 from backend.core.generate.schemas import Evidence, Guide, GuideStep
 from backend.core.generate.issues import discover_issues
+from backend.core.generate.prerequisites import runtime_steps
 from backend.core.github.recon import RawSignals
 from backend.core.index.service import RepoIndex
 from backend.core.profile.builder import build_profile
@@ -141,7 +143,16 @@ def build_guide(
             required = {s.command for s in rules if s.command and (stage == 'B' or
                 re.match(r'^(?:uv (?:pip install|sync)|pip\d? install|python\d? -m pip install|pnpm install|npm (?:ci|install)|yarn install)(?=\s|$)',s.command))}
             current = {s.command for s in guide.steps if s.stage == stage and s.command}
-            if required and not required <= current:
+            runtime_groups = {}
+            if stage == 'A':
+                for item in runtime_steps(sig):
+                    runtime_groups.setdefault(str(PurePosixPath(item.evidence.source).parent), []).append(item)
+            missing_runtime = any(not any(
+                s.stage == 'A' and s.evidence.verification in {'quote_verified', 'command_verified'}
+                and s.evidence.quote.strip() and str(PurePosixPath(s.evidence.source.split('#', 1)[0]).parent) == directory
+                and any(s.evidence.quote.strip() in item.evidence.quote or item.evidence.quote in s.evidence.quote for item in items)
+                for s in guide.steps) for directory, items in runtime_groups.items())
+            if (required and not required <= current) or missing_runtime:
                 guide.steps = [s for s in guide.steps if s.stage != stage] + rules
                 guide.stage_modes[stage] = 'heuristic'
                 guide.stage_fallbacks[stage] = 'incomplete_workflow'
@@ -297,6 +308,20 @@ def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=Fals
     sid = start_id
     for stage, q in _STAGE_QUERIES.items():
         snippets = _retrieve_for_stage(index, stage, q)
+        if allow_fallback and not snippets:
+            # No repository material means nothing for a model to ground on.
+            # Strict research clients still run the prescribed model protocol.
+            if stage_modes is not None:
+                stage_modes[stage] = 'heuristic'
+            if fallback_reasons is not None:
+                fallback_reasons[stage] = 'no_stage_evidence'
+            if warnings is not None:
+                warnings.append(f'{_STAGE_LABELS[stage]}阶段没有取得可引用资料，未调用模型；已保留规则入口与待确认项。')
+            for step in generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]):
+                step.step_id = sid
+                sid += 1
+                out.append(step)
+            continue
         messages = build_stage_messages(stage, snippets)
         try:
             obj = client.chat_json(messages, temperature=0.2, max_tokens=1800)

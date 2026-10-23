@@ -1,0 +1,52 @@
+{
+  "owner": "codingsjx",
+  "repo": "openguide",
+  "html_url": "https://github.com/codingsjx/openguide",
+  "description": "",
+  "stars": 0,
+  "forks": 0,
+  "open_issues": 0,
+  "languages": {
+    "Python": 0.825,
+    "TypeScript": 0.146,
+    "CSS": 0.021,
+    "Dockerfile": 0.005,
+    "HTML": 0.001,
+    "Batchfile": 0.001
+  },
+  "license": "NOASSERTION",
+  "default_branch": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "has_readme": true,
+  "has_contributing": false,
+  "has_docs": true,
+  "build": {
+    "tool": "pyproject.toml",
+    "package_manager": null,
+    "test_cmd": null,
+    "has_makefile": false,
+    "has_dockerfile": true,
+    "manifest_paths": [
+      "docker-compose.yml",
+      "backend/Dockerfile",
+      "backend/pyproject.toml",
+      "frontend/Dockerfile",
+      "frontend/package.json"
+    ],
+    "scan_status": "tree"
+  },
+  "gfi": {
+    "count": 0,
+    "oldest_days": null
+  },
+  "activity": {
+    "commits_30d": 7,
+    "last_release_days": 0
+  },
+  "suitability": "unclear",
+  "reasons": [],
+  "unavailable_signals": [],
+  "collection_warnings": [
+    "文件证据固定于提交 8c21e6d43798c707b5aa5001112719e832ae95a8；issue 信息是独立采集的快照，操作前需核对最新状态。"
+  ]
+}

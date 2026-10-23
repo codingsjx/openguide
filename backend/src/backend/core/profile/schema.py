@@ -16,6 +16,8 @@ class BuildInfo(BaseModel):
     test_cmd: str | None = None  # "pytest" | "npm test" | ...
     has_makefile: bool = False
     has_dockerfile: bool = False
+    manifest_paths: list[str] = Field(default_factory=list)
+    scan_status: Literal['root_only', 'tree', 'partial', 'unavailable'] = 'root_only'
 
 
 class GfiInfo(BaseModel):
@@ -44,6 +46,7 @@ class Profile(BaseModel):
     languages: dict[str, float] = Field(default_factory=dict)  # {"python": 0.72, ...}
     license: str | None = None
     default_branch: str = "main"
+    revision: str = ""  # fixed revision of the build-file inventory, when available
     has_readme: bool = False
     has_contributing: bool = False
     has_docs: bool = False

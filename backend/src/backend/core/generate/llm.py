@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+import logging
 from typing import Any
 
 from backend.config import get_settings
@@ -80,6 +81,7 @@ class LLMClient:
         self._model = _OVERRIDE_MODEL or s.llm_model
         self.trace: list[dict] = []
         self.attempt_count = 0
+        self.request_events: list[dict] = []
         self._timeout_s = timeout_s
         self._retry_limit = retry_limit
         self._allow_literal_linebreaks = allow_literal_linebreaks
@@ -92,6 +94,17 @@ class LLMClient:
 
     def available(self) -> bool:
         return bool(self._key)
+
+    def _request_event(self, elapsed: float, error: Exception | None = None) -> None:
+        """Timing/status only: never log prompts, provider bodies, URLs or keys."""
+        import httpx
+        event = {'elapsed_ms': round(elapsed * 1000), 'attempt': self.attempt_count,
+                 'status': error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None,
+                 'result': 'timeout' if isinstance(error, httpx.TimeoutException) else 'request_failed' if error else 'response_received'}
+        self.request_events.append(event)
+        if error:
+            logging.getLogger(__name__).warning('Model request result=%s elapsed_ms=%s status=%s attempt=%s',
+                event['result'], event['elapsed_ms'], event['status'], event['attempt'])
 
     def chat_json(
         self,
@@ -124,6 +137,7 @@ class LLMClient:
         retries = min(retries, self._retry_limit)
         for attempt in range(retries + 1):
             self.attempt_count += 1
+            started = time.perf_counter()
             try:
                 resp = httpx.post(
                     f"{self._base}/chat/completions",
@@ -133,11 +147,13 @@ class LLMClient:
                 )
                 resp.raise_for_status()
             except Exception as exc:  # noqa: BLE001 - network/API errors surfaced
+                self._request_event(time.perf_counter() - started, exc)
                 last_exc = exc
                 if attempt < retries:
                     time.sleep(1.5 * (attempt + 1))
                     continue
                 raise LLMUnavailable(f"LLM 调用失败: {exc}") from exc
+            self._request_event(time.perf_counter() - started)
             try:
                 data = resp.json()
                 content = data["choices"][0]["message"]["content"]

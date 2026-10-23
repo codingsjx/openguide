@@ -1,5 +1,6 @@
 """Synthetic outages verify retention/accounting, not real model quality."""
 import pytest
+import re
 
 from backend.core.generate.pipeline import build_guide
 from backend.core.generate.llm import LLMUnavailable
@@ -23,7 +24,7 @@ class Model:
         self.failing, self.empty, self.calls = failing, empty, []
     def available(self): return True
     def chat_json(self, *args, **kwargs):
-        stage = 'ABCD'[len(self.calls)]
+        stage = re.search(r'Stage ([ABCD])', args[0][-1]['content'])[1]
         self.calls.append(stage)
         if stage in self.failing:
             raise LLMUnavailable('synthetic timeout')
@@ -45,7 +46,8 @@ def generate(client=None, **kwargs):
 def test_one_failed_stage_retains_successful_output_and_continues():
     model = Model()
     guide = generate(model)
-    assert model.calls == list('ABCD')
+    assert model.calls == list('ABD')
+    assert guide.stage_fallbacks['C'] == 'no_stage_evidence'
     assert guide.generation_mode == 'mixed'
     assert guide.stage_modes == {'A':'llm','B':'heuristic','C':'heuristic','D':'llm'}
     assert {s.title for s in guide.steps if s.stage in ('A', 'D')} == {'Preserved AI A','Preserved AI D'}
@@ -90,7 +92,7 @@ def test_no_sources_produces_pending_items_instead_of_invented_commands():
 def test_audited_clone_cannot_remove_pr_entry_point():
     class CloneInPR(Model):
         def chat_json(self, *args, **kwargs):
-            stage = 'ABCD'[len(self.calls)]
+            stage = re.search(r'Stage ([ABCD])', args[0][-1]['content'])[1]
             if stage == 'D':
                 self.calls.append(stage)
                 return {'steps':[{'title':'Clone in wrong stage',
@@ -179,7 +181,7 @@ def test_timeout_and_unverified_evidence_have_separate_safe_reasons():
             return super().chat_json(*args, **kwargs)
     guide = generate(Timeout())
     assert guide.stage_fallbacks['B'] == 'model_timeout'
-    assert guide.stage_fallbacks['C'] == 'evidence_unverified'
+    assert guide.stage_fallbacks['C'] == 'no_stage_evidence'
     assert 'private provider details' not in guide.model_dump_json()
 
 

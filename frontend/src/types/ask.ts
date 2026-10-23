@@ -31,7 +31,7 @@ export interface AskResult {
   links: { label: string; url: string }[]
 }
 
-export interface AskTurn { id: number; question: string; result: AskResult }
+export interface AskTurn { id: number; question: string; result: AskResult; modelTimeoutSeconds?: number }
 
 function canonicalRepo(value: string): string {
   return value.trim().replace(/^https?:\/\/(?:www\.)?github\.com\//i, '').replace(/\/$/, '').replace(/\.git$/, '').toLowerCase()
@@ -63,7 +63,9 @@ export function conversationMarkdown(turns: AskTurn[]): string {
     const r = turn.result
     lines.push(`## 问题 ${turn.id}：${escape(turn.question)}`, '', `仓库：${r.repo_url}`, `参考提交：${r.revision || '未取得'}`, `回答方式：${r.mode === 'ai' ? 'AI 解读（引用已匹配原文）' : r.mode === 'extractive' ? '原文整理' : '资料不足'}`, '')
     for (const p of r.points) lines.push(escape(p.text) + ' [' + p.citations.join(', ') + ']', '')
-    for (const c of r.commands) lines.push('原文操作入口（未执行） [' + c.citation + ']：', '```text', c.command, '```', '')
+    if (turn.modelTimeoutSeconds != null) lines.push(`本轮模型网络等待设置：${turn.modelTimeoutSeconds} 秒。`, '')
+    for (const c of r.commands) lines.push('原文操作入口（未执行） [' + c.citation + ']：', '```text', c.command, '```',
+      c.directory_basis === 'clone_destination' ? '执行位置：你选择的项目存放目录，克隆后再进入仓库。' : c.working_directory ? `执行位置（静态推导）：${escape(c.working_directory)}` : '执行目录尚未确认，请先核对出处。', '')
     if (r.missing.length) lines.push('仍缺资料：', ...r.missing.map((s) => '- ' + escape(s)), '')
     lines.push('下一步（通用建议）：', ...r.next_actions.map((s) => '- ' + escape(s)), '', '出处：')
     for (const source of r.sources) {

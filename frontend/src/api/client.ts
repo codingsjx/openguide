@@ -72,7 +72,9 @@ export interface SearchResult {
 export interface FollowupResult {
   intent: string
   text: string
-  sub_steps: unknown[]
+  sub_steps: import('../types/guide').GuideStep[]
+  preparation_checks?: string[]
+  completion_checks?: string[]
   sources: string[]
   evidence: import('../types/guide').Evidence[]
   revision: string
@@ -83,8 +85,9 @@ export interface FollowupResult {
 }
 
 export const api = {
-  postAsk: (payload: { url: string; question: string; history: string[]; revision?: string; use_llm: boolean }, signal?: AbortSignal) =>
-    request<import('../types/ask').AskResult>('/api/ask', { method: 'POST', body: JSON.stringify(payload), signal }, 90_000),
+  postAsk: (payload: { url: string; question: string; history: string[]; revision?: string; use_llm: boolean; model_timeout_s?: number }, signal?: AbortSignal) =>
+    request<import('../types/ask').AskResult>('/api/ask', { method: 'POST', body: JSON.stringify(payload), signal },
+      Math.max(90_000, ((payload.model_timeout_s ?? 40) + 50) * 1000)),
   postProfile: (url: string) =>
     request<import('../types/profile').Profile>('/api/profile', {
       method: 'POST',

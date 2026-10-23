@@ -103,7 +103,7 @@
 ```json
 {
   "languages": {"python": 0.72, "javascript": 0.28},
-  "build": {"tool": "pyproject.toml", "package_manager": "uv", "test_cmd": "pytest"},
+  "build": {"tool": "pyproject.toml", "package_manager": null, "test_cmd": null, "manifest_paths": ["pyproject.toml"], "scan_status": "root_only"},
   "has_docs": true,
   "has_gfi": {"count": 6, "oldest_days": 3},
   "activity": {"commits_30d": 41, "last_release_days": 12},

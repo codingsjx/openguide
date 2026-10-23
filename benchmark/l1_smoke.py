@@ -191,7 +191,8 @@ def main() -> int:
     check(
         "构建面识别",
         (profile.build.tool, profile.build.package_manager, profile.build.test_cmd)
-        == ("pyproject.toml", "uv", "pytest"),
+        == ("pyproject.toml", None, None)
+        and 'pyproject.toml' in profile.build.manifest_paths,
         f"{profile.build.tool}/{profile.build.package_manager}/{profile.build.test_cmd}",
     )
     check("画像 README 标记", profile.has_readme is True)

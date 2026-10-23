@@ -1,0 +1,394 @@
+{
+  "repo_url": "https://github.com/codingsjx/openguide",
+  "owner": "codingsjx",
+  "repo": "openguide",
+  "default_branch": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "unsuitable": false,
+  "reasons": [
+    "星标 0 较少；社区规模不能单独判断贡献价值",
+    "近 30 天 7 次提交，维护活跃",
+    "有 README，入门信息基础具备",
+    "本次未发现候选新手任务，需进一步查看社区贡献入口",
+    "综合信号偏弱，建议人工确认后再投入"
+  ],
+  "steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "取得本地副本，核对仓库获取方式",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "仓库原文未提供已核验的克隆说明，可查看下方“通用 Git 起步”。那是工具提供的标准操作提示，仓库特殊获取要求仍需核对。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "未取得可核验的对应操作说明"
+      }
+    },
+    {
+      "step_id": 2,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "核对 README.md 中的运行时与工具要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。",
+        "verification": "quote_verified",
+        "line_start": 40,
+        "line_end": 40,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 3,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "核对 frontend/README.md 中的运行时与工具要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "frontend/README.md",
+        "quote": "需先装 Node.js 24 LTS 与 pnpm。",
+        "verification": "quote_verified",
+        "line_start": 7,
+        "line_end": 7,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 4,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "核对 backend/.python-version 中的运行时与工具要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "backend/.python-version",
+        "quote": "3.12",
+        "verification": "quote_verified",
+        "line_start": 1,
+        "line_end": 1,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 5,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "核对 backend/pyproject.toml 中的运行时与工具要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "backend/pyproject.toml",
+        "quote": "requires-python = \">=3.12\"",
+        "verification": "quote_verified",
+        "line_start": 6,
+        "line_end": 6,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 6,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文安装依赖（请核对组件及开发用途）",
+      "command": "uv sync",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "backend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "backend/README.md",
+        "quote": "uv sync                        # 按 uv.lock 安装依赖",
+        "verification": "command_verified",
+        "line_start": 11,
+        "line_end": 11,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 7,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文安装依赖（请核对组件及开发用途）",
+      "command": "pnpm install",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "frontend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "frontend/README.md",
+        "quote": "pnpm install",
+        "verification": "command_verified",
+        "line_start": 11,
+        "line_end": 11,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 8,
+      "stage": "B",
+      "stage_label": "测试基线",
+      "title": "按原文运行测试（先核对组件与范围）",
+      "command": "uv run pytest tests/ -q",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "backend",
+      "directory_basis": "document_context",
+      "required_paths": [
+        "backend/tests"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        6
+      ],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。",
+        "核对测试输出中的失败、跳过与未选中项，并确认实际运行了预期用例。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "uv run pytest tests/ -q        # 69 个单测（评测体系另有 14 个：pytest benchmark/tests）",
+        "verification": "command_verified",
+        "line_start": 45,
+        "line_end": 45,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 9,
+      "stage": "B",
+      "stage_label": "测试基线",
+      "title": "按原文进行构建检查（不等同测试）",
+      "command": "pnpm build",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "frontend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        7
+      ],
+      "context_notes": [
+        "由同目录的 frontend/package.json 中已声明的 build 脚本与原文命令共同推导；请核对当前终端位置。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "核对组件目录与依赖后进行构建，记录退出码和构建输出；构建成功不等同测试通过，本指南未执行。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "frontend/README.md",
+        "quote": "pnpm build              # tsc 类型检查 + 生产构建（产物在 dist/）",
+        "verification": "command_verified",
+        "line_start": 22,
+        "line_end": 22,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 10,
+      "stage": "C",
+      "stage_label": "挑选 issue",
+      "title": "查看任务检索入口，记录待核对的小范围任务",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "查看任务候选与 GitHub 检索入口；没有候选时可人工选题，记录问题、范围和原始来源，再核对维护者规则。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "未取得可核验的对应操作说明"
+      }
+    },
+    {
+      "step_id": 11,
+      "stage": "D",
+      "stage_label": "首次 PR 路径",
+      "title": "待确认仓库 PR 规范与提交要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "未取得可核验的仓库专属 PR 规范。可先按下方通用准备清单整理任务、实际改动和测试记录；提交前仍需核对维护者要求。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "未取得可核验的对应操作说明"
+      }
+    }
+  ],
+  "generation_mode": "heuristic",
+  "stage_modes": {
+    "A": "heuristic",
+    "B": "heuristic",
+    "C": "heuristic",
+    "D": "heuristic"
+  },
+  "requested_mode": "rules",
+  "model_timeout_s": null,
+  "stage_fallbacks": {},
+  "warnings": [
+    "文件证据固定于提交 8c21e6d43798c707b5aa5001112719e832ae95a8；issue 信息是独立采集的快照，操作前需核对最新状态。",
+    "挑选 issue阶段未保留可核验依据，已补充仓库原文规则入口或待确认项。"
+  ],
+  "issue_discovery": {
+    "status": "empty",
+    "reason": "本次标签检索和有限开放 issue 采样没有取得可用候选，不代表仓库没有任务。可查看最新检索结果，或从贡献规范中选择并说明一个小范围任务。",
+    "sampled_at": "2026-10-23T10:44:06.241743+00:00",
+    "sampled_count": 0,
+    "blocked_count": 0,
+    "candidates": [],
+    "search_links": [
+      {
+        "label": "good first issue",
+        "url": "https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
+      },
+      {
+        "label": "help wanted",
+        "url": "https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22"
+      },
+      {
+        "label": "全部开放 issue",
+        "url": "https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen"
+      }
+    ]
+  }
+}

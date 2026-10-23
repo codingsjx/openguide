@@ -1,36 +1,18 @@
 """Assemble a Profile from raw recon signals — pure functions, testable offline.
 
-Language byte counts are normalised to fractions. Build detection keys off the
-root file listing; doc presence off README/CONTRIBUTING/docs/LICENSE.
+Language byte counts are normalised to fractions. Build detection inventories
+root and shallow component manifests; it does not guess runnable commands.
 """
 
 from __future__ import annotations
 
-import re
+from pathlib import PurePosixPath
 
 from backend.core.github.recon import RawSignals
 from backend.core.profile.schema import ActivityInfo, BuildInfo, GfiInfo, Profile
 
-_BUILD_TO_PKG_MANAGER = {
-    "pyproject.toml": "uv",
-    "requirements.txt": "pip",
-    "setup.py": "pip",
-    "package.json": "pnpm",
-    "Cargo.toml": "cargo",
-    "go.mod": "go",
-    "Gemfile": "bundler",
-}
-
-_BUILD_TO_TEST_CMD = {
-    "pyproject.toml": "pytest",
-    "requirements.txt": "pytest",
-    "setup.py": "pytest",
-    "package.json": "npm test",
-    "Cargo.toml": "cargo test",
-    "go.mod": "go test",
-    "Gemfile": "bundle exec rspec",
-}
-
+_BUILD_MANIFESTS = ('pyproject.toml', 'requirements.txt', 'setup.py',
+                    'package.json', 'Cargo.toml', 'go.mod', 'Gemfile')
 
 def _normalise_languages(bytes_: dict[str, int]) -> dict[str, float]:
     total = sum(bytes_.values())
@@ -39,28 +21,40 @@ def _normalise_languages(bytes_: dict[str, int]) -> dict[str, float]:
     return {k: round(v / total, 3) for k, v in sorted(bytes_.items(), key=lambda kv: -kv[1])}
 
 
-def _detect_build(root_entries: dict[str, str]) -> BuildInfo:
-    keys = set(root_entries.keys())
-    tool: str | None = None
-    for marker in _BUILD_TO_PKG_MANAGER:
-        if marker in keys:
-            tool = marker
-            break
-    if tool is None:
-        return BuildInfo()
+def _detect_build(sig: RawSignals) -> BuildInfo:
+    # Filename inventory is not proof of an install tool or a test command.
+    markers = {name.lower() for name in _BUILD_MANIFESTS} | {
+        'makefile', 'gnumakefile', 'dockerfile', 'tox.ini', 'setup.cfg',
+        'composer.json', 'docker-compose.yml', 'docker-compose.yaml', 'compose.yml', 'compose.yaml'}
+    excluded = {'node_modules', 'vendor', 'dist', 'build', '.venv', 'venv', '.git',
+                '__pycache__', 'output', 'tmp', 'fixtures', 'examples', 'samples'}
+    paths = set(sig.file_tree) | {d.path for d in sig.doc_files}
+    if not sig.file_tree:
+        paths.update(sig.root_entries.values())
+    manifests = sorted((path for path in paths
+        if len(path.split('/')) <= 4 and PurePosixPath(path).name.lower() in markers
+        and not any(part.lower() in excluded for part in path.split('/')[:-1])
+        and path not in sig.symlink_paths), key=lambda p: (p.count('/'), p.lower()))
+    status = 'partial' if 'tree' in sig.unavailable_signals else 'tree' if sig.file_tree else 'root_only'
+    if not manifests and 'root' in sig.unavailable_signals and 'tree' in sig.unavailable_signals:
+        status = 'unavailable'
+    if len(manifests) > 24:
+        status = 'partial'
+    primary = next((p for marker in _BUILD_MANIFESTS for p in manifests
+                    if '/' not in p and p.lower() == marker.lower()), None)
+    primary = primary or next((p for marker in _BUILD_MANIFESTS for p in manifests
+                               if PurePosixPath(p).name.lower() == marker.lower()), None)
     return BuildInfo(
-        tool=tool,
-        package_manager=_BUILD_TO_PKG_MANAGER[tool],
-        test_cmd=_BUILD_TO_TEST_CMD.get(tool),
-        has_makefile="makefile" in keys,
-        has_dockerfile="dockerfile" in keys,
+        tool=PurePosixPath(primary or manifests[0]).name if manifests else None,
+        manifest_paths=manifests[:24], scan_status=status,
+        has_makefile=any(PurePosixPath(p).name.lower() in {'makefile', 'gnumakefile'} for p in manifests),
+        has_dockerfile=any(PurePosixPath(p).name.lower() == 'dockerfile' for p in manifests),
     )
 
 
 def build_profile(sig: RawSignals) -> Profile:
     root = sig.root_entries
     meta = sig.meta
-    is_python = "python" in (sig.language_bytes or {})
 
     # Age of oldest open beginner-friendly issue.
     issue_dates = [i.get("created_at", "") for i in sig.issues if i.get("pull_request") is None]
@@ -73,7 +67,7 @@ def build_profile(sig: RawSignals) -> Profile:
         if ages:
             oldest_issue_days = max(ages)
 
-    build = _detect_build(root)
+    build = _detect_build(sig)
 
     return Profile(
         owner=meta.owner,
@@ -86,6 +80,7 @@ def build_profile(sig: RawSignals) -> Profile:
         languages=_normalise_languages(sig.language_bytes),
         license=meta.license,
         default_branch=meta.default_branch,
+        revision=meta.default_branch if len(meta.default_branch) == 40 else '',
         has_readme=any(n in root for n in ("readme.md", "readme.rst", "readme")),
         has_contributing=any(
             name in root for name in ("contributing.md", "contributing")

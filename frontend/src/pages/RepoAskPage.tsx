@@ -17,6 +17,7 @@ function AnswerCard({ turn }: { turn: AskTurn }) {
   return <div ref={top}><Card style={{ marginTop: 16 }} title={`问题 ${turn.id}`}>
     <Paragraph strong>{turn.question}</Paragraph>
     <Tag color={r.mode === 'ai' ? 'blue' : r.mode === 'no_evidence' ? 'orange' : 'default'}>{r.mode === 'ai' ? 'AI 解读 · 引用已匹配原文' : r.mode === 'extractive' ? '原文整理' : '资料不足'}</Tag>
+    {turn.modelTimeoutSeconds != null && <Text type="secondary">本轮模型等待：{turn.modelTimeoutSeconds} 秒。 </Text>}
     {r.fallback_reason && <Text type="secondary">{r.fallback_reason === 'answer_unverified' ? 'AI 解读未通过原文核验' : fallbackLabels[r.fallback_reason] || '本轮未获得可用 AI 解读'}</Text>}
     {r.context_used && <details style={{ marginTop: 8 }}><summary>已承接前文 · 查看本轮理解</summary><Paragraph style={{ whiteSpace: 'pre-wrap' }}>{r.resolved_question}</Paragraph></details>}
     {modelNotes.map((w) => <Paragraph type="secondary" key={w} style={{ marginTop: 8 }}>{w}</Paragraph>)}
@@ -59,6 +60,7 @@ export default function RepoAskPage({ initialUrl }: { initialUrl: string }) {
   const [elapsed, setElapsed] = useState(0)
   const [error, setError] = useState('')
   const [useAi, setUseAi] = useState(true)
+  const [modelTimeout, setModelTimeout] = useState(40)
   const active = useRef<AbortController | null>(null)
   const initialRef = useRef(initialUrl)
 
@@ -87,9 +89,9 @@ export default function RepoAskPage({ initialUrl }: { initialUrl: string }) {
     active.current = controller
     setQuestion(text); setLoading(true); setElapsed(0); setError('')
     try {
-      const result = await api.postAsk({ url:repo, question:text, history:questionsForRequest(turns,repo), revision, use_llm:useAi }, controller.signal)
+      const result = await api.postAsk({ url:repo, question:text, history:questionsForRequest(turns,repo), revision, use_llm:useAi, model_timeout_s:modelTimeout }, controller.signal)
       if (active.current !== controller) return
-      setTurns((old) => [...old, { id:(old.at(-1)?.id ?? 0)+1,question:text,result }])
+      setTurns((old) => [...old, { id:(old.at(-1)?.id ?? 0)+1,question:text,result,modelTimeoutSeconds:useAi ? modelTimeout : undefined }])
       if (/^[0-9a-f]{40}$/.test(result.revision)) setRevision(result.revision)
       setQuestion('')
     } catch (e) {
@@ -112,6 +114,11 @@ export default function RepoAskPage({ initialUrl }: { initialUrl: string }) {
     <Card>
       <label><Text strong>当前仓库</Text><Input aria-label="问答仓库" value={url} maxLength={500} onChange={(e) => { reset(); setUrl(e.target.value) }} placeholder="GitHub 仓库地址" /></label>
       <Space wrap style={{ marginTop: 12 }}><Switch checked={useAi} onChange={setUseAi} disabled={loading} checkedChildren="AI 整理" unCheckedChildren="仅原文" /><Button onClick={reset} disabled={!turns.length && !loading && !question.trim() && !error}>开始新对话</Button><Button onClick={download} disabled={!turns.length}>下载问答记录</Button></Space>
+      <Space wrap style={{ marginTop: 12, marginLeft: 12 }}><label htmlFor="ask-model-timeout">问答模型等待</label><select id="ask-model-timeout" aria-label="问答模型超时" value={modelTimeout} onChange={(e) => setModelTimeout(Number(e.target.value))} disabled={loading || !useAi}
+        style={{ padding:'5px 10px', border:'1px solid #cfddd9', borderRadius:6, background:'#fff', color:'#244d45' }}>
+        {[25, 40, 60, 90, 120].map((seconds) => <option key={seconds} value={seconds}>{seconds} 秒</option>)}
+      </select></Space>
+      <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>此设置只用于下一轮问答，独立于指南设置；延长等待不保证模型成功，超时后仍保留可核验原文。</Paragraph>
       <Paragraph type="secondary" style={{ marginTop: 10, marginBottom: 0 }}>问题和检索片段可能交给当前配置的模型服务，请勿输入密钥或个人信息。上下文仅保留在本页，切换仓库会清空；追问沿用同一文件版本。</Paragraph>
     </Card>
     {!turns.length && <Space wrap style={{ marginTop: 12 }}>{examples.map((text) => <Button key={text} disabled={loading} onClick={() => ask(text)}>{text}</Button>)}</Space>}
@@ -119,7 +126,7 @@ export default function RepoAskPage({ initialUrl }: { initialUrl: string }) {
     <Card style={{ marginTop: 16 }}>
       <label><Text strong>{turns.length ? '继续追问' : '你的问题'}</Text><Input.TextArea aria-label="贡献问答问题" rows={3} maxLength={2000} showCount disabled={loading} value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="例如：测试怎么运行？也可以接着问：这条命令在哪里执行？" /></label>
       <Space wrap style={{ marginTop: 14 }}><Button type="primary" disabled={!url.trim() || !question.trim()} loading={loading} onClick={() => ask()}>发送问题</Button>{loading && <Button onClick={() => { active.current?.abort(); active.current=null; setLoading(false); setError('已停止等待，后台可能仍在处理；你可以重试。') }}>取消等待</Button>}</Space>
-      {loading && <Paragraph type="secondary" style={{ marginTop: 8 }}>正在核对仓库资料并整理回答，已等待 {elapsed} 秒。</Paragraph>}
+      {loading && <Paragraph type="secondary" style={{ marginTop: 8 }}>正在核对仓库资料并整理回答，已等待 {elapsed} 秒。{useAi ? `本轮模型网络等待上限 ${modelTimeout} 秒，另有资料采集时间。` : '本轮仅整理原文。'}</Paragraph>}
       {error && <Alert showIcon type="error" style={{ marginTop: 12 }} message="本轮未完成" description={error} action={<Button size="small" onClick={() => ask()}>重试当前问题</Button>} />}
     </Card>
   </div>

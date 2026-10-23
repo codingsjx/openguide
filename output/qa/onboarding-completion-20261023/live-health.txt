@@ -1,0 +1,170 @@
+- link "跳到仓库输入":
+  - /url: "#start"
+- banner:
+  - link "OpenGuide，前往仓库输入":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+    - generic: 开源贡献，从容开始
+  - link "在 GitHub 查看 OpenGuide 源码":
+    - /url: https://github.com/codingsjx/openguide
+    - img "github":
+    - generic: GitHub
+  - button "api 模型已配置":
+    - img "api":
+    - generic: 模型已配置
+- main:
+  - region "仓库探索动态概览":
+    - generic: YOUR OPEN SOURCE JOURNEY
+    - heading "从理解项目，到开始贡献" [level=1]
+    - img "github":
+    - strong: codingsjx/openguide
+    - paragraph: 先读懂环境与测试入口，再选择一个范围明确的小任务。
+    - generic: 默认分支 master
+    - generic: Python · TypeScript
+    - generic: README 入口
+    - status: 仓库概况已取得
+    - link "查看贡献指南 arrow-right":
+      - /url: "#workspace"
+      - text: 查看贡献指南
+      - img "arrow-right":
+    - generic: 当前查看 · 仓库体检
+    - button "暂停动态装饰":
+      - img "pause":
+      - text: 暂停动效
+    - generic: 仓库资料
+    - generic: 项目说明
+    - generic: 构建与测试
+    - generic: 贡献约定
+    - generic "环境、测试、选题、PR，贡献路径示意":
+      - generic: A
+      - text: 环境
+      - img "arrow-right":
+      - generic: B
+      - text: 测试
+      - img "arrow-right":
+      - generic: C
+      - text: 选题
+      - img "arrow-right":
+      - generic: D
+      - text: PR
+      - emphasis: 路径示意
+  - region "当前探索的仓库":
+    - heading "当前探索的仓库" [level=2]
+    - img "github":
+    - text: GitHub 公开仓库
+    - img "github":
+    - textbox "GitHub 仓库地址":
+      - /placeholder: https://github.com/owner/repo
+      - text: https://github.com/codingsjx/openguide
+    - button "rocket 生成路线图 arrow-right":
+      - img "rocket":
+      - generic: 生成路线图
+      - img "arrow-right":
+    - generic: 先看看怎么用
+    - button "体验 requests 示例 arrow-right":
+      - text: 体验 requests 示例
+      - img "arrow-right":
+    - button "upload 导入已保存指南 · 离线查看":
+      - img "upload":
+      - generic: 导入已保存指南
+      - generic: · 离线查看
+    - generic: Enter ↵
+  - region "仓库贡献工作台":
+    - generic: 贡献工作区
+    - link "github codingsjx/openguide arrow-right":
+      - /url: https://github.com/codingsjx/openguide
+      - img "github":
+      - text: codingsjx/openguide
+      - img "arrow-right":
+    - tablist:
+      - tab "thunderbolt 贡献指南":
+        - img "thunderbolt":
+        - generic: 贡献指南
+      - tab "rocket 仓库体检" [active] [selected]:
+        - img "rocket":
+        - generic: 仓库体检
+      - tab "question-circle 贡献问答":
+        - img "question-circle":
+        - generic: 贡献问答
+    - tabpanel "rocket 仓库体检":
+      - heading "github codingsjx/openguide" [level=4]:
+        - img "github":
+        - text: codingsjx/openguide
+      - generic: （无描述）
+      - generic: "License: NOASSERTION"
+      - generic: 默认分支 master
+      - generic: README
+      - generic: docs/
+      - generic: 需进一步确认
+      - generic: Star
+      - img "star":
+      - generic: "0"
+      - generic: Fork
+      - img "branches":
+      - generic: "0"
+      - generic: open issues
+      - img "comment":
+      - generic: "0"
+      - generic: 30 天提交
+      - generic: "7"
+      - strong: 语言构成
+      - generic: Python
+      - progressbar:
+        - generic "83%"
+      - generic: TypeScript
+      - progressbar:
+        - generic "15%"
+      - generic: CSS
+      - progressbar:
+        - generic "2%"
+      - generic: Dockerfile
+      - progressbar:
+        - generic "1%"
+      - generic: HTML
+      - progressbar:
+        - generic "0%"
+      - generic: Batchfile
+      - progressbar:
+        - generic "0%"
+      - strong: 构建与测试
+      - link "file-text docker-compose.yml":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/docker-compose.yml
+        - img "file-text":
+        - text: docker-compose.yml
+      - link "file-text backend/Dockerfile":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/Dockerfile
+        - img "file-text":
+        - text: backend/Dockerfile
+      - link "file-text backend/pyproject.toml":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/pyproject.toml
+        - img "file-text":
+        - text: backend/pyproject.toml
+      - link "file-text frontend/Dockerfile":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/frontend/Dockerfile
+        - img "file-text":
+        - text: frontend/Dockerfile
+      - link "file-text frontend/package.json":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/frontend/package.json
+        - img "file-text":
+        - text: frontend/package.json
+      - generic: 按已取得的文件树中的文件名识别，最多展示 24 份；不据此推测包管理器或测试命令。具体操作请查看贡献指南与原文。
+      - strong: 规则体检建议
+      - list:
+        - listitem: 星标 0 较少；社区规模不能单独判断贡献价值
+        - listitem: 近 30 天 7 次提交，维护活跃
+        - listitem: 有 README，入门信息基础具备
+        - listitem: 本次未发现候选新手任务，需进一步查看社区贡献入口
+        - listitem: 综合信号偏弱，建议人工确认后再投入
+- contentinfo:
+  - link "apartment OpenGuide":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+  - generic: 让开源的第一步，更清晰一点。
+  - img "safety-certificate":
+  - text: 核对原文，再开始行动
+  - link "项目说明 arrow-right":
+    - /url: https://github.com/codingsjx/openguide#readme
+    - text: 项目说明
+    - img "arrow-right":

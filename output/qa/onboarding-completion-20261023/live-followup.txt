@@ -1,0 +1,251 @@
+- link "跳到仓库输入":
+  - /url: "#start"
+- banner:
+  - link "OpenGuide，前往仓库输入":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+    - generic: 开源贡献，从容开始
+  - link "在 GitHub 查看 OpenGuide 源码":
+    - /url: https://github.com/codingsjx/openguide
+    - img "github":
+    - generic: GitHub
+  - button "api 模型已配置":
+    - img "api":
+    - generic: 模型已配置
+- main:
+  - region "仓库探索动态概览":
+    - generic: YOUR OPEN SOURCE JOURNEY
+    - heading "从理解项目，到开始贡献" [level=1]
+    - img "github":
+    - strong: codingsjx/openguide
+    - paragraph: 先读懂环境与测试入口，再选择一个范围明确的小任务。
+    - generic: 默认分支 master
+    - generic: Python · TypeScript
+    - generic: README 入口
+    - status: 仓库概况已取得
+    - link "查看贡献指南 arrow-right":
+      - /url: "#workspace"
+      - text: 查看贡献指南
+      - img "arrow-right":
+    - generic: 当前查看 · 贡献指南
+    - button "暂停动态装饰":
+      - img "pause":
+      - text: 暂停动效
+    - generic: 仓库资料
+    - generic: 项目说明
+    - generic: 构建与测试
+    - generic: 贡献约定
+    - generic "环境、测试、选题、PR，贡献路径示意":
+      - generic: A
+      - text: 环境
+      - img "arrow-right":
+      - generic: B
+      - text: 测试
+      - img "arrow-right":
+      - generic: C
+      - text: 选题
+      - img "arrow-right":
+      - generic: D
+      - text: PR
+      - emphasis: 路径示意
+  - region "当前探索的仓库":
+    - heading "当前探索的仓库" [level=2]
+    - img "github":
+    - text: GitHub 公开仓库
+    - img "github":
+    - textbox "GitHub 仓库地址":
+      - /placeholder: https://github.com/owner/repo
+      - text: https://github.com/codingsjx/openguide
+    - button "rocket 生成路线图 arrow-right":
+      - img "rocket":
+      - generic: 生成路线图
+      - img "arrow-right":
+    - generic: 先看看怎么用
+    - button "体验 requests 示例 arrow-right":
+      - text: 体验 requests 示例
+      - img "arrow-right":
+    - button "upload 导入已保存指南 · 离线查看":
+      - img "upload":
+      - generic: 导入已保存指南
+      - generic: · 离线查看
+    - generic: Enter ↵
+  - region "仓库贡献工作台":
+    - generic: 贡献工作区
+    - link "github codingsjx/openguide arrow-right":
+      - /url: https://github.com/codingsjx/openguide
+      - img "github":
+      - text: codingsjx/openguide
+      - img "arrow-right":
+    - tablist:
+      - tab "thunderbolt 贡献指南" [selected]:
+        - img "thunderbolt":
+        - generic: 贡献指南
+      - tab "rocket 仓库体检":
+        - img "rocket":
+        - generic: 仓库体检
+      - tab "question-circle 贡献问答":
+        - img "question-circle":
+        - generic: 贡献问答
+    - tabpanel "thunderbolt 贡献指南":
+      - generic: CONTRIBUTION GUIDE
+      - heading "生成贡献指南" [level=4]
+      - text: 输入仓库后生成
+      - strong: 结构化、带证据
+      - text: 的分步新手贡献指南（Stage A 环境搭建 → B 测试 → C 挑 issue → D 首 PR）。
+      - textbox "仓库 URL": https://github.com/codingsjx/openguide
+      - button "thunderbolt 用 AI 生成":
+        - img "thunderbolt":
+        - generic: 用 AI 生成
+      - button "快速(本地规则)":
+        - generic: 快速(本地规则)
+      - button "clock-circle 超时设置 · 60 秒":
+        - img "clock-circle":
+        - generic: 超时设置 · 60 秒
+      - generic: 11 步
+      - button "保存指南 JSON":
+        - generic: 保存指南 JSON
+      - alert:
+        - img "info-circle":
+        - generic: 规则模式 · 由你选择
+        - text: 你选择了“快速（本地规则）”，这次生成没有调用模型。命令仍需在本机验证。
+        - button "用 AI 重新生成":
+          - generic: 用 AI 重新生成
+      - generic: 当前 · 环境搭建
+      - generic: 规则整理
+      - generic "生成详情与各阶段来源"
+      - generic "资料版本与核验说明 · 8c21e6d43798"
+      - button "1 环境搭建 7 步":
+        - generic: "1"
+        - generic: 环境搭建
+        - generic: 7 步
+      - button "2 测试基线 2 步":
+        - generic: "2"
+        - generic: 测试基线
+        - generic: 2 步
+      - button "3 挑选 issue 1 步":
+        - generic: "3"
+        - generic: 挑选 issue
+        - generic: 1 步
+      - button "4 首次 PR 路径 1 步":
+        - generic: "4"
+        - generic: 首次 PR 路径
+        - generic: 1 步
+      - generic: A
+      - strong: 环境搭建
+      - heading "第 6/11 步 · 按原文安装依赖（请核对组件及开发用途）" [level=5]
+      - strong: 建议执行位置（按原文上下文推导）：
+      - text: backend
+      - generic: 依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。
+      - code: uv sync
+      - text: 复制完整命令
+      - button "复制":
+        - img "copy":
+      - img "check-circle":
+      - text: 期望：按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。
+      - strong: 基础完成检查（通用）：
+      - generic: 命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。
+      - link "file-text backend/README.md":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L11
+        - img "file-text":
+        - text: backend/README.md
+      - generic "通用 Git 起步与环境准备 · 工具提供"
+      - button "zoom-in 这步太粗":
+        - img "zoom-in":
+        - generic: 这步太粗
+      - button "question-circle 看不懂为什么":
+        - img "question-circle":
+        - generic: 看不懂为什么
+      - button "bug 报错了":
+        - img "bug":
+        - generic: 报错了
+      - strong: 更细的步骤
+      - generic: 按“开始前核对 → 原文操作 → 结果检查”继续。通用检查由工具提供；下面带出处的内容取自仓库，尚未执行。
+      - generic: 原文匹配只证明出处存在，不代表已确认根因或执行过命令。本次展示已核验的检索原文。
+      - strong: 1. 开始前核对（工具提供）
+      - list:
+        - listitem: 先打开固定版本出处，核对当前组件、操作系统及前置条件。
+        - listitem: 在新的终端确认当前位置为 backend；勿在其他组件目录执行。
+        - listitem: 安装依赖前先确认所需工具可用；已有配置文件先检查，不覆盖本地密钥或环境。
+      - strong: 2. 仓库原文中的要求与操作
+      - strong: 核对 README.md 中的运行时与工具要求
+      - generic: 需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。
+      - generic: 先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。
+      - link "file-text README.md":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/README.md#L40
+        - img "file-text":
+        - text: README.md
+      - strong: 核对 backend/.python-version 中的运行时与工具要求
+      - generic: "3.12"
+      - generic: 先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。
+      - link "file-text backend/.python-version":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/.python-version#L1
+        - img "file-text":
+        - text: backend/.python-version
+      - strong: 核对 backend/pyproject.toml 中的运行时与工具要求
+      - generic: requires-python = ">=3.12"
+      - generic: 先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。
+      - link "file-text backend/pyproject.toml":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/pyproject.toml#L6
+        - img "file-text":
+        - text: backend/pyproject.toml
+      - strong: 按原文执行当前操作
+      - generic: 执行位置：backend
+      - code: uv sync
+      - button "复制":
+        - img "copy":
+      - generic: 记录实际退出码和输出；没有代你执行，不预设通过数量。
+      - link "file-text backend/README.md":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L11
+        - img "file-text":
+        - text: backend/README.md
+      - strong: 3. 如何判断与继续（工具提供）
+      - list:
+        - listitem: 命令结束后记录退出码、失败与跳过项及实际运行范围；未运行时保留“未运行”。
+        - listitem: 有异常时点击“报错了”，粘贴脱敏日志继续排查，不要直接标记完成。
+      - generic "资料版本与核验说明 · 8c21e6d43798"
+      - link "file-text backend/README.md":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L7-L14
+        - img "file-text":
+        - text: backend/README.md
+      - generic "原文摘录（L7-L14）"
+      - generic: "需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。 ```bash cd backend uv sync # 按 uv.lock 安装依赖 uv run pytest tests/ -q # 68 个单测 uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 ```"
+      - link "file-text backend/README.md":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L1-L27
+        - img "file-text":
+        - text: backend/README.md
+      - generic "原文摘录（L1-L27）"
+      - button "left 上一步":
+        - img "left":
+        - generic: 上一步
+      - button "仅查看下一步":
+        - generic: 仅查看下一步
+      - button "完成并下一步 right":
+        - generic: 完成并下一步
+        - img "right":
+      - img "file-text":
+      - generic: 证据面板
+      - strong: 当前步骤：
+      - generic: 按原文安装依赖（请核对组件及开发用途）
+      - text: 证据来源
+      - link "file-text backend/README.md":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L11
+        - img "file-text":
+        - text: backend/README.md
+      - generic: 命令已匹配原文，尚未执行验证
+      - code: "uv sync # 按 uv.lock 安装依赖"
+      - link "打开原始出处 ↗":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L11
+        - generic: 打开原始出处 ↗
+- contentinfo:
+  - link "apartment OpenGuide":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+  - generic: 让开源的第一步，更清晰一点。
+  - img "safety-certificate":
+  - text: 核对原文，再开始行动
+  - link "项目说明 arrow-right":
+    - /url: https://github.com/codingsjx/openguide#readme
+    - text: 项目说明
+    - img "arrow-right":

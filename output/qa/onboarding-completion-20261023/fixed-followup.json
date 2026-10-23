@@ -1,0 +1,125 @@
+{
+  "text": "按“开始前核对 → 原文操作 → 结果检查”继续。通用检查由工具提供；下面带出处的内容取自仓库，尚未执行。",
+  "preparation_checks": [
+    "先打开固定版本出处，核对当前组件、操作系统及前置条件。",
+    "在新的终端确认当前位置为 backend；勿在其他组件目录执行。",
+    "安装依赖前先确认所需工具可用；已有配置文件先检查，不覆盖本地密钥或环境。"
+  ],
+  "completion_checks": [
+    "命令结束后记录退出码、失败与跳过项及实际运行范围；未运行时保留“未运行”。",
+    "有异常时点击“报错了”，粘贴脱敏日志继续排查，不要直接标记完成。"
+  ],
+  "sub_steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "核对 README.md 中的运行时与工具要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。",
+        "verification": "quote_verified",
+        "line_start": 40,
+        "line_end": 40,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 2,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "核对 backend/pyproject.toml 中的运行时与工具要求",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "backend/pyproject.toml",
+        "quote": "requires-python = \">=3.12\"",
+        "verification": "quote_verified",
+        "line_start": 6,
+        "line_end": 6,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 3,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文执行当前操作",
+      "command": "uv sync",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "backend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "记录实际退出码和输出；没有代你执行，不预设通过数量。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "backend/README.md",
+        "quote": "uv sync                        # 按 uv.lock 安装依赖",
+        "verification": "command_verified",
+        "line_start": 11,
+        "line_end": 11,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "file",
+      "source": "backend/README.md",
+      "quote": "需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。\n\n```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 68 个单测\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```",
+      "verification": "quote_verified",
+      "line_start": 7,
+      "line_end": 14,
+      "reason": "原文匹配不等于命令已运行或建议语义正确"
+    },
+    {
+      "kind": "file",
+      "source": "backend/README.md",
+      "quote": "# OpenGuide 后端（FastAPI）\n\n仓库勘探 → 画像 → 四视角分层索引 → 结构化指南生成 + 证据校验 + 三步追问。\n\n## 运行\n\n需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。\n\n```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 68 个单测\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```\n\n可选：复制 `.env.example` 为 `.env`，填 `GITHUB_TOKEN` 提升 GitHub 限流；\n填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` 启用 AI 生成。不填也能跑：\n生成会走确定性启发式路径，测试与 CI 均在该路径下验证。\n\n> 测试默认走 hermetic 路径（`conftest.py` 设 `USE_CHROMA=false`），\n> 不下载嵌入模型，秒级完成。需要真实向量检索时设 `USE_CHROMA=true`。\n\n## 目录\n\n| 路径 | 说明 |\n|---|---|\n| `src/backend/api/` | HTTP 层：profile / search / guide / followup / settings 路由 |",
+      "verification": "quote_verified",
+      "line_start": 1,
+      "line_end": 27,
+      "reason": "原文匹配不等于命令已运行或建议语义正确"
+    }
+  ]
+}

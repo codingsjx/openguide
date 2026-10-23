@@ -11,7 +11,7 @@ export function parseSavedGuide(text: string): Guide {
   if (data.model_timeout_s != null && (!Number.isInteger(data.model_timeout_s) || data.model_timeout_s < 10 || data.model_timeout_s > 120)) throw new Error('模型超时设置无效')
   if (data.stage_fallbacks != null && (typeof data.stage_fallbacks !== 'object' || Array.isArray(data.stage_fallbacks) ||
       Object.entries(data.stage_fallbacks).some(([stage, reason]) => !['A', 'B', 'C', 'D'].includes(stage) ||
-        !['not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited', 'model_error', 'invalid_output', 'evidence_unverified', 'incomplete_workflow'].includes(reason as string)))) {
+        !['not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited', 'model_error', 'invalid_output', 'evidence_unverified', 'incomplete_workflow', 'no_stage_evidence'].includes(reason as string)))) {
     throw new Error('阶段回退原因格式无效')
   }
   if (data.stage_modes != null && (typeof data.stage_modes !== 'object' || Array.isArray(data.stage_modes) ||

@@ -88,5 +88,7 @@ def follow_up(req: FollowupRequest) -> dict:
         "mode": r.mode,
         "diagnostic_category": r.diagnostic_category,
         "local_checks": r.local_checks,
+        "preparation_checks": r.preparation_checks,
+        "completion_checks": r.completion_checks,
         "warnings": list(dict.fromkeys(sig.collection_warnings + r.warnings)),
     }

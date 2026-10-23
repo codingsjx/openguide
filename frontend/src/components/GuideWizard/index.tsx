@@ -27,6 +27,7 @@ import { api, type FollowupResult } from '../../api/client'
 import type { Evidence, Guide, GuideStep } from '../../types/guide'
 import ContributionWorkbench from '../ContributionWorkbench'
 import GuideStatus, { GuideNotices } from '../GuideStatus'
+import GuideEntryHelp from '../GuideEntryHelp'
 
 const { Paragraph, Text, Title } = Typography
 
@@ -164,6 +165,27 @@ function FollowupBar({
             {result.text}
           </Paragraph>
           <Paragraph type="secondary" style={{ marginTop: 8 }}>原文匹配只证明出处存在，不代表已确认根因或执行过命令。{result.mode === 'rules' ? '本次使用本地规则与检索。' : result.mode === 'llm_evidence_selection' ? '本次由 AI 选择原文，再逐字核验。' : '本次展示已核验的检索原文。'}</Paragraph>
+          {Boolean(result.preparation_checks?.length) && <div style={{ marginTop: 12 }}>
+            <Text strong>1. 开始前核对（工具提供）</Text>
+            <ol>{result.preparation_checks!.map((item) => <li key={item}>{item}</li>)}</ol>
+          </div>}
+          {result.sub_steps.length > 0 && <div style={{ marginTop: 12 }}>
+            <Text strong>2. 仓库原文中的要求与操作</Text>
+            {result.sub_steps.map((child) => <Card key={child.step_id} size="small" style={{ marginTop: 8 }}>
+              <Text strong>{child.title}</Text>
+              {child.command && <>
+                <Paragraph type="secondary" style={{ marginTop: 8 }}>执行位置：{child.directory_basis === 'clone_destination' ? '你选择的项目存放目录' : child.working_directory === '.' ? '仓库根目录' : child.working_directory || '尚未确认，请先核对出处'}</Paragraph>
+                <Paragraph copyable={{ text: child.command }} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}><Text code>{child.command}</Text></Paragraph>
+              </>}
+              {!child.command && <Paragraph style={{ marginTop: 8, whiteSpace: 'pre-wrap' }}>{child.evidence.quote}</Paragraph>}
+              <Paragraph type="secondary">{child.expected}</Paragraph>
+              <EvidenceBadge guide={{ ...guide, default_branch: result.revision }} ev={child.evidence} />
+            </Card>)}
+          </div>}
+          {Boolean(result.completion_checks?.length) && <div style={{ marginTop: 12 }}>
+            <Text strong>3. 如何判断与继续（工具提供）</Text>
+            <ol>{result.completion_checks!.map((item) => <li key={item}>{item}</li>)}</ol>
+          </div>}
           <GuideNotices guide={{ ...guide, default_branch: result.revision }} warnings={result.warnings} />
           {Boolean(result.local_checks?.length) && <div style={{ marginTop: 12 }}>
             <Text strong>通用本机检查（工具提供，非仓库原文）</Text>
@@ -396,6 +418,7 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
               <EvidenceBadge guide={guide} ev={step.evidence} />
             </div>
 
+            <GuideEntryHelp guide={guide} stage={step.stage} expanded={step.evidence.kind === 'missing'} />
             {!guide.is_demo && !guide.is_saved && <FollowupBar key={`${guide.default_branch}:${step.step_id}`} step={step} url={url} guide={guide} />}
           </Card>
         )}

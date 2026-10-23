@@ -53,3 +53,17 @@ def test_retry_attempts_are_distinct_from_recorded_responses(monkeypatch):
     assert client.attempt_count == 2 and len(client.trace) == 1
     assert client.trace[0]['response_id'] == 'test-response'
     assert client.trace[0]['attempt'] == 2
+
+
+def test_timing_records_never_log_keys_provider_urls_or_prompt_content(monkeypatch,caplog):
+    import pytest
+    from backend.core.generate.llm import LLMUnavailable
+    client=LLMClient(timeout_s=40,retry_limit=0)
+    client._key='private-test-key';client._base='https://provider.invalid/private-path'
+    def fail(*a,**k):raise httpx.ReadTimeout('private provider diagnostic')
+    monkeypatch.setattr(httpx,'post',fail)
+    with pytest.raises(LLMUnavailable):client.chat_json([{'role':'user','content':'private prompt'}])
+    assert client.request_events[0]['result']=='timeout'
+    assert client.request_events[0]['elapsed_ms']>=0
+    for value in ['private-test-key','private-path','private provider diagnostic','private prompt']:
+        assert value not in caplog.text and value not in str(client.request_events)

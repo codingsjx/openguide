@@ -20,6 +20,10 @@ from backend.core.generate.schemas import Evidence, GuideStep
 from backend.core.generate.evidence import verify_step_evidence
 from backend.core.index.service import RepoIndex
 from backend.core.followup.diagnostics import diagnostic_plan
+from backend.core.ask.scope import path_component, source_allowed
+from backend.core.generate.prerequisites import runtime_steps
+from backend.core.generate.workflow import prepare_workflow
+from backend.core.generate.command_context import STAGE_COMMAND_PATTERNS
 
 _DIAGNOSE_SYSTEM = (
     "你是 OpenGuide 的报错定位助手。根据用户粘贴的报错日志和仓库上下文，"
@@ -52,6 +56,8 @@ class FollowupResult:
     warnings: list[str] = field(default_factory=list)
     diagnostic_category: str = ""
     local_checks: list[dict[str, str]] = field(default_factory=list)
+    preparation_checks: list[str] = field(default_factory=list)
+    completion_checks: list[str] = field(default_factory=list)
 
 
 def _clean_snippet(text: str) -> str:
@@ -99,7 +105,56 @@ def granular(index: RepoIndex, step: GuideStep, query: str = "") -> FollowupResu
     q = query or f"{step.title} {step.command or ''}"
     kind = _STAGE_TO_KIND.get(step.stage, "setup")
     snips = _top_snippets(index, q, kind=kind, top_k=5)
+    component = path_component(step.evidence.source) or path_component(step.working_directory or '')
+    snips = [s for s in snips if source_allowed(s['source'], query, component, kind)]
+    signals = getattr(index, 'signals', None)
+    sub_steps, before, after = [], [], []
+    # The request's command is untrusted. It becomes an operation only after
+    # literal source verification, never merely because it was posted by a UI.
+    if signals and step.command:
+        operation = step.model_copy(deep=True)
+        operation.execution_record = None
+        operation.evidence = verify_step_evidence(operation, signals)
+        if operation.evidence.verification == 'command_verified' and re.match(STAGE_COMMAND_PATTERNS[step.stage], operation.command):
+            operation = prepare_workflow(signals, [operation])[0]
+            component = path_component(operation.working_directory or '') or path_component(operation.evidence.source)
+            snips = [s for s in _top_snippets(index, q, kind=kind, top_k=5)
+                     if source_allowed(s['source'], query, component, kind)]
+            operation.title = '按原文执行当前操作'
+            operation.expected = '记录实际退出码和输出；没有代你执行，不预设通过数量。'
+            before = ['先打开固定版本出处，核对当前组件、操作系统及前置条件。',
+                      '在你选择的项目存放目录执行，克隆后再进入仓库。' if operation.directory_basis == 'clone_destination' else
+                      f"在新的终端确认当前位置为 {operation.working_directory}；勿在其他组件目录执行。" if operation.working_directory else '执行目录尚未确认；先在出处中找到目录说明，再运行命令。']
+            if step.stage == 'A':
+                before.append('安装依赖前先确认所需工具可用；已有配置文件先检查，不覆盖本地密钥或环境。')
+                sub_steps.extend(runtime_steps(signals, component))
+            elif step.stage == 'B':
+                before.append('先完成该组件的依赖安装；构建检查与测试分开记录，局部测试不代表完整测试。')
+            sub_steps.append(operation)
+            after = ['命令结束后记录退出码、失败与跳过项及实际运行范围；未运行时保留“未运行”。',
+                     '有异常时点击“报错了”，粘贴脱敏日志继续排查，不要直接标记完成。']
+            # Retain the current source even when token retrieval missed it.
+            source = operation.evidence.source.split('#', 1)[0]
+            doc = next((d for d in signals.doc_files if d.path == source), None)
+            if doc:
+                line = (operation.evidence.line_start or 1) - 1
+                quote = '\n'.join(doc.text.splitlines()[max(0, line - 4):line + 5])
+                snips.insert(0, {'source': source, 'text': quote})
+    elif signals and step.stage == 'A':
+        sub_steps = runtime_steps(signals, component)
+    # Non-command contribution tasks still get a concrete preparation flow;
+    # these are explicitly tool-provided checks, not repository policy claims.
+    if step.stage in {'C', 'D'}:
+        before = ['打开任务及最新讨论，核对是否已有人负责、已有对应 PR 或需要先沟通。',
+                  '写明一个可复现的问题、改动范围和验收方法；没有 issue 时记录人工选题来源。']
+        after = ['在贡献工作台记录实际修改文件与测试结果；没有修改时先停留在任务准备阶段。',
+                 '按仓库最新模板和维护者要求审阅草稿，再决定是否提交。']
+    for i, child in enumerate(sub_steps, 1):
+        child.step_id = i
+        child.prerequisite_step_ids = []
     text = "以下为当前阶段的仓库原文，请打开来源核对前置条件；这些摘录不代表已拆解为可直接执行的步骤。" if snips else "（没有检索到可核验的更细资料，请先查看原始出处）"
+    if sub_steps or before:
+        text = '按“开始前核对 → 原文操作 → 结果检查”继续。通用检查由工具提供；下面带出处的内容取自仓库，尚未执行。'
     if step.stage == 'C' and not snips:
         text = ("未检索到可核验的候选资料。可在贡献工作台查看采集情况和检索入口；"
             f"也可打开 https://github.com/{index.owner}/{index.repo}/issues 人工筛选开放任务。"
@@ -109,6 +164,7 @@ def granular(index: RepoIndex, step: GuideStep, query: str = "") -> FollowupResu
         text=text,
         sources=[s["source"] for s in snips if s["source"]],
         evidence=_evidence(index, snips),
+        sub_steps=sub_steps, preparation_checks=before, completion_checks=after,
     )
 
 

@@ -25,7 +25,9 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
     .map(([name, frac]) => ({ name, pct: Math.round(frac * 100) }))
   const build = profile.build
   const unavailable = new Set(profile.unavailable_signals ?? [])
-  const hasBuildInfo = Boolean(build?.tool || build?.test_cmd)
+  const manifests = build?.manifest_paths ?? []
+  const hasBuildInfo = Boolean(manifests.length || build?.tool || build?.test_cmd)
+  const buildScope = build?.scan_status === 'tree' ? '已取得的文件树' : '已取得的部分目录'
 
   return (
     <Card className="profile-card" style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -122,11 +124,15 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
             alignItems: 'center',
           }}
         >
-          <Tag icon={<FileTextOutlined />}>
-            {hasBuildInfo ? `构建: ${build!.tool}` : '未识别到构建文件'}
-          </Tag>
+          {manifests.length ? manifests.map((path) => <a key={path} target="_blank" rel="noreferrer"
+            href={`https://github.com/${profile.owner}/${profile.repo}/blob/${encodeURIComponent(profile.revision || profile.default_branch)}/${path.split('/').map(encodeURIComponent).join('/')}`}>
+            <Tag icon={<FileTextOutlined />}>{path}</Tag>
+          </a>) : <Tag icon={<FileTextOutlined />}>
+            {hasBuildInfo ? `配置文件: ${build!.tool}` : build?.scan_status === 'unavailable' ? '构建配置暂未取得' : `在${buildScope}中未识别到支持的构建配置`}
+          </Tag>}
           {build?.test_cmd && <Tag color="purple">候选测试（未核验）: {build.test_cmd}</Tag>}
         </div>
+        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>按{buildScope}中的文件名识别，最多展示 24 份；不据此推测包管理器或测试命令。具体操作请查看贡献指南与原文。</Paragraph>
       </div>
 
       <div style={{ marginTop: 14 }}>

@@ -28,3 +28,10 @@ test('download keeps provenance and missing information rather than claiming exe
   assert.ok(text.includes(r.revision))
   assert.match(text,/Makefile/)
 })
+
+test('download preserves working directory and the actual question wait setting',()=>{
+  const r=result();r.commands=[{command:'uv run pytest tests/ -q',citation:'S1',working_directory:'backend',directory_basis:'document_context'}]
+  const text=conversationMarkdown([{id:1,question:'后端测试？',result:r,modelTimeoutSeconds:60}])
+  assert.match(text,/执行位置（静态推导）：backend/)
+  assert.match(text,/等待设置：60 秒/)
+})

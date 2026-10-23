@@ -61,7 +61,8 @@ _BUILD_FILES = ("Makefile", "makefile", "GNUmakefile", "pyproject.toml",
                 "package.json", "tox.ini", "setup.cfg", "setup.py",
                 "Cargo.toml", "go.mod", "Gemfile", "composer.json",
                 "requirements.txt", "requirements-dev.txt", "Dockerfile",
-                "docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml")
+                "docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml",
+                ".python-version", ".node-version", ".nvmrc", ".tool-versions")
 
 _MAX_DOC_SIZE = 200_000  # skip absurdly large docs
 

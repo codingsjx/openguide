@@ -38,6 +38,11 @@ test('stage generation modes are preserved and invalid modes rejected', () => {
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))
 })
 
+test('import preserves the no-context skipped-call reason',()=>{
+  const f=fixture();f.requested_mode='ai';f.stage_fallbacks={C:'no_stage_evidence'}
+  assert.deepEqual(parseSavedGuide(JSON.stringify(f)).stage_fallbacks,{C:'no_stage_evidence'})
+})
+
 test('request provenance and safe fallback codes survive export/import', () => {
   const f = fixture(); f.requested_mode = 'ai'; f.stage_fallbacks = { A: 'model_timeout' }
   assert.equal(parseSavedGuide(JSON.stringify(f)).stage_fallbacks.A, 'model_timeout')
