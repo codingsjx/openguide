@@ -24,6 +24,7 @@ import GuideWizard from '../components/GuideWizard'
 import type { Guide } from '../types/guide'
 import { parseSavedGuide } from '../types/savedGuide'
 import LandingJourney from '../components/LandingJourney'
+import WorkspaceHero from '../components/WorkspaceHero'
 
 const DEMO_URL = 'https://github.com/psf/requests'
 
@@ -113,7 +114,6 @@ export default function HomePage() {
       <header className="topbar">
         <div className="topbar-inner">
           <a className="brand" href="#start" aria-label="OpenGuide，前往仓库输入"><span className="brand-mark"><ApartmentOutlined /></span><span>OpenGuide<span className="brand-caption">开源贡献，从容开始</span></span></a>
-          <nav className="site-nav" aria-label="网站导航"><a href="#start">开始探索</a>{showGuide ? <a href="#workspace" className="nav-current">贡献工作台</a> : <a href="#how-it-works">使用流程</a>}</nav>
           <div className="topbar-actions"><a className="github-link" href="https://github.com/codingsjx/openguide" target="_blank" rel="noreferrer" aria-label="在 GitHub 查看 OpenGuide 源码"><GithubOutlined /><span>GitHub</span></a><LlmSettings /></div>
         </div>
       </header>
@@ -128,7 +128,8 @@ export default function HomePage() {
             <div className="trust-row"><span><CheckCircleOutlined /> 分步贡献路线</span><span><LinkOutlined /> 原文证据可查</span><span><QuestionCircleOutlined /> 随时继续追问</span></div>
           </div>
           <LandingJourney />
-        </section> : <section className="workspace-intro"><div><div className="section-kicker">YOUR CONTRIBUTION WORKSPACE</div><h1>你的开源贡献工作台</h1><p>{loading ? '正在读取仓库资料，准备你的贡献路线。' : '一步一步向前，每个建议都值得核对。'}</p></div><span className="workspace-intro-badge"><SafetyCertificateOutlined /> 以仓库原文为依据</span></section>}
+        </section> : <WorkspaceHero loading={loading} demo={demoMode} profile={profile} guide={savedGuide}
+          url={loading ? url : workspaceUrl} tab={tab} onViewChange={setTab} />}
 
         <section className="search-panel" id="start" aria-labelledby="search-title" aria-busy={loading}>
           <div className="panel-heading"><div><span className="section-kicker">{showGuide ? 'REPOSITORY' : 'START YOUR JOURNEY'}</span><h2 id="search-title">{showGuide ? '当前探索的仓库' : '你的第一站，是哪个仓库？'}</h2></div><span className="search-panel-hint"><GithubOutlined /> GitHub 公开仓库</span></div>
