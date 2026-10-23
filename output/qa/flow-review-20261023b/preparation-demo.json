@@ -1,0 +1,18 @@
+{
+  "format": "openguide.contribution-preparation.v1",
+  "repo_url": "https://github.com/codingsjx/openguide",
+  "reference_revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "input": {
+    "task": "【页面模拟】保存尚未形成改动的任务",
+    "issueUrl": "",
+    "problem": "仅用于测试贡献准备记录的恢复；不是实际贡献任务，没有修改文件或运行测试。",
+    "changeSummary": "",
+    "baseRevision": "",
+    "files": "",
+    "patch": "",
+    "testStatus": "not_run",
+    "testCommand": "",
+    "testExitCode": "",
+    "testOutput": ""
+  }
+}

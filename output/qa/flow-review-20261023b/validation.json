@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-23",
+  "backend_changed": false,
+  "checks": {
+    "frontend_passed": 55,
+    "build_exit_code": 0,
+    "lint_exit_code": 0,
+    "partial_preparation_download_and_restore": true,
+    "import_previews_before_applying": true,
+    "foreign_repository_rejected_without_overwrite": true,
+    "different_reference_warning": true,
+    "draft_still_requires_actual_change": true,
+    "online_tabs_reenabled": true,
+    "failed_reconnect_preserves_snapshot_and_form": true,
+    "source_switch_clears_old_error": true,
+    "original_user_learning_state_preserved": true,
+    "temporary_test_tab_closed": true
+  },
+  "remaining_findings": [
+    "Why-help still returns excerpts and includes benchmark material for an installation step.",
+    "Per-step learning result remains free-text/manual, not execution evidence.",
+    "Cross-repository effectiveness and real novice usability remain unverified."
+  ],
+  "method": "independent explicitly labelled UI fixtures, actual local browser interactions, actual read-only GitHub reconnect and 404 failure branch",
+  "limits": [
+    "No source install or test commands executed.",
+    "No upstream PR/Issue submitted.",
+    "No new model-quality experiment or human participant data.",
+    "User original guide backup stayed in ignored local runtime storage."
+  ]
+}

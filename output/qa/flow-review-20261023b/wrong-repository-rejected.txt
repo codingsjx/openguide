@@ -1,0 +1,246 @@
+- link "跳到仓库输入":
+  - /url: "#start"
+- banner:
+  - link "OpenGuide，前往仓库输入":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+    - generic: 开源贡献，从容开始
+  - link "在 GitHub 查看 OpenGuide 源码":
+    - /url: https://github.com/codingsjx/openguide
+    - img "github":
+    - generic: GitHub
+  - button "api 模型已配置":
+    - img "api":
+    - generic: 模型已配置
+- main:
+  - region "仓库探索动态概览":
+    - generic: YOUR OPEN SOURCE JOURNEY
+    - heading "从理解项目，到开始贡献" [level=1]
+    - img "github":
+    - strong: codingsjx/openguide
+    - paragraph: 沿着已保存的步骤继续探索；本次没有重新联网核验资料。
+    - generic: 本机记录
+    - generic: 引用版本 8c21e6d43798
+    - status: 已载入离线指南
+    - link "查看贡献指南 arrow-right":
+      - /url: "#workspace"
+      - text: 查看贡献指南
+      - img "arrow-right":
+    - generic: 当前查看 · 贡献指南
+    - button "暂停动态装饰":
+      - img "pause":
+      - text: 暂停动效
+    - generic: 仓库资料
+    - generic: 项目说明
+    - generic: 构建与测试
+    - generic: 贡献约定
+    - generic "环境、测试、选题、PR，贡献路径示意":
+      - generic: A
+      - text: 环境
+      - img "arrow-right":
+      - generic: B
+      - text: 测试
+      - img "arrow-right":
+      - generic: C
+      - text: 选题
+      - img "arrow-right":
+      - generic: D
+      - text: PR
+      - emphasis: 路径示意
+  - region "当前探索的仓库":
+    - heading "当前探索的仓库" [level=2]
+    - img "github":
+    - text: GitHub 公开仓库
+    - img "github":
+    - textbox "GitHub 仓库地址":
+      - /placeholder: https://github.com/owner/repo
+      - text: https://github.com/codingsjx/openguide
+    - button "rocket 生成路线图 arrow-right":
+      - img "rocket":
+      - generic: 生成路线图
+      - img "arrow-right":
+    - text: 生成方式
+    - combobox "首次指南生成方式":
+      - option "AI 生成 · 可能需要较长等待" [selected]
+      - option "快速原文整理 · 不调用模型"
+    - generic: 先看看怎么用
+    - button "体验 requests 示例 arrow-right":
+      - text: 体验 requests 示例
+      - img "arrow-right":
+    - button "upload 导入已保存指南 · 离线查看":
+      - img "upload":
+      - generic: 导入已保存指南
+      - generic: · 离线查看
+    - generic: Enter ↵
+  - region "仓库贡献工作台":
+    - generic: 已保存指南
+    - link "github codingsjx/openguide arrow-right":
+      - /url: https://github.com/codingsjx/openguide
+      - img "github":
+      - text: codingsjx/openguide
+      - img "arrow-right":
+    - paragraph: 本机快照可继续查看；问答与体检需重新联网读取。重新采集可能生成不同步骤，先导出未保存的贡献准备记录；学习进度仅在步骤一致时恢复。
+    - button "先保存本机指南":
+      - generic: 先保存本机指南
+    - button "重新联网读取，启用问答与体检":
+      - generic: 重新联网读取，启用问答与体检
+    - tablist:
+      - tab "thunderbolt 贡献指南" [selected]:
+        - img "thunderbolt":
+        - generic: 贡献指南
+      - tab "rocket 仓库体检" [disabled]:
+        - img "rocket":
+        - generic: 仓库体检
+      - tab "question-circle 贡献问答" [disabled]:
+        - img "question-circle":
+        - generic: 贡献问答
+    - tabpanel "thunderbolt 贡献指南":
+      - alert:
+        - img "info-circle":
+        - generic: 已保存 · 规则模式 · 由你选择
+        - generic: 本次仅在本机查看，没有重新采集资料或执行命令。你选择了“快速（本地规则）”，这次生成没有调用模型。命令仍需在本机验证。
+      - generic: 当前 · 首次 PR 路径
+      - generic: 规则整理
+      - generic "生成详情与各阶段来源"
+      - generic "资料版本与核验说明 · 8c21e6d43798"
+      - generic "其他提示（1 条）"
+      - strong: 本阶段要达到什么
+      - generic: 整理实际改动、验证记录和待审阅草稿，再核对仓库的提交要求。
+      - generic: 自行核对 0/11
+      - generic: 卡住 0
+      - generic: 暂缓 0
+      - button "导出学习记录":
+        - generic: 导出学习记录
+      - button "保存当前指南 JSON":
+        - generic: 保存当前指南 JSON
+      - generic: 手动记录，不代表工具执行验证。
+      - generic "本机保存与恢复说明"
+      - generic "步骤目录 · 返回未完成项和卡点"
+      - button "1 环境搭建 7 步":
+        - generic: "1"
+        - generic: 环境搭建
+        - generic: 7 步
+      - button "2 测试基线 2 步":
+        - generic: "2"
+        - generic: 测试基线
+        - generic: 2 步
+      - button "3 挑选 issue 1 步":
+        - generic: "3"
+        - generic: 挑选 issue
+        - generic: 1 步
+      - button "4 首次 PR 路径 1 步":
+        - generic: "4"
+        - generic: 首次 PR 路径
+        - generic: 1 步
+      - generic: D
+      - strong: 首次 PR 路径
+      - heading "第 11/11 步 · 【独立页面验收 20261023B】待确认仓库 PR 规范与提交要求" [level=5]
+      - strong: 本步核对目标：
+      - text: 未取得可核验的仓库专属 PR 规范。可先按下方通用准备清单整理任务、实际改动和测试记录；提交前仍需核对维护者要求。
+      - img "warning":
+      - text: 无来源标注
+      - generic "通用 PR 准备清单 · 工具提供"
+      - generic: 以下是工具提供的通用操作提示，不是仓库原文要求，尚未执行。仓库特殊安装方式、参与政策和提交规范仍以最新原文为准。
+      - list:
+        - listitem: 确认任务仍需处理，写清问题、改动范围与验收方法；先查维护者是否要求讨论、认领或限制 AI 协助。
+        - listitem: 核对仓库 Fork、分支和提交规范，在自己的开发分支进行实际修改。尚未修改时先保留任务记录。
+        - listitem: 检查实际 diff，按指南及仓库要求运行检查，记录退出码、失败、跳过与未验证范围。
+        - listitem: 在下面的贡献工作台填写真实改动与验证记录，导出草稿。人工核对模板、敏感信息及 AI 协助披露后，再通过 GitHub 发起 PR。
+      - link "打开 GitHub 比较页面（不会自动提交）↗":
+        - /url: https://github.com/codingsjx/openguide/compare
+      - strong: 本步记录（仅本机）
+      - generic: 未记录完成
+      - generic: 先补齐本步的原文要求。通用帮助可用于准备，不能替代仓库专属规范；未确认时可以暂缓。
+      - textbox "本步结果或卡点摘要":
+        - /placeholder: 记录实际修改、验证范围和待审阅事项
+      - generic: 0 / 1000
+      - button "我卡住了":
+        - generic: 我卡住了
+      - button "暂缓，继续浏览":
+        - generic: 暂缓，继续浏览
+      - generic: 贡献工作台：任务 → 改动 → PR 草稿
+      - generic: 填写内容仅保留在当前页面，不会发给模型或提交到 GitHub。尚未修改也可导出准备记录，之后在同一仓库恢复；已形成草稿时另存 Markdown。文件包含你填写的 diff 和结果，分享前请检查敏感内容。
+      - button "导出准备记录 JSON":
+        - generic: 导出准备记录 JSON
+      - button "从准备记录恢复" [active]:
+        - generic: 从准备记录恢复
+      - alert:
+        - img "close-circle":
+        - generic: 未导入，当前表单保持原样
+        - generic: 准备记录属于其他仓库，不能覆盖当前仓库的表单
+      - generic: 已恢复本机准备记录，尚未提交或独立核验；PR 草稿需补齐实际改动后重新整理。
+      - alert:
+        - img "exclamation-circle":
+        - generic: 本次标签检索和有限开放 issue 采样没有取得可用候选，不代表仓库没有任务。可查看最新检索结果，或从贡献规范中选择并说明一个小范围任务。
+      - generic: 本次采样 0 项，排除已负责、锁定或未开放项 0 项。快照取得时间：2026/10/23 20:59:11（北京时间）（可能使用缓存）；操作前核对最新状态。
+      - link "查看 good first issue":
+        - /url: https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+      - link "查看 help wanted":
+        - /url: https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
+      - link "查看 全部开放 issue":
+        - /url: https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen
+      - generic: 选题时先核对：能否复现、范围是否够小、是否已有负责人或对应 PR、维护者是否接受该类改动。没有 issue 时可人工选题，并在问题描述中记录具体来源和理由。
+      - strong: 选定任务
+      - textbox "选定任务":
+        - /placeholder: 用一句话写清准备解决的问题
+        - text: 【页面模拟】保存尚未形成改动的任务
+      - strong: 任务 issue 链接（可选）
+      - textbox "任务 issue 链接（可选）":
+        - /placeholder: https://github.com/codingsjx/openguide/issues/具体编号
+      - strong: 问题、范围与来源
+      - textbox "问题、范围与来源":
+        - /placeholder: 说明具体问题、复现方式及本次处理范围；人工选题请补充来源
+        - text: 仅用于测试贡献准备记录的恢复；不是实际贡献任务，没有修改文件或运行测试。
+      - generic "记录实际修改与验证"
+      - strong: 已经做出的修改
+      - textbox "已经做出的修改":
+        - /placeholder: 填写已经完成的改动及其如何解决问题；不要把计划写成完成结果
+      - strong: 改动基准提交（可选）
+      - textbox "改动基准提交（可选）":
+        - /placeholder: 填写实际修改前的完整 Git 提交 SHA，便于核对版本
+      - strong: 实际修改文件（每行一个仓库相对路径）
+      - textbox "实际修改文件（每行一个仓库相对路径）":
+        - /placeholder: 例如 docs/example.rst；这里不预填或推测修改文件
+      - strong: 实际 git diff（可选，仅本机解析）
+      - textbox "实际 git diff（可选，仅本机解析）":
+        - /placeholder: 可粘贴 git diff 或 git diff --cached 输出，自动提取变更路径；提交前自行检查有无敏感信息
+      - strong: 实际测试状态
+      - radiogroup "实际测试状态":
+        - radio "未运行" [checked]
+        - generic: 未运行
+        - radio "通过（用户记录）"
+        - generic: 通过（用户记录）
+        - radio "失败"
+        - generic: 失败
+      - alert:
+        - generic: 草稿还需要以下信息
+        - list:
+          - listitem: 请描述已经做出的修改，尚未修改时先停留在任务准备阶段。
+          - listitem: 请填写实际修改的仓库相对路径，或粘贴标准 git diff 输出。
+      - button "整理本机 PR 草稿" [disabled]:
+        - generic: 整理本机 PR 草稿
+      - button "left 上一步":
+        - img "left":
+        - generic: 上一步
+      - button "check-circle 记录本步已核对":
+        - img "check-circle":
+        - generic: 记录本步已核对
+      - img "file-text":
+      - generic: 证据面板
+      - strong: 当前步骤：
+      - generic: 【独立页面验收 20261023B】待确认仓库 PR 规范与提交要求
+      - img "warning":
+      - text: 未找到通过核验的出处，请先确认原文
+- contentinfo:
+  - link "apartment OpenGuide":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+  - generic: 让开源的第一步，更清晰一点。
+  - img "safety-certificate":
+  - text: 核对原文，再开始行动
+  - link "项目说明 arrow-right":
+    - /url: https://github.com/codingsjx/openguide#readme
+    - text: 项目说明
+    - img "arrow-right":

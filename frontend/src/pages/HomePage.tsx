@@ -22,7 +22,7 @@ import LlmSettings from '../components/LlmSettings'
 import RepoAskPage from './RepoAskPage'
 import GuideWizard from '../components/GuideWizard'
 import type { Guide } from '../types/guide'
-import { parseSavedGuide } from '../types/savedGuide'
+import { downloadGuide, parseSavedGuide } from '../types/savedGuide'
 import LandingJourney from '../components/LandingJourney'
 import WorkspaceHero from '../components/WorkspaceHero'
 import { lastLearningGuide } from '../types/learningProgress'
@@ -82,30 +82,37 @@ export default function HomePage() {
     } catch { return null }
   })
 
-  async function handleSubmit() {
-    const trimmed = url.trim()
+  async function readRepository(target: string, withAi: boolean, keepSnapshot = false) {
+    const trimmed = target.trim()
     if (!trimmed) return
     if (loading) return
     setProfileError(null)
     setLoading(true)
-    setSubmittedUseLlm(useAiGuide)
-    setSavedGuide(null)
+    setUrl(trimmed)
+    setUseAiGuide(withAi)
+    setSubmittedUseLlm(withAi)
+    if (!keepSnapshot) setSavedGuide(null)
     setDemoMode(false)
     setTab('guide')
     setProfile(null)
-    setSubmittedUrl('')
+    if (!keepSnapshot) setSubmittedUrl('')
     try {
       const p = await api.postProfile(trimmed)
       setProfile(p)
       setSubmittedUrl(trimmed)
+      setSavedGuide(null)
     } catch (error) {
-      setProfileError(error instanceof Error ? error.message : '仓库读取失败，请重试或导入已保存指南。')
+      const detail = error instanceof Error ? error.message : '仓库读取失败，请重试或导入已保存指南。'
+      setProfileError(keepSnapshot ? '重新联网未完成，已保留原本机指南和当前表单。' + detail : detail)
     } finally {
       setLoading(false)
     }
   }
 
+  async function handleSubmit() { await readRepository(url, useAiGuide) }
+
   function startDemo() {
+    setProfileError(null)
     setGuideVersion((version) => version + 1)
     setSavedGuide(null)
     setUrl(DEMO_URL)
@@ -167,6 +174,8 @@ export default function HomePage() {
             try {
               if (file.size > 2_000_000) throw new Error('指南文件不能超过 2 MB')
               const imported = parseSavedGuide(await file.text())
+              setProfileError(null)
+              setProfile(null)
               setSavedGuide(imported)
               setGuideVersion((version) => version + 1)
               setSubmittedUrl(imported.repo_url)
@@ -188,6 +197,11 @@ export default function HomePage() {
       {showGuide && (
         <section className="results-wrap" id="workspace" aria-label="仓库贡献工作台">
         <div className="workspace-heading"><div><span className="workspace-indicator" /><span>{savedGuide ? '已保存指南' : demoMode ? '交互示例' : '贡献工作区'}</span></div><a href={workspaceUrl} target="_blank" rel="noreferrer"><GithubOutlined /> {workspaceUrl.replace('https://github.com/', '')} <ArrowRightOutlined /></a></div>
+        {savedGuide && <div style={{ marginBottom: 14 }}>
+          <p style={{ color: '#64748b', marginTop: 0 }}>本机快照可继续查看；问答与体检需重新联网读取。重新采集可能生成不同步骤，先导出未保存的贡献准备记录；学习进度仅在步骤一致时恢复。</p>
+          <Space wrap><Button disabled={loading} onClick={() => downloadGuide(savedGuide)}>先保存本机指南</Button>
+            <Button loading={loading} onClick={() => readRepository(savedGuide.repo_url, false, true)}>重新联网读取，启用问答与体检</Button></Space>
+        </div>}
         {demoMode && <div className="demo-banner"><ThunderboltOutlined /><span>当前指南与体检为静态 requests 示例。点击「生成路线图」分析所填仓库；贡献问答会单独读取仓库资料。</span></div>}
         <Tabs
           activeKey={tab}

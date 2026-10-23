@@ -1,13 +1,17 @@
 import { useState } from 'react'
-import { Alert, Button, Card, Input, Radio, Space, Tag, Typography } from 'antd'
+import { Alert, Button, Card, Input, Radio, Space, Tag, Typography, Upload, message } from 'antd'
 import type { Guide } from '../../types/guide'
-import { buildContributionDraft, changedFiles, contributionProblems, emptyContribution, type ContributionInput } from '../../types/contribution'
+import { buildContributionDraft, changedFiles, contributionProblems, contributionPreparationJson, emptyContribution, parseContributionPreparation, type ContributionInput, type ContributionPreparation } from '../../types/contribution'
 
 const { Paragraph, Text } = Typography
 
 export default function ContributionWorkbench({ guide, stage }: { guide: Guide; stage: string }) {
   const [input, setInput] = useState(emptyContribution)
   const [draft, setDraft] = useState('')
+  const [preparationRevision, setPreparationRevision] = useState(guide.default_branch)
+  const [pendingImport, setPendingImport] = useState<ContributionPreparation | null>(null)
+  const [importError, setImportError] = useState('')
+  const [restored, setRestored] = useState(false)
   const discovery = guide.issue_discovery
   const sampledAt = discovery?.sampled_at && Number.isFinite(Date.parse(discovery.sampled_at))
     ? new Date(discovery.sampled_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }) + '（北京时间）' : '未记录'
@@ -17,6 +21,7 @@ export default function ContributionWorkbench({ guide, stage }: { guide: Guide; 
     setDraft('')
   }
   const problems = contributionProblems(guide, input)
+  const hasPreparation = Object.entries(input).some(([key, value]) => key === 'testStatus' ? value !== 'not_run' : value.trim())
   const choose = (url: string, title: string) => {
     setInput((s) => ({ ...s, issueUrl: url, task: title }))
     setDraft('')
@@ -31,9 +36,39 @@ export default function ContributionWorkbench({ guide, stage }: { guide: Guide; 
     const a = document.createElement('a')
     a.href = url; a.download = `OpenGuide-${guide.owner}-${guide.repo}-pr-draft.md`; a.click(); URL.revokeObjectURL(url)
   }
+  const downloadPreparation = () => {
+    try {
+      const raw = contributionPreparationJson(guide, input, preparationRevision)
+      const url = URL.createObjectURL(new Blob([raw], { type: 'application/json' }))
+      const link = document.createElement('a')
+      link.href = url; link.download = `OpenGuide-${guide.owner}-${guide.repo}-preparation.json`; link.click(); URL.revokeObjectURL(url)
+    } catch (error) { void message.error(error instanceof Error ? error.message : '准备记录导出失败') }
+  }
   if (stage !== 'C' && stage !== 'D') return null
   return <Card title="贡献工作台：任务 → 改动 → PR 草稿" style={{ marginTop: 16 }}>
-    <Paragraph type="secondary">填写内容仅保留在当前页面，不会发给模型或提交到 GitHub；离开或重新生成指南前请导出草稿。草稿会保留测试失败和未执行状态。</Paragraph>
+    <Paragraph type="secondary">填写内容仅保留在当前页面，不会发给模型或提交到 GitHub。尚未修改也可导出准备记录，之后在同一仓库恢复；已形成草稿时另存 Markdown。文件包含你填写的 diff 和结果，分享前请检查敏感内容。</Paragraph>
+    <Space wrap style={{ marginBottom: 12 }}>
+      <Button disabled={!hasPreparation} onClick={downloadPreparation}>导出准备记录 JSON</Button>
+      <Upload accept=".json" showUploadList={false} beforeUpload={async (file) => {
+        setImportError(''); setPendingImport(null)
+        try {
+          if (file.size > 2_000_000) throw new Error('准备记录不能超过 2 MB')
+          setPendingImport(parseContributionPreparation(await file.text(), guide))
+        } catch (error) { setImportError(error instanceof Error ? error.message : '准备记录读取失败') }
+        return false
+      }}><Button>从准备记录恢复</Button></Upload>
+    </Space>
+    {importError && <Alert type="error" showIcon message="未导入，当前表单保持原样" description={importError} style={{ marginBottom: 12 }} />}
+    {pendingImport && <Alert type="info" showIcon message="准备记录已读取，尚未替换表单" style={{ marginBottom: 12, overflowWrap: 'anywhere' }}
+      description={<>
+        <Paragraph>任务：{pendingImport.input.task || '尚未填写'}；参考版本：{pendingImport.referenceRevision}；测试状态：{pendingImport.input.testStatus === 'not_run' ? '未运行' : pendingImport.input.testStatus === 'failed' ? '用户记录失败' : '用户记录通过（未核验）'}。</Paragraph>
+        <Paragraph>恢复将替换本页表单，当前内容请先导出。{pendingImport.referenceRevision !== guide.default_branch ? '文件参考版本与当前指南不同，恢复后需重新核对规范与验证要求。' : ''}</Paragraph>
+        <Space wrap><Button onClick={() => {
+          setInput(pendingImport.input); setPreparationRevision(pendingImport.referenceRevision); setDraft(''); setRestored(true); setPendingImport(null)
+        }}>使用该记录替换表单</Button><Button onClick={() => setPendingImport(null)}>取消导入</Button></Space>
+      </>} />}
+    {restored && <Paragraph type="secondary">已恢复本机准备记录，尚未提交或独立核验；PR 草稿需补齐实际改动后重新整理。</Paragraph>}
+    {preparationRevision !== guide.default_branch && <Alert type="warning" showIcon message="准备记录与当前指南版本不同" description={`文件记录：${preparationRevision}；当前指南：${guide.default_branch}。提交前核对贡献规范与验证要求。`} style={{ marginBottom: 12, overflowWrap: 'anywhere' }} />}
     <Alert type={discovery?.status === 'candidates' ? 'info' : 'warning'} showIcon message={discovery?.reason || '此指南未附带候选快照。请通过 GitHub 检索入口选择并核对任务，也可以记录人工选题。'} />
     {discovery && <Paragraph type="secondary" style={{ marginTop: 8 }}>本次采样 {discovery.sampled_count} 项，排除已负责、锁定或未开放项 {discovery.blocked_count} 项。快照取得时间：{sampledAt}（可能使用缓存）；操作前核对最新状态。</Paragraph>}
     {discovery?.candidates.map((c) => <Card key={c.number} size="small" style={{ marginTop: 10 }}>
@@ -65,7 +100,7 @@ export default function ContributionWorkbench({ guide, stage }: { guide: Guide; 
         {field('testOutput', '实际结果与范围', '记录通过、失败、跳过数量和未验证范围，不要仅写“正常”', true)}
       </>}
       {problems.length > 0 && <Alert type="info" style={{ marginTop: 12 }} message="草稿还需要以下信息" description={<ul>{problems.map((p) => <li key={p}>{p}</li>)}</ul>} />}
-      <Button type="primary" disabled={problems.length > 0} style={{ marginTop: 12 }} onClick={() => setDraft(buildContributionDraft(guide, input))}>整理本机 PR 草稿</Button>
+      <Button type="primary" disabled={problems.length > 0} style={{ marginTop: 12 }} onClick={() => setDraft(buildContributionDraft(guide, input, preparationRevision))}>整理本机 PR 草稿</Button>
     </details>
     {draft && <div style={{ marginTop: 12 }}>
       <Alert showIcon type={input.testStatus === 'passed' ? 'info' : 'warning'} message="草稿已整理，待人工审阅；尚未提交" />

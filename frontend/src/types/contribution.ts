@@ -16,6 +16,47 @@ export interface ContributionInput {
 
 export const emptyContribution = (): ContributionInput => ({ task: '', issueUrl: '', problem: '', changeSummary: '', baseRevision: '', files: '', patch: '', testStatus: 'not_run', testCommand: '', testExitCode: '', testOutput: '' })
 
+export interface ContributionPreparation { input: ContributionInput; referenceRevision: string }
+const PREPARATION_FORMAT = 'openguide.contribution-preparation.v1'
+const validPreparationRevision = (value: unknown): value is string => typeof value === 'string' && Boolean(value.trim()) && value.length <= 200
+  && !Array.from(value).some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
+const repositoryKey = (value: unknown): string | null => typeof value === 'string' && /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/.test(value)
+  ? value.replace(/\/$/, '').toLowerCase() : null
+
+function preparationInput(value: unknown): ContributionInput {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('准备记录缺少有效表单')
+  const input = emptyContribution()
+  const raw = value as Record<string, unknown>
+  for (const key of Object.keys(input) as (keyof ContributionInput)[]) {
+    const field = Object.prototype.hasOwnProperty.call(raw, key) ? raw[key] : input[key]
+    const limit = key === 'patch' ? 1_000_000 : ['task', 'issueUrl', 'baseRevision', 'testCommand', 'testExitCode'].includes(key) ? 1000 : 10000
+    if (typeof field !== 'string' || field.length > limit) throw new Error('准备记录字段格式或长度无效')
+    if (key === 'testStatus') {
+      if (!['not_run', 'passed', 'failed'].includes(field)) throw new Error('准备记录测试状态无效')
+      input.testStatus = field as ContributionInput['testStatus']
+    } else input[key] = field
+  }
+  return input
+}
+
+export function contributionPreparationJson(guide: Guide, input: ContributionInput, referenceRevision = guide.default_branch): string {
+  if (!validPreparationRevision(referenceRevision)) throw new Error('准备记录参考版本无效')
+  const raw = JSON.stringify({ format: PREPARATION_FORMAT, repo_url: guide.repo_url,
+    reference_revision: referenceRevision, input: preparationInput(input) }, null, 2)
+  if (new TextEncoder().encode(raw).length > 2_000_000) throw new Error('准备记录超过 2 MB，请减少 diff 或测试输出后再导出')
+  return raw
+}
+
+export function parseContributionPreparation(text: string, guide: Guide): ContributionPreparation {
+  if (new TextEncoder().encode(text).length > 2_000_000) throw new Error('准备记录不能超过 2 MB')
+  let data
+  try { data = JSON.parse(text) } catch { throw new Error('准备记录不是有效 JSON') }
+  if (!data || data.format !== PREPARATION_FORMAT) throw new Error('这不是贡献准备记录；指南 JSON 请在首页导入')
+  if (!repositoryKey(data.repo_url) || repositoryKey(data.repo_url) !== repositoryKey(guide.repo_url)) throw new Error('准备记录属于其他仓库，不能覆盖当前仓库的表单')
+  if (!validPreparationRevision(data.reference_revision)) throw new Error('准备记录参考版本无效')
+  return { input: preparationInput(data.input), referenceRevision: data.reference_revision }
+}
+
 export function issueNumber(repoUrl: string, value: string): number | null {
   try {
     const url = new URL(value)
@@ -55,7 +96,7 @@ export function contributionProblems(guide: Guide, input: ContributionInput): st
   return errors
 }
 
-export function buildContributionDraft(guide: Guide, input: ContributionInput): string {
+export function buildContributionDraft(guide: Guide, input: ContributionInput, preparationRevision = guide.default_branch): string {
   const errors = contributionProblems(guide, input)
   if (errors.length) throw new Error(errors.join('\n'))
   const number = input.issueUrl.trim() ? issueNumber(guide.repo_url, input.issueUrl.trim()) : null
@@ -74,6 +115,7 @@ export function buildContributionDraft(guide: Guide, input: ContributionInput): 
 ## 任务来源
 仓库：${guide.repo_url}
 指南参考资料提交：${guide.default_branch}
+${preparationRevision !== guide.default_branch ? `准备记录最初参考版本（用户文件，未独立核验）：${preparationRevision}\n准备记录与当前指南版本不同，贡献规范及验证要求仍需重新核对。\n` : ''}
 用户记录的改动基准：${input.baseRevision.trim() || '未提供；提交前需核对。'}
 ${input.baseRevision.trim() && input.baseRevision.trim() !== guide.default_branch ? '改动基准与指南参考资料版本不同，请重新核对贡献规范及验证要求。\n' : ''}
 ${source}

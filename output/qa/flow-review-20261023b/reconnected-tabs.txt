@@ -1,0 +1,4 @@
+      - tab "thunderbolt 贡献指南" [selected]:
+      - tab "rocket 仓库体检":
+      - tab "question-circle 贡献问答":
+        - generic: 规则模式 · 由你选择
