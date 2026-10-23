@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Button,
   Card,
@@ -28,6 +28,9 @@ import type { Evidence, Guide, GuideStep } from '../../types/guide'
 import ContributionWorkbench from '../ContributionWorkbench'
 import GuideStatus, { GuideNotices } from '../GuideStatus'
 import GuideEntryHelp from '../GuideEntryHelp'
+import { downloadGuide } from '../../types/savedGuide'
+import LearningOverview from '../LearningOverview'
+import { emptyLearningProgress, learningIdentity, learningLabels, learningMarkdown, loadLearningProgress, nextLearningAction, pendingPrerequisites, rememberLearningGuide, saveLearningProgress, type LearningProgress, type LearningStatus } from '../../types/learningProgress'
 
 const { Paragraph, Text, Title } = Typography
 
@@ -88,12 +91,17 @@ function FollowupBar({
   step,
   url,
   guide,
+  logOpen,
+  onBlocked,
+  onToggleLog,
 }: {
   step: GuideStep
   url: string
   guide: Guide
+  logOpen: boolean
+  onBlocked: () => void
+  onToggleLog: () => void
 }) {
-  const [logOpen, setLogOpen] = useState(false)
   const [logText, setLogText] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [result, setResult] = useState<FollowupResult | null>(null)
@@ -131,15 +139,17 @@ function FollowupBar({
         <Button size="small" disabled={!!busy} icon={<QuestionCircleOutlined />} loading={busy === 'explain'} onClick={() => run('explain')}>
           看不懂为什么
         </Button>
-        <Button size="small" disabled={!!busy} icon={<BugOutlined />} loading={busy === 'diagnose'} onClick={() => setLogOpen((v) => !v)}>
+        <Button size="small" disabled={!!busy} icon={<BugOutlined />} loading={busy === 'diagnose'} onClick={() => { if (!logOpen) onBlocked(); else onToggleLog() }}>
           报错了
         </Button>
       </Space>
 
       {logOpen && (
         <div style={{ marginTop: 8 }}>
-          <Paragraph type="secondary">日志可能交给当前配置的模型服务分析；粘贴前请移除密钥、账号及个人信息。</Paragraph>
+          <Paragraph type="secondary">日志可能交给当前配置的模型服务分析；粘贴前请移除密钥、账号及个人信息。原始日志不会保存到学习记录，离开此步会清空。</Paragraph>
           <Input.TextArea
+            autoFocus
+            aria-label="脱敏报错日志"
             rows={3}
             value={logText}
             onChange={(e) => setLogText(e.target.value)}
@@ -171,7 +181,13 @@ function FollowupBar({
           </div>}
           {result.sub_steps.length > 0 && <div style={{ marginTop: 12 }}>
             <Text strong>2. 仓库原文中的要求与操作</Text>
-            {result.sub_steps.map((child) => <Card key={child.step_id} size="small" style={{ marginTop: 8 }}>
+            {result.sub_steps.some((child) => !child.command) && <ul style={{ paddingLeft: 20 }}>
+              {result.sub_steps.filter((child) => !child.command).map((child) => <li key={child.step_id} style={{ marginBottom: 10 }}>
+                <Text style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{child.evidence.quote}</Text>{' '}
+                <EvidenceBadge guide={{ ...guide, default_branch: result.revision }} ev={child.evidence} />
+              </li>)}
+            </ul>}
+            {result.sub_steps.filter((child) => child.command).map((child) => <Card key={child.step_id} size="small" style={{ marginTop: 8 }}>
               <Text strong>{child.title}</Text>
               {child.command && <>
                 <Paragraph type="secondary" style={{ marginTop: 8 }}>执行位置：{child.directory_basis === 'clone_destination' ? '你选择的项目存放目录' : child.working_directory === '.' ? '仓库根目录' : child.working_directory || '尚未确认，请先核对出处'}</Paragraph>
@@ -265,15 +281,62 @@ function EvidencePanel({ guide, step }: { guide: Guide; step: GuideStep | null }
 
 // ---- Wizard body ----------------------------------------------------------
 
-export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }: {
+function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
   guide: Guide; url: string; onRegenerateAi?: () => void; onRegenerate?: () => void
 }) {
   const steps = guide.steps
-  const [current, setCurrent] = useState(0)
-  const [done, setDone] = useState<Set<number>>(new Set())
+  const [progress, setProgress] = useState<LearningProgress>(() => {
+    try { return loadLearningProgress(guide, window.localStorage) } catch { return emptyLearningProgress(guide) }
+  })
+  const [storageFailed, setStorageFailed] = useState(false)
+  const [diagnosticStep, setDiagnosticStep] = useState<number | null>(null)
+  const stepAnchor = useRef<HTMLDivElement>(null)
+  const navigationRequested = useRef(false)
+  const current = Math.max(0, steps.findIndex((s) => s.step_id === progress.currentStepId))
+  const done = new Set(steps.flatMap((s, i) => progress.records[String(s.step_id)]?.status === 'done' ? [i] : []))
 
   const step = steps[current] ?? null
   const allDone = steps.length > 0 && done.size === steps.length
+  const prerequisites = step ? pendingPrerequisites(guide, step, progress) : []
+  const record = step ? progress.records[String(step.step_id)] : undefined
+  const canAsk = !guide.is_demo && !guide.is_saved
+  useEffect(() => {
+    if (!navigationRequested.current) return
+    stepAnchor.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    navigationRequested.current = false
+  }, [current])
+
+  function persist(next: LearningProgress) {
+    setProgress(next)
+    try {
+      const progressSaved = saveLearningProgress(next, window.localStorage)
+      const guideSaved = rememberLearningGuide(guide, window.localStorage)
+      setStorageFailed(!progressSaved || !guideSaved)
+    } catch { setStorageFailed(true) }
+  }
+  function goToIndex(index: number) {
+    if (!steps[index]) return
+    if (index === current) stepAnchor.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    else navigationRequested.current = true
+    setDiagnosticStep(null)
+    persist({ ...progress, currentStepId: steps[index].step_id })
+  }
+  function recordStatus(status: LearningStatus, advance = false) {
+    if (!step) return
+    if (advance && current < steps.length - 1) navigationRequested.current = true
+    persist({ ...progress, records: { ...progress.records, [String(step.step_id)]: { status, note: record?.note ?? '' } },
+      currentStepId: advance ? (steps[current + 1]?.step_id ?? step.step_id) : step.step_id })
+    if (advance) setDiagnosticStep(null)
+  }
+  function markBlocked() {
+    recordStatus('blocked')
+    if (step && canAsk) setDiagnosticStep(step.step_id)
+  }
+  function downloadLearning() {
+    const href = URL.createObjectURL(new Blob([learningMarkdown(guide, progress)], { type: 'text/markdown;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = href; link.download = `OpenGuide-${guide.owner}-${guide.repo}-learning.md`; link.click(); URL.revokeObjectURL(href)
+  }
 
   const stepItems = useMemo(
     () =>
@@ -287,21 +350,10 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
 
   function markDone() {
     const completingAll = !done.has(current) && done.size + 1 === steps.length
-    setDone((prev) => {
-      const next = new Set(prev)
-      next.add(current)
-      return next
-    })
-    if (current < steps.length - 1) {
-      setCurrent((c) => c + 1)
-    } else if (completingAll) {
+    recordStatus('done', true)
+    if (current === steps.length - 1 && completingAll) {
       void message.success('已标记全部步骤，请结合实际测试和 PR 状态核对结果。')
     }
-  }
-
-  function resetProgress() {
-    setDone(new Set())
-    setCurrent(0)
   }
 
   if (guide.unsuitable) {
@@ -332,6 +384,8 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
       {/* Main column: steps + current card */}
       <div className="guide-main">
         <GuideStatus guide={guide} step={step} onRegenerateAi={onRegenerateAi} onRegenerate={onRegenerate} />
+        {step && <LearningOverview guide={guide} step={step} progress={progress} onGo={(id) => goToIndex(steps.findIndex((s) => s.step_id === id))}
+          onDownload={downloadLearning} onDownloadGuide={() => downloadGuide(guide)} storageFailed={storageFailed} />}
         {step?.stage === 'A' && steps.some((s) => /^(?:python(?:3)?\b|pip(?:3)?\b)/.test(s.command || '')) && <details style={{ marginBottom: 12 }}>
           <summary style={{ cursor: 'pointer' }}>Python 新手：先确认隔离环境与解释器</summary>
           <Paragraph style={{ marginTop: 8 }}>优先遵循仓库指定的运行时和环境工具。以下是 OpenGuide 提供的通用 venv 方法，不是仓库原文；先进入仓库，再创建开发环境。发布环境不能代替开发环境。</Paragraph>
@@ -353,10 +407,10 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
           }))}
           onChange={(stageIndex) => {
             const first = steps.findIndex((s) => s.stage === ['A', 'B', 'C', 'D'][stageIndex])
-            if (first >= 0) setCurrent(first)
+            if (first >= 0) goToIndex(first)
           }}
           labelPlacement="vertical"
-          responsive
+          responsive={false}
         />
 
         {step && (
@@ -370,6 +424,7 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
               </Space>
             }
           >
+            <div ref={stepAnchor} style={{ scrollMarginTop: 100 }} />
             <Title level={5} style={{ marginTop: 0 }}>
               第 {current + 1}/{steps.length} 步 · {step.title}
             </Title>
@@ -378,6 +433,9 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
               <Text strong>{step.directory_basis === 'build_file' ? '建议执行位置（按构建文件推导）：' : step.directory_basis === 'document_context' ? '建议执行位置（按原文上下文推导）：' : '执行位置：'}</Text>{step.directory_basis === 'clone_destination' ? '你选择的项目存放目录（克隆后进入仓库）' : step.working_directory === '.' ? '仓库根目录' : step.working_directory || '待确认，请先核对来源中的目录说明'}
             </Paragraph>}
             {Boolean(step.prerequisite_step_ids?.length) && <Paragraph><Text strong>建议先完成：</Text>第 {step.prerequisite_step_ids!.join('、')} 步（流程顺序，不代表依赖已验证）</Paragraph>}
+            {prerequisites.length > 0 && <Alert type="info" showIcon message="这些前置步骤尚未记录完成"
+              description={<Space wrap>{prerequisites.map((item) => <Button key={item.step_id} size="small" onClick={() => goToIndex(steps.findIndex((s) => s.step_id === item.step_id))}>回到第 {item.step_id} 步</Button>)}</Space>}
+              style={{ marginBottom: 12 }} />}
             {Boolean(step.required_paths?.length) && <Paragraph><Text strong>所需输入路径：</Text>{step.required_paths!.join('、')}</Paragraph>}
             {Boolean(step.missing_inputs?.length) && <Alert type="error" showIcon message={`在当前文件树中未找到：${step.missing_inputs!.join('、')}；请先确认目录、分支和依赖文件`} style={{ marginBottom: 10 }} />}
             {step.context_notes?.map((note, i) => <Paragraph type="secondary" key={i}>{note}</Paragraph>)}
@@ -393,7 +451,7 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
 
             {step.expected && (
               <Paragraph style={{ marginBottom: 4 }}>
-                <CheckCircleOutlined style={{ color: '#52c41a' }} /> 期望：{step.expected}
+                <Text strong>本步核对目标：</Text>{step.expected}
               </Paragraph>
             )}
             {step.command_derivation && <Paragraph type="secondary">{step.command_derivation}（原建议：{step.original_command}）</Paragraph>}
@@ -419,7 +477,20 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
             </div>
 
             <GuideEntryHelp guide={guide} stage={step.stage} expanded={step.evidence.kind === 'missing'} />
-            {!guide.is_demo && !guide.is_saved && <FollowupBar key={`${guide.default_branch}:${step.step_id}`} step={step} url={url} guide={guide} />}
+            {canAsk && <FollowupBar key={`${guide.default_branch}:${step.step_id}`} step={step} url={url} guide={guide}
+              logOpen={diagnosticStep === step.step_id} onBlocked={markBlocked} onToggleLog={() => setDiagnosticStep(null)} />}
+            <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #e7efec' }}>
+              <Text strong>本步记录（仅本机）</Text>{' '}<Tag>{learningLabels[record?.status ?? 'pending']}</Tag>
+              <Paragraph type="secondary" style={{ marginTop: 6, marginBottom: 8 }}>{nextLearningAction(step, progress, prerequisites, canAsk)}</Paragraph>
+              <Input.TextArea aria-label="本步结果或卡点摘要" rows={2} maxLength={1000} showCount value={record?.note ?? ''}
+                placeholder={step.stage === 'C' ? '记录任务来源、复现方式、范围与验收方法' : step.stage === 'D' ? '记录实际修改、验证范围和待审阅事项' : '记录实际目录、退出码或卡点摘要；不要填写密钥或原始日志'}
+                onChange={(event) => persist({ ...progress, records: { ...progress.records, [String(step.step_id)]: { status: record?.status ?? 'pending', note: event.target.value } } })} />
+              <Space wrap style={{ marginTop: 14 }}>
+                <Button onClick={markBlocked}>我卡住了{canAsk ? '，展开排错' : ''}</Button>
+                <Button onClick={() => recordStatus('skipped', true)}>暂缓，继续浏览</Button>
+                {record && record.status !== 'pending' && <Button type="link" onClick={() => recordStatus('pending')}>{record.status === 'done' ? '撤回本步完成标记' : '改为待继续'}</Button>}
+              </Space>
+            </div>
           </Card>
         )}
 
@@ -433,8 +504,8 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
             description="这是手动进度记录。请结合测试结果和 GitHub 上的实际 PR 状态确认贡献完成情况。"
             style={{ marginTop: 16 }}
             action={
-              <Button size="small" onClick={resetProgress}>
-                重新开始
+              <Button size="small" onClick={() => goToIndex(0)}>
+                返回第一步
               </Button>
             }
           />
@@ -444,18 +515,18 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
           <Button
             icon={<LeftOutlined />}
             disabled={current === 0}
-            onClick={() => setCurrent((c) => c - 1)}
+            onClick={() => goToIndex(current - 1)}
           >
             上一步
           </Button>
-          {current < steps.length - 1 && <Button onClick={() => setCurrent((c) => c + 1)}>仅查看下一步</Button>}
+          {current < steps.length - 1 && <Button onClick={() => goToIndex(current + 1)}>仅查看下一步</Button>}
           {current < steps.length - 1 ? (
             <Button type="primary" onClick={markDone}>
-              完成并下一步 <RightOutlined />
+              记录完成并继续 <RightOutlined />
             </Button>
           ) : (
             <Button type="primary" icon={<CheckCircleOutlined />} disabled={allDone} onClick={markDone}>
-              {allDone ? '已全部完成' : '完成全部'}
+              {allDone ? '已记录全部完成' : '记录本步已核对'}
             </Button>
           )}
         </div>
@@ -467,4 +538,8 @@ export default function GuideWizard({ guide, url, onRegenerateAi, onRegenerate }
       </div>
     </div>
   )
+}
+
+export default function GuideWizard(props: { guide: Guide; url: string; onRegenerateAi?: () => void; onRegenerate?: () => void }) {
+  return <GuideSession key={learningIdentity(props.guide)} {...props} />
 }

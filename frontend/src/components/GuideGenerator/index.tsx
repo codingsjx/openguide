@@ -10,7 +10,7 @@ import GuideWizard from '../GuideWizard'
 
 const { Title, Paragraph, Text } = Typography
 
-export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
+export default function GuideGenerator({ initialUrl, initialUseLlm = true }: { initialUrl: string; initialUseLlm?: boolean }) {
   const [url, setUrl] = useState(initialUrl)
   const [loading, setLoading] = useState(false)
   const [guide, setGuide] = useState<Guide | null>(null)
@@ -78,10 +78,15 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
   useEffect(() => {
     const nextUrl = initialUrl.trim()
     if (!nextUrl || nextUrl === lastUrlRef.current) return
-    lastUrlRef.current = nextUrl
     setUrl(nextUrl)
-    void generate(nextUrl, true)
-  }, [generate, initialUrl])
+    // StrictMode replays mount effects. Cancel the scheduled first setup
+    // before it sends a second, billable automatic model request.
+    const timer = window.setTimeout(() => {
+      lastUrlRef.current = nextUrl
+      void generate(nextUrl, initialUseLlm)
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [generate, initialUrl, initialUseLlm])
 
   return (
     <div className="guide-generator">

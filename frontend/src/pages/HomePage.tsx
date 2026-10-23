@@ -25,6 +25,7 @@ import type { Guide } from '../types/guide'
 import { parseSavedGuide } from '../types/savedGuide'
 import LandingJourney from '../components/LandingJourney'
 import WorkspaceHero from '../components/WorkspaceHero'
+import { lastLearningGuide } from '../types/learningProgress'
 
 const DEMO_URL = 'https://github.com/psf/requests'
 
@@ -72,6 +73,14 @@ export default function HomePage() {
   const [demoMode, setDemoMode] = useState(false)
   const [savedGuide, setSavedGuide] = useState<Guide | null>(null)
   const [guideVersion, setGuideVersion] = useState(0)
+  const [useAiGuide, setUseAiGuide] = useState(true)
+  const [submittedUseLlm, setSubmittedUseLlm] = useState(true)
+  const [resumeGuide] = useState<Guide | null>(() => {
+    try {
+      const raw = lastLearningGuide(window.localStorage)
+      return raw ? parseSavedGuide(raw) : null
+    } catch { return null }
+  })
 
   async function handleSubmit() {
     const trimmed = url.trim()
@@ -79,6 +88,7 @@ export default function HomePage() {
     if (loading) return
     setProfileError(null)
     setLoading(true)
+    setSubmittedUseLlm(useAiGuide)
     setSavedGuide(null)
     setDemoMode(false)
     setTab('guide')
@@ -137,7 +147,22 @@ export default function HomePage() {
             <Input aria-label="GitHub 仓库地址" size="large" placeholder="https://github.com/owner/repo" value={url} onChange={(e) => setUrl(e.target.value)} onPressEnter={handleSubmit} disabled={loading} prefix={<GithubOutlined />} />
             <Button type="primary" size="large" icon={<RocketOutlined />} loading={loading} onClick={handleSubmit}>生成路线图 <ArrowRightOutlined /></Button>
           </Space.Compact>
+          <label style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 12, color: '#4c6662' }}>
+            生成方式
+            <select aria-label="首次指南生成方式" disabled={loading} value={useAiGuide ? 'ai' : 'rules'} onChange={(event) => setUseAiGuide(event.target.value === 'ai')}
+              style={{ maxWidth: '100%', padding: '5px 8px', border: '1px solid #cfddd9', borderRadius: 6, color: '#244d45', background: '#fff' }}>
+              <option value="ai">AI 生成 · 可能需要较长等待</option>
+              <option value="rules">快速原文整理 · 不调用模型</option>
+            </select>
+          </label>
           {profileError && <Alert showIcon type="error" message="仓库读取失败" description={profileError} style={{ marginTop: 12 }} />}
+          {!showGuide && !loading && resumeGuide && <Alert type="info" showIcon style={{ marginTop: 12 }}
+            message={`继续上次指南：${resumeGuide.owner}/${resumeGuide.repo}`}
+            description="从本机快照和学习记录继续，不重新请求模型或核验仓库；贡献工作台表单和问答历史不在此快照中。"
+            action={<Button onClick={() => {
+              setProfile(null); setProfileError(null); setSavedGuide(resumeGuide); setGuideVersion((version) => version + 1)
+              setSubmittedUrl(resumeGuide.repo_url); setUrl(resumeGuide.repo_url); setDemoMode(false); setTab('guide')
+            }}>继续上次指南</Button>} />}
           <div className="search-foot"><div className="search-example"><span>先看看怎么用</span><button onClick={startDemo} disabled={loading}>体验 requests 示例 <ArrowRightOutlined /></button></div><span className="search-separator" /><Upload accept=".json" showUploadList={false} beforeUpload={async (file) => {
             try {
               if (file.size > 2_000_000) throw new Error('指南文件不能超过 2 MB')
@@ -176,7 +201,7 @@ export default function HomePage() {
                   <ThunderboltOutlined /> 贡献指南
                 </Space>
               ),
-              children: savedGuide ? <GuideWizard key={`saved-${guideVersion}`} guide={savedGuide} url={savedGuide.repo_url} /> : demoMode ? <GuideWizard key={`demo-${guideVersion}`} guide={demoGuide} url={submittedUrl} /> : <GuideGenerator initialUrl={submittedUrl} />,
+              children: savedGuide ? <GuideWizard key={`saved-${guideVersion}`} guide={savedGuide} url={savedGuide.repo_url} /> : demoMode ? <GuideWizard key={`demo-${guideVersion}`} guide={demoGuide} url={submittedUrl} /> : <GuideGenerator initialUrl={submittedUrl} initialUseLlm={submittedUseLlm} />,
             },
             {
               key: 'health',

@@ -1,0 +1,263 @@
+- link "跳到仓库输入":
+  - /url: "#start"
+- banner:
+  - link "OpenGuide，前往仓库输入":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+    - generic: 开源贡献，从容开始
+  - link "在 GitHub 查看 OpenGuide 源码":
+    - /url: https://github.com/codingsjx/openguide
+    - img "github":
+    - generic: GitHub
+  - button "api 模型已配置":
+    - img "api":
+    - generic: 模型已配置
+- main:
+  - region "仓库探索动态概览":
+    - generic: YOUR OPEN SOURCE JOURNEY
+    - heading "从理解项目，到开始贡献" [level=1]
+    - img "github":
+    - strong: codingsjx/openguide
+    - paragraph: 先读懂环境与测试入口，再选择一个范围明确的小任务。
+    - generic: 默认分支 master
+    - generic: Python · TypeScript
+    - generic: README 入口
+    - status: 仓库概况已取得
+    - link "查看贡献指南 arrow-right":
+      - /url: "#workspace"
+      - text: 查看贡献指南
+      - img "arrow-right":
+    - generic: 当前查看 · 贡献指南
+    - button "暂停动态装饰":
+      - img "pause":
+      - text: 暂停动效
+    - generic: 仓库资料
+    - generic: 项目说明
+    - generic: 构建与测试
+    - generic: 贡献约定
+    - generic "环境、测试、选题、PR，贡献路径示意":
+      - generic: A
+      - text: 环境
+      - img "arrow-right":
+      - generic: B
+      - text: 测试
+      - img "arrow-right":
+      - generic: C
+      - text: 选题
+      - img "arrow-right":
+      - generic: D
+      - text: PR
+      - emphasis: 路径示意
+  - region "当前探索的仓库":
+    - heading "当前探索的仓库" [level=2]
+    - img "github":
+    - text: GitHub 公开仓库
+    - img "github":
+    - textbox "GitHub 仓库地址":
+      - /placeholder: https://github.com/owner/repo
+      - text: https://github.com/codingsjx/openguide
+    - button "rocket 生成路线图 arrow-right":
+      - img "rocket":
+      - generic: 生成路线图
+      - img "arrow-right":
+    - text: 生成方式
+    - combobox "首次指南生成方式":
+      - option "AI 生成 · 可能需要较长等待"
+      - option "快速原文整理 · 不调用模型" [selected]
+    - generic: 先看看怎么用
+    - button "体验 requests 示例 arrow-right":
+      - text: 体验 requests 示例
+      - img "arrow-right":
+    - button "upload 导入已保存指南 · 离线查看":
+      - img "upload":
+      - generic: 导入已保存指南
+      - generic: · 离线查看
+    - generic: Enter ↵
+  - region "仓库贡献工作台":
+    - generic: 贡献工作区
+    - link "github codingsjx/openguide arrow-right":
+      - /url: https://github.com/codingsjx/openguide
+      - img "github":
+      - text: codingsjx/openguide
+      - img "arrow-right":
+    - tablist:
+      - tab "thunderbolt 贡献指南" [selected]:
+        - img "thunderbolt":
+        - generic: 贡献指南
+      - tab "rocket 仓库体检":
+        - img "rocket":
+        - generic: 仓库体检
+      - tab "question-circle 贡献问答":
+        - img "question-circle":
+        - generic: 贡献问答
+    - tabpanel "thunderbolt 贡献指南":
+      - generic: CONTRIBUTION GUIDE
+      - heading "生成贡献指南" [level=4]
+      - text: 输入仓库后生成
+      - strong: 结构化、带证据
+      - text: 的分步新手贡献指南（Stage A 环境搭建 → B 测试 → C 挑 issue → D 首 PR）。
+      - textbox "仓库 URL": https://github.com/codingsjx/openguide
+      - button "thunderbolt 用 AI 生成":
+        - img "thunderbolt":
+        - generic: 用 AI 生成
+      - button "快速(本地规则)":
+        - generic: 快速(本地规则)
+      - button "clock-circle 超时设置 · 60 秒":
+        - img "clock-circle":
+        - generic: 超时设置 · 60 秒
+      - generic: 11 步
+      - button "保存指南 JSON":
+        - generic: 保存指南 JSON
+      - alert:
+        - img "info-circle":
+        - generic: 规则模式 · 由你选择
+        - text: 你选择了“快速（本地规则）”，这次生成没有调用模型。命令仍需在本机验证。
+        - button "用 AI 重新生成":
+          - generic: 用 AI 重新生成
+      - generic: 当前 · 测试基线
+      - generic: 规则整理
+      - generic "生成详情与各阶段来源"
+      - generic "资料版本与核验说明 · 8c21e6d43798"
+      - strong: 本阶段要达到什么
+      - generic: 取得真实的检查结果，区分测试、构建、失败、跳过与未运行项。
+      - generic: 自行核对 1/11
+      - generic: 卡住 1
+      - generic: 暂缓 0
+      - button "导出学习记录":
+        - generic: 导出学习记录
+      - generic: 进度和摘要仅保存在当前浏览器；刷新后可从首页“继续上次指南”恢复同一版本与步骤，新版本不混用。请勿填写密钥或原始日志。状态是你的记录，不代表系统执行验证。
+      - generic "步骤目录 · 返回未完成项和卡点"
+      - generic: 未记录完成
+      - button "第 1 步 · 取得本地副本，核对仓库获取方式":
+        - generic: 第 1 步 · 取得本地副本，核对仓库获取方式
+      - generic: 未记录完成
+      - button "第 2 步 · 核对 README.md 中的运行时与工具要求":
+        - generic: 第 2 步 · 核对 README.md 中的运行时与工具要求
+      - generic: 未记录完成
+      - button "第 3 步 · 核对 frontend/README.md 中的运行时与工具要求":
+        - generic: 第 3 步 · 核对 frontend/README.md 中的运行时与工具要求
+      - generic: 未记录完成
+      - button "第 4 步 · 核对 backend/.python-version 中的运行时与工具要求":
+        - generic: 第 4 步 · 核对 backend/.python-version 中的运行时与工具要求
+      - generic: 未记录完成
+      - button "第 5 步 · 核对 backend/pyproject.toml 中的运行时与工具要求":
+        - generic: 第 5 步 · 核对 backend/pyproject.toml 中的运行时与工具要求
+      - generic: 已自行核对
+      - button "第 6 步 · 按原文安装依赖（请核对组件及开发用途）":
+        - generic: 第 6 步 · 按原文安装依赖（请核对组件及开发用途）
+      - generic: 未记录完成
+      - button "第 7 步 · 按原文安装依赖（请核对组件及开发用途）":
+        - generic: 第 7 步 · 按原文安装依赖（请核对组件及开发用途）
+      - generic: 卡住了
+      - button "第 8 步 · 按原文运行测试（先核对组件与范围）":
+        - generic: 第 8 步 · 按原文运行测试（先核对组件与范围）
+      - generic: 未记录完成
+      - button "第 9 步 · 按原文进行构建检查（不等同测试）":
+        - generic: 第 9 步 · 按原文进行构建检查（不等同测试）
+      - generic: 未记录完成
+      - button "第 10 步 · 查看任务检索入口，记录待核对的小范围任务":
+        - generic: 第 10 步 · 查看任务检索入口，记录待核对的小范围任务
+      - generic: 未记录完成
+      - button "第 11 步 · 待确认仓库 PR 规范与提交要求":
+        - generic: 第 11 步 · 待确认仓库 PR 规范与提交要求
+      - button "1 环境搭建 7 步":
+        - generic: "1"
+        - generic: 环境搭建
+        - generic: 7 步
+      - button "2 测试基线 2 步":
+        - generic: "2"
+        - generic: 测试基线
+        - generic: 2 步
+      - button "3 挑选 issue 1 步":
+        - generic: "3"
+        - generic: 挑选 issue
+        - generic: 1 步
+      - button "4 首次 PR 路径 1 步":
+        - generic: "4"
+        - generic: 首次 PR 路径
+        - generic: 1 步
+      - generic: B
+      - strong: 测试基线
+      - heading "第 8/11 步 · 按原文运行测试（先核对组件与范围）" [level=5]
+      - strong: 建议执行位置（按原文上下文推导）：
+      - text: backend
+      - strong: 建议先完成：
+      - text: 第 6 步（流程顺序，不代表依赖已验证）
+      - strong: 所需输入路径：
+      - text: backend/tests
+      - generic: 依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。
+      - code: uv run pytest tests/ -q
+      - text: 复制完整命令
+      - button "复制":
+        - img "copy":
+      - strong: 本步核对目标：
+      - text: 按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。
+      - strong: 基础完成检查（通用）：
+      - generic: 命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。
+      - generic: 核对测试输出中的失败、跳过与未选中项，并确认实际运行了预期用例。
+      - link "file-text README.md":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/README.md#L45
+        - img "file-text":
+        - text: README.md
+      - button "zoom-in 这步太粗":
+        - img "zoom-in":
+        - generic: 这步太粗
+      - button "question-circle 看不懂为什么":
+        - img "question-circle":
+        - generic: 看不懂为什么
+      - button "bug 报错了":
+        - img "bug":
+        - generic: 报错了
+      - generic: 日志可能交给当前配置的模型服务分析；粘贴前请移除密钥、账号及个人信息。原始日志不会保存到学习记录，离开此步会清空。
+      - textbox "脱敏报错日志" [active]:
+        - /placeholder: 把报错日志贴在这里…
+      - button "定位问题":
+        - generic: 定位问题
+      - strong: 本步记录（仅本机）
+      - generic: 卡住了
+      - generic: 先记录卡点，再展开“报错了”粘贴脱敏日志排查。尚未解决时可以暂缓，后续从步骤目录返回。
+      - textbox "本步结果或卡点摘要":
+        - /placeholder: 记录实际目录、退出码或卡点摘要；不要填写密钥或原始日志
+        - text: 【页面验收模拟】尚未执行测试；用模拟的工具不可用情形验证卡点保存，不能计作真实报错或用户试用。
+      - generic: 47 / 1000
+      - button "我卡住了，展开排错":
+        - generic: 我卡住了，展开排错
+      - button "暂缓，继续浏览":
+        - generic: 暂缓，继续浏览
+      - button "改为待继续":
+        - generic: 改为待继续
+      - button "left 上一步":
+        - img "left":
+        - generic: 上一步
+      - button "仅查看下一步":
+        - generic: 仅查看下一步
+      - button "记录完成并继续 right":
+        - generic: 记录完成并继续
+        - img "right":
+      - img "file-text":
+      - generic: 证据面板
+      - strong: 当前步骤：
+      - generic: 按原文运行测试（先核对组件与范围）
+      - text: 证据来源
+      - link "file-text README.md":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/README.md#L45
+        - img "file-text":
+        - text: README.md
+      - generic: 命令已匹配原文，尚未执行验证
+      - code: "uv run pytest tests/ -q # 69 个单测（评测体系另有 14 个：pytest benchmark/tests）"
+      - link "打开原始出处 ↗":
+        - /url: https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/README.md#L45
+        - generic: 打开原始出处 ↗
+- contentinfo:
+  - link "apartment OpenGuide":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+  - generic: 让开源的第一步，更清晰一点。
+  - img "safety-certificate":
+  - text: 核对原文，再开始行动
+  - link "项目说明 arrow-right":
+    - /url: https://github.com/codingsjx/openguide#readme
+    - text: 项目说明
+    - img "arrow-right":

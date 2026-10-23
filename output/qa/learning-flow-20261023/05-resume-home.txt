@@ -1,0 +1,136 @@
+- link "跳到仓库输入":
+  - /url: "#start"
+- banner:
+  - link "OpenGuide，前往仓库输入":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+    - generic: 开源贡献，从容开始
+  - link "在 GitHub 查看 OpenGuide 源码":
+    - /url: https://github.com/codingsjx/openguide
+    - img "github":
+    - generic: GitHub
+  - button "api 模型已配置":
+    - img "api":
+    - generic: 模型已配置
+- main:
+  - region "从读懂仓库， 到你的第一个 PR.":
+    - generic: 让第一次开源贡献，有路可循
+    - heading "从读懂仓库， 到你的第一个 PR." [level=1]:
+      - text: 从读懂仓库，
+      - text: 到你的
+      - generic: 第一个 PR.
+    - paragraph:
+      - text: 把陌生的项目，拆成清晰的下一步。
+      - text: 找到环境、测试和贡献入口，带着原文依据开始行动。
+    - img "check-circle":
+    - text: 分步贡献路线
+    - img "link":
+    - text: 原文证据可查
+    - img "question-circle":
+    - text: 随时继续追问
+    - generic "从仓库原文到贡献路线的流程示意":
+      - generic: 你的开源旅程
+      - img "github":
+      - img "github":
+      - strong: 一个你感兴趣的仓库
+      - generic: 从这里，找到第一步。
+      - generic: 流程示意
+      - img "file-text":
+      - text: 仓库原文
+      - generic: 项目说明
+      - generic: 开发与测试
+      - generic: 贡献约定
+      - text: 整理为可行动的路线
+      - img "arrow-right":
+      - generic: A
+      - strong: 搭好环境
+      - generic: 找到安装入口
+      - generic: B
+      - strong: 跑通测试
+      - generic: 核对命令与目录
+      - generic: C
+      - strong: 选择任务
+      - generic: 确认范围与状态
+      - generic: D
+      - strong: 准备 PR
+      - generic: 遵循贡献约定
+      - img "link":
+      - generic: 每一步，都能回到原文核对
+      - img "file-text":
+      - strong: 让建议有据可查
+      - generic: 资料不足，也会清楚告诉你
+  - region "你的第一站，是哪个仓库？":
+    - generic: START YOUR JOURNEY
+    - heading "你的第一站，是哪个仓库？" [level=2]
+    - img "github":
+    - text: GitHub 公开仓库
+    - img "github":
+    - textbox "GitHub 仓库地址":
+      - /placeholder: https://github.com/owner/repo
+    - button "rocket 生成路线图 arrow-right":
+      - img "rocket":
+      - generic: 生成路线图
+      - img "arrow-right":
+    - text: 生成方式
+    - combobox "首次指南生成方式":
+      - option "AI 生成 · 可能需要较长等待" [selected]
+      - option "快速原文整理 · 不调用模型"
+    - alert:
+      - img "info-circle":
+      - generic: 继续上次指南：codingsjx/openguide
+      - generic: 从本机快照和学习记录继续，不重新请求模型或核验仓库；贡献工作台表单和问答历史不在此快照中。
+      - button "继续上次指南":
+        - generic: 继续上次指南
+    - generic: 先看看怎么用
+    - button "体验 requests 示例 arrow-right":
+      - text: 体验 requests 示例
+      - img "arrow-right":
+    - button "upload 导入已保存指南 · 离线查看":
+      - img "upload":
+      - generic: 导入已保存指南
+      - generic: · 离线查看
+    - generic: Enter ↵
+  - region "不用一次读懂整个项目":
+    - generic: A CLEARER WAY TO CONTRIBUTE
+    - heading "不用一次读懂整个项目" [level=2]
+    - paragraph: 先找到起点，再走好每一步。
+    - article:
+      - img "file-search":
+      - generic: "01"
+      - heading "先了解，是否适合你" [level=3]
+      - paragraph: 查看仓库语言、构建方式与任务线索，识别上手前需要确认的信息。
+      - link "仓库体检 arrow-right":
+        - /url: "#start"
+        - text: 仓库体检
+        - img "arrow-right":
+    - article:
+      - img "rocket":
+      - generic: "02"
+      - heading "把大目标，拆成小步骤" [level=3]
+      - paragraph: 从环境搭建、测试到选题与 PR，按阶段查看操作入口和前置条件。
+      - link "贡献指南 arrow-right":
+        - /url: "#start"
+        - text: 贡献指南
+        - img "arrow-right":
+    - article:
+      - img "link":
+      - generic: "03"
+      - heading "有疑问，就回到原文" [level=3]
+      - paragraph: 展开出处、核对建议，也可以围绕当前仓库追问。资料不足时会明确说明。
+      - link "证据与问答 arrow-right":
+        - /url: "#start"
+        - text: 证据与问答
+        - img "arrow-right":
+- contentinfo:
+  - link "apartment OpenGuide":
+    - /url: "#start"
+    - img "apartment":
+    - text: OpenGuide
+  - generic: 让开源的第一步，更清晰一点。
+  - img "safety-certificate":
+  - text: 核对原文，再开始行动
+  - link "项目说明 arrow-right":
+    - /url: https://github.com/codingsjx/openguide#readme
+    - text: 项目说明
+    - img "arrow-right":

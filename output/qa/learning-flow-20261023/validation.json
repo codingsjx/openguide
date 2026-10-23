@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-23",
+  "backend_changed": false,
+  "source_revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "checks": {
+    "frontend_passed": 49,
+    "build_exit_code": 0,
+    "lint_exit_code": 0,
+    "browser_resume_same_step_and_notes": true,
+    "manual_prerequisite_navigation": true,
+    "blocked_and_deferred_not_completed": true,
+    "raw_log_not_exported": true,
+    "mobile_css_width": 375,
+    "mobile_document_width": 375,
+    "viewport_reset": true,
+    "simulation_statuses_reverted": true
+  },
+  "method": "real browser interaction and synthetic, explicitly labelled manual status records; not human trials",
+  "limits": [
+    "No source clone/install/test commands executed.",
+    "No model effect experiment or new upstream contribution.",
+    "Browser-only records are not verified execution evidence.",
+    "Original diagnosis logs, question history and contribution workbench forms are not auto-saved."
+  ]
+}
