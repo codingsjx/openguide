@@ -16,7 +16,7 @@ import type { Profile } from '../types/profile'
 import ProfileCard from '../components/ProfileCard'
 import GuideGenerator from '../components/GuideGenerator'
 import LlmSettings from '../components/LlmSettings'
-import GuidePage from './RepoAskPage'
+import RepoAskPage from './RepoAskPage'
 import GuideWizard from '../components/GuideWizard'
 import type { Guide } from '../types/guide'
 import { parseSavedGuide } from '../types/savedGuide'
@@ -154,7 +154,7 @@ export default function HomePage() {
 
       {showGuide && (
         <div className="results-wrap">
-        {demoMode && <div className="demo-banner"><ThunderboltOutlined /> 当前为本地演示数据（固定展示 psf/requests 示例路线图，与输入地址无关），启动后端后可分析任意公开仓库</div>}
+        {demoMode && <div className="demo-banner"><ThunderboltOutlined /> 贡献指南为固定的 requests 交互示例。点击「生成路线图」分析所填仓库；贡献问答会单独读取仓库资料。</div>}
         <Tabs
           activeKey={tab}
           onChange={setTab}
@@ -187,7 +187,7 @@ export default function HomePage() {
                   <QuestionCircleOutlined /> 贡献问答
                 </Space>
               ),
-              children: <GuidePage initialUrl={submittedUrl} />,
+              children: <RepoAskPage initialUrl={submittedUrl} />,
             },
           ]}
         />
