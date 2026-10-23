@@ -64,6 +64,15 @@ test('working directory cannot escape the checkout', () => {
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))
 })
 
+test('historical timeout is preserved and invalid timeout values rejected', () => {
+  const f=fixture();f.model_timeout_s=60
+  assert.equal(parseSavedGuide(JSON.stringify(f)).model_timeout_s,60)
+  for(const invalid of [9,121,25.5,'60']) {
+    f.model_timeout_s=invalid
+    assert.throws(()=>parseSavedGuide(JSON.stringify(f)))
+  }
+})
+
 test('document-derived directories survive saved guide import', () => {
   const f = fixture(); f.steps[0].working_directory = 'frontend'; f.steps[0].directory_basis = 'document_context'
   f.stage_fallbacks = { A: 'incomplete_workflow' }

@@ -1,5 +1,7 @@
 // Thin fetch wrapper for the backend. Vite dev proxy sends /api to :8000.
 // Point VITE_API_BASE at the backend root when not using the proxy.
+import { DEFAULT_GUIDE_TIMEOUT, guideRequestTimeoutMs } from '../types/guideTimeout'
+
 const BASE = import.meta.env.VITE_API_BASE ?? ''
 
 export class ApiError extends Error {
@@ -93,12 +95,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url, query, kind: kind ?? null }),
     }),
-  postGuide: (url: string, useLlm = true, signal?: AbortSignal) =>
+  postGuide: (url: string, useLlm = true, signal?: AbortSignal, modelTimeoutSeconds = DEFAULT_GUIDE_TIMEOUT) =>
     request<import('../types/guide').Guide>('/api/guide', {
       method: 'POST',
-      body: JSON.stringify({ url, use_llm: useLlm }),
+      body: JSON.stringify({ url, use_llm: useLlm, model_timeout_s: modelTimeoutSeconds }),
       signal,
-    }, 180_000),
+    }, guideRequestTimeoutMs(modelTimeoutSeconds, useLlm)),
   getLlmConfig: () => request<{ configured: boolean }>('/api/llm-config'),
   setLlmConfig: (cfg: { api_key: string; base_url: string; model: string }) =>
     request<{ configured: boolean }>('/api/llm-config', {

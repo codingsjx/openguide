@@ -8,6 +8,7 @@ export function parseSavedGuide(text: string): Guide {
   }
   const ids = new Set<number>()
   if (data.requested_mode != null && !['ai', 'rules', 'unknown'].includes(data.requested_mode)) throw new Error('生成请求模式无效')
+  if (data.model_timeout_s != null && (!Number.isInteger(data.model_timeout_s) || data.model_timeout_s < 10 || data.model_timeout_s > 120)) throw new Error('模型超时设置无效')
   if (data.stage_fallbacks != null && (typeof data.stage_fallbacks !== 'object' || Array.isArray(data.stage_fallbacks) ||
       Object.entries(data.stage_fallbacks).some(([stage, reason]) => !['A', 'B', 'C', 'D'].includes(stage) ||
         !['not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited', 'model_error', 'invalid_output', 'evidence_unverified', 'incomplete_workflow'].includes(reason as string)))) {

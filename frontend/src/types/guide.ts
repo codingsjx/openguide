@@ -51,6 +51,7 @@ export interface Guide {
   generation_mode?: 'heuristic' | 'llm' | 'mixed'
   stage_modes?: Partial<Record<'A' | 'B' | 'C' | 'D', 'heuristic' | 'llm'>>
   requested_mode?: 'ai' | 'rules' | 'unknown'
+  model_timeout_s?: number | null
   stage_fallbacks?: Partial<Record<'A' | 'B' | 'C' | 'D', 'not_configured' | 'model_timeout' | 'model_auth_failed' | 'model_rate_limited' | 'model_error' | 'invalid_output' | 'evidence_unverified' | 'incomplete_workflow'>>
   warnings?: string[]
   is_demo?: boolean

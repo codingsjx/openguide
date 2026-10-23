@@ -24,6 +24,7 @@ router = APIRouter(prefix="/api", tags=["guide"])
 class GuideRequest(BaseModel):
     url: str = Field(min_length=3)
     use_llm: bool = True
+    model_timeout_s: int = Field(default=25, ge=10, le=120)
 
 
 @router.post("/guide", response_model=Guide)
@@ -44,7 +45,9 @@ def make_guide(req: GuideRequest) -> Guide:
 
     idx = RepoIndex(owner, repo)
     idx.index(sig)
-    # Interactive requests should not retry a slow model for many minutes.
+    # Interactive calls use the bounded browser-selected timeout, no retries.
     # Offline experiment clients retain their own default timeout policy.
-    return build_guide(sig, index=idx, use_llm=req.use_llm,
-        llm_client=LLMClient(timeout_s=25.0, retry_limit=0, allow_literal_linebreaks=True) if req.use_llm else None)
+    guide = build_guide(sig, index=idx, use_llm=req.use_llm,
+        llm_client=LLMClient(timeout_s=float(req.model_timeout_s), retry_limit=0, allow_literal_linebreaks=True) if req.use_llm else None)
+    guide.model_timeout_s = req.model_timeout_s if req.use_llm else None
+    return guide

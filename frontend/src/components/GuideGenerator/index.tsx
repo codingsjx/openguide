@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, Button, Card, Input, Space, Tag, Typography } from 'antd'
-import { ThunderboltOutlined } from '@ant-design/icons'
+import { Alert, Button, Card, Input, InputNumber, Modal, Space, Tag, Typography } from 'antd'
+import { ClockCircleOutlined, ThunderboltOutlined } from '@ant-design/icons'
 
 import { api } from '../../api/client'
 import type { Guide } from '../../types/guide'
 import { downloadGuide } from '../../types/savedGuide'
+import { DEFAULT_GUIDE_TIMEOUT, MIN_GUIDE_TIMEOUT, MAX_GUIDE_TIMEOUT, isGuideTimeout, guideRequestTimeoutMs, loadGuideTimeout, saveGuideTimeout } from '../../types/guideTimeout'
 import GuideWizard from '../GuideWizard'
 
 const { Title, Paragraph, Text } = Typography
@@ -18,6 +19,19 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
   const lastUrlRef = useRef('')
   const activeRequest = useRef<AbortController | null>(null)
   const [elapsed, setElapsed] = useState(0)
+  const [modelTimeout, setModelTimeout] = useState(loadGuideTimeout)
+  const timeoutRef = useRef(modelTimeout)
+  const [timeoutOpen, setTimeoutOpen] = useState(false)
+  const [timeoutDraft, setTimeoutDraft] = useState<number | null>(modelTimeout)
+  const [requestSettings, setRequestSettings] = useState<{ ai: boolean; seconds: number } | null>(null)
+
+  function applyTimeout() {
+    if (!isGuideTimeout(timeoutDraft)) return
+    timeoutRef.current = timeoutDraft
+    setModelTimeout(timeoutDraft)
+    saveGuideTimeout(timeoutDraft)
+    setTimeoutOpen(false)
+  }
 
   useEffect(() => {
     if (!loading) return
@@ -44,8 +58,10 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
     setGuide(null)
     setError(null)
     setCancelled(false)
+    const seconds = timeoutRef.current
+    setRequestSettings({ ai: useLlm, seconds })
     try {
-      const g = await api.postGuide(u, useLlm, controller.signal)
+      const g = await api.postGuide(u, useLlm, controller.signal, seconds)
       if (activeRequest.current === controller) setGuide(g)
     } catch (e) {
       if (activeRequest.current === controller) {
@@ -99,15 +115,31 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
               快速(本地规则)
             </Button>
           </Space.Compact>
+          <Button icon={<ClockCircleOutlined />} onClick={() => { setTimeoutDraft(modelTimeout); setTimeoutOpen(true) }}>
+            超时设置 · {modelTimeout} 秒
+          </Button>
         </div>
       </Card>
+
+      <Modal title="AI 请求超时设置" open={timeoutOpen} onCancel={() => setTimeoutOpen(false)} onOk={applyTimeout}
+        okText="保存设置" cancelText="取消" okButtonProps={{ disabled: !isGuideTimeout(timeoutDraft) }}>
+        <Paragraph>设置贡献指南每个阶段的模型网络等待时间，支持 {MIN_GUIDE_TIMEOUT}–{MAX_GUIDE_TIMEOUT} 秒。</Paragraph>
+        <Space wrap style={{ marginBottom: 16 }}>
+          {[25, 45, 60, 90, 120].map((seconds) => <Button key={seconds} type={timeoutDraft === seconds ? 'primary' : 'default'} onClick={() => setTimeoutDraft(seconds)}>{seconds} 秒</Button>)}
+        </Space>
+        <div><label htmlFor="guide-model-timeout">自定义秒数：</label><InputNumber id="guide-model-timeout" aria-label="模型请求超时秒数"
+          min={MIN_GUIDE_TIMEOUT} max={MAX_GUIDE_TIMEOUT} precision={0} value={timeoutDraft} onChange={setTimeoutDraft} /></div>
+        {isGuideTimeout(timeoutDraft) && <Paragraph style={{ marginTop: 12 }}>四个阶段依次执行；页面整次等待上限约 {Math.ceil(guideRequestTimeoutMs(timeoutDraft) / 1000)} 秒，包含仓库资料采集预留时间。</Paragraph>}
+        <Paragraph type="secondary">保存后用于下一次 AI 生成，正在进行的请求保持原设置。延长等待时间不保证模型成功返回；仍可取消等待。设置保存在当前浏览器。</Paragraph>
+        <Button type="link" onClick={() => setTimeoutDraft(DEFAULT_GUIDE_TIMEOUT)}>恢复默认 25 秒</Button>
+      </Modal>
 
       {loading && (
         <Alert
           showIcon
           type="info"
           message="正在生成贡献路线图"
-          description={`已等待 ${elapsed} 秒。正在处理仓库资料与指南；网络和模型响应可能较慢。取消仅停止本页等待，后台处理可能继续。`}
+          description={`已等待 ${elapsed} 秒。${requestSettings?.ai ? `本次每阶段模型等待设置为 ${requestSettings.seconds} 秒，页面整次等待上限约 ${guideRequestTimeoutMs(requestSettings.seconds) / 1000} 秒。` : ''}正在处理仓库资料与指南。取消仅停止本页等待，后台处理可能继续。`}
           action={<Button size="small" onClick={() => activeRequest.current?.abort()}>取消等待</Button>}
           style={{ marginTop: 12 }}
         />
@@ -135,6 +167,7 @@ export default function GuideGenerator({ initialUrl }: { initialUrl: string }) {
           <Space style={{ marginBottom: 4 }}>
             {guide.unsuitable && <Tag color="red">暂不建议贡献</Tag>}
             <Tag>{guide.steps.length} 步</Tag>
+            {guide.model_timeout_s != null && <Tag>本次模型等待：{guide.model_timeout_s} 秒/阶段</Tag>}
             <Button size="small" onClick={() => downloadGuide(guide)}>保存指南 JSON</Button>
           </Space>
           <GuideWizard guide={guide} url={guide.repo_url}
