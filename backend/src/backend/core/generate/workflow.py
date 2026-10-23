@@ -9,7 +9,7 @@ import re
 
 from backend.core.generate.schemas import GuideStep
 from backend.core.github.recon import RawSignals
-from backend.core.generate.command_context import input_paths as _input_paths, document_directory
+from backend.core.generate.command_context import input_paths as _input_paths, document_directory, command_family
 
 _LABELS = {"A": "环境搭建", "B": "测试基线", "C": "挑选 issue", "D": "首次 PR 路径"}
 _CLONE = re.compile(r"^git clone\b")
@@ -46,7 +46,7 @@ def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]
     directories = {"."}
     for path in known:
         directories.update(str(parent) for parent in PurePosixPath(path).parents)
-    clone_ids, environment_ids, install_ids = [], [], []
+    clone_ids, environment_steps, install_steps = [], [], []
     for step in prepared:
         step.working_directory = None
         step.directory_basis = "unknown"
@@ -93,14 +93,19 @@ def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]
                     else:
                         step.context_notes.append(f"文件树未完整取得，尚不能确认输入路径：{full}")
         if step.stage == 'A' and _INSTALL.match(command):
-            step.prerequisite_step_ids.extend(environment_ids)
+            step.prerequisite_step_ids.extend(s.step_id for s in environment_steps
+                if step.working_directory is not None and s.working_directory==step.working_directory
+                and command_family(s.command)==command_family(command))
         if step.stage == "B":
-            step.prerequisite_step_ids.extend(environment_ids)
-            step.prerequisite_step_ids.extend(install_ids)
-            if not install_ids:
-                step.context_notes.append("本指南尚无可核验的安装步骤，运行测试前请先核对开发依赖。")
+            matching_installs=[s for s in install_steps if step.working_directory is not None
+                and s.working_directory==step.working_directory and command_family(s.command)==command_family(command)]
+            matching_environments=[s for s in environment_steps if step.working_directory is not None
+                and s.working_directory==step.working_directory and command_family(s.command)==command_family(command)]
+            step.prerequisite_step_ids.extend(s.step_id for s in matching_environments+matching_installs)
+            if not matching_installs:
+                step.context_notes.append("尚未确认与本步骤组件和目录匹配的安装入口，请先核对该组件的开发依赖。")
         if step.stage == "A" and _INSTALL.match(command):
-            install_ids.append(step.step_id)
+            install_steps.append(step)
         if step.stage == 'A' and _ENVIRONMENT.match(command):
-            environment_ids.append(step.step_id)
+            environment_steps.append(step)
     return prepared

@@ -147,12 +147,14 @@ def test_directory_is_not_inherited_across_code_blocks():
     assert document_directory(sig,'README.md','pnpm build') is None
 
 
-def test_repeated_commands_use_verified_occurrence_and_unknown_stays_unknown():
+def test_repeated_commands_use_verified_occurrence_and_root_readme_cd():
     sig=signals(); sig.file_tree += ['admin/package.json']
     sig.doc_files[0].text='```\ncd frontend\npnpm install\n```\n```\ncd admin\npnpm install\n```'
     assert document_directory(sig,'README.md','pnpm install',7)[0]=='admin'
     sig.file_tree += ['tools/frontend/package.json']
-    assert document_directory(sig,'README.md','pnpm install',3) is None
+    assert document_directory(sig,'README.md','pnpm install',3)[0]=='frontend'
+    sig.doc_files[0].path='docs/README.md'
+    assert document_directory(sig,'docs/README.md','pnpm install',3) is None
 
 
 def test_build_without_test_script_is_not_claimed_as_test_baseline():

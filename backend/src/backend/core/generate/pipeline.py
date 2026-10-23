@@ -141,11 +141,11 @@ def build_guide(
             required = {s.command for s in rules if s.command and (stage == 'B' or
                 re.match(r'^(?:uv (?:pip install|sync)|pip\d? install|python\d? -m pip install|pnpm install|npm (?:ci|install)|yarn install)(?=\s|$)',s.command))}
             current = {s.command for s in guide.steps if s.stage == stage and s.command}
-            if len(required) >= 2 and not required <= current:
+            if required and not required <= current:
                 guide.steps = [s for s in guide.steps if s.stage != stage] + rules
                 guide.stage_modes[stage] = 'heuristic'
                 guide.stage_fallbacks[stage] = 'incomplete_workflow'
-                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段未覆盖原文中的多组件操作，已使用核验后的原文步骤补齐该阶段。')
+                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段缺少已核验的操作入口，已使用原文步骤补齐该阶段。')
                 completed = True
         if completed:
             guide.steps = audit_steps(sig, index, guide.steps)
@@ -165,11 +165,17 @@ def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> li
     steps = _backfill_evidence(sig, index, steps)
     for st in steps:
         source_path = st.evidence.source.split('#', 1)[0].lower()
-        if st.command and st.stage == 'A' and source_path.startswith('.github/workflows/') and re.search(r'typecheck|publish|release|coverage|lint', source_path):
+        if st.command and st.stage == 'A' and source_path.startswith('.github/workflows/'):
             st.command = None
             st.execution_record = None
             st.title = '核对专项 CI 安装示例（待确认是否适用）'
             st.expected = '该来源属于专项 CI，尚不能作为普通开发环境的必需安装步骤；请核对仓库开发说明。'
+        if st.command and st.stage == 'A' and st.evidence.verification == 'command_verified' and re.match(r'^(?:cd|Set-Location)(?=\s|$)',st.command,re.I):
+            st.command = None
+            st.execution_record = None
+            st.evidence.verification = 'quote_verified'
+            st.title = '按原文核对并进入开发目录'
+            st.expected = '先核对原文中的目录切换说明；后续每条命令的执行位置会另行标注，尚未执行目录切换。'
         if st.command and not re.match(_STAGE_CMD_PATTERNS[st.stage], st.command):
             st.evidence = Evidence(kind="missing", reason="命令动作不属于当前阶段")
         if st.command and st.evidence.verification != "command_verified":
@@ -239,6 +245,15 @@ def _retrieve_for_stage(index: RepoIndex, stage: str, query: str) -> list[dict]:
             match = next((h for h in candidates if (h.meta or {}).get('source') and accepts(h.text)), None)
             if match and not any(h.text == match.text and h.meta == match.meta for h in reserved):
                 reserved.append(match)
+        # Keep a second component's install README within the same four-slot
+        # budget instead of letting backend/CI material occupy every slot.
+        for component, query in [('frontend','frontend pnpm npm install dependencies'),('backend','backend uv sync pip install dependencies')]:
+            if len(reserved) >= 4: break
+            candidates = index.search(query,kind=kind,top_k=20).hits
+            match = next((h for h in sorted(candidates,key=rank,reverse=True)
+                if re.search(r'(?:^|/)'+component+r'/',str((h.meta or {}).get('source','')))
+                and any(re.match(_STAGE_CMD_PATTERNS['A'],line.strip()) for line in h.text.splitlines())),None)
+            if match and not any(h.text == match.text and h.meta == match.meta for h in reserved): reserved.append(match)
         hits = reserved + [h for h in hits if not any(h.text == r.text and h.meta == r.meta for r in reserved)]
     # Diversity: a long generic file must not occupy every context slot.
     selected, source_counts = [], {}

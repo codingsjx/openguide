@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-23",
+  "repository": "https://github.com/codingsjx/openguide",
+  "revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "method": "fixed-revision deterministic before/after replay, hermetic regressions and actual browser acceptance; not human trials",
+  "checks": {
+    "backend_and_benchmark_passed": 302,
+    "backend_dependency_warnings": 1,
+    "frontend_passed": 36,
+    "lint_exit_code": 0,
+    "build_exit_code": 0,
+    "live_final_rule_assertions_passed": true,
+    "ai_software_snapshot_regression_passed": true
+  },
+  "controlled_after_commands": [
+    {
+      "command": "uv sync",
+      "directory": "backend",
+      "prerequisites": []
+    },
+    {
+      "command": "pnpm install",
+      "directory": "frontend",
+      "prerequisites": []
+    },
+    {
+      "command": "uv run pytest tests/ -q",
+      "directory": "backend",
+      "prerequisites": [
+        3
+      ]
+    },
+    {
+      "command": "pnpm build",
+      "directory": "frontend",
+      "prerequisites": [
+        4
+      ]
+    }
+  ],
+  "controlled_question_sources": [
+    "backend/README.md",
+    "backend/Dockerfile",
+    "backend/pyproject.toml",
+    "backend/README.md",
+    "README.md"
+  ],
+  "live_ai_checkpoint": {
+    "mode": "mixed",
+    "stage_modes": {
+      "A": "heuristic",
+      "B": "llm",
+      "C": "heuristic",
+      "D": "llm"
+    },
+    "fallbacks": {
+      "A": "evidence_unverified",
+      "C": "evidence_unverified"
+    },
+    "note": "Actual intermediate model attempt; final component-specific prerequisites were verified afterwards using rule generation."
+  },
+  "live_question": {
+    "mode": "extractive",
+    "note": "AI interpretation did not pass verification; original commands and directory were retained. Not counted as AI answer success."
+  },
+  "limits": [
+    "No installation or test command from the analyzed master revision was executed.",
+    "Source comments mentioning 68/69 tests are not current execution counts.",
+    "Directory/component selection is static inference, not a general semantic proof.",
+    "Human trials and independent review remain pending.",
+    "No model effect score or accepted upstream PR is claimed."
+  ]
+}

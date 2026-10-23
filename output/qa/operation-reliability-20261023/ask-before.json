@@ -1,0 +1,178 @@
+{
+  "repo_url": "https://github.com/codingsjx/openguide",
+  "question": "后端测试应该在哪个目录运行？需要先安装什么依赖？",
+  "resolved_question": "后端测试应该在哪个目录运行？需要先安装什么依赖？",
+  "context_used": false,
+  "revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "intents": [
+    "setup",
+    "test",
+    "arch"
+  ],
+  "status": "answered",
+  "mode": "extractive",
+  "fallback_reason": "",
+  "verification_issue": "",
+  "points": [
+    {
+      "text": "已找到可核对的环境搭建入口：backend/README.md。",
+      "citations": [
+        "S1"
+      ]
+    },
+    {
+      "text": "已找到可核对的测试入口：backend/README.md。",
+      "citations": [
+        "S1"
+      ]
+    },
+    {
+      "text": "已找到可核对的文件与目录入口：backend/uv.lock。这里仅确认该文件存在，文件职责和修改方案还需查看代码。",
+      "citations": [
+        "S5"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "command": "uv sync                        # 按 uv.lock 安装依赖",
+      "citation": "S1",
+      "working_directory": null,
+      "directory_basis": "unknown"
+    },
+    {
+      "command": "npm ci",
+      "citation": "S3",
+      "working_directory": null,
+      "directory_basis": "unknown"
+    },
+    {
+      "command": "uv run pytest tests/ -q        # 68 个单测",
+      "citation": "S1",
+      "working_directory": null,
+      "directory_basis": "unknown"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "kind": "file",
+      "source": "backend/README.md",
+      "quote": "# OpenGuide 后端（FastAPI）\n\n仓库勘探 → 画像 → 四视角分层索引 → 结构化指南生成 + 证据校验 + 三步追问。\n\n## 运行\n\n需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。\n\n```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 68 个单测\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```\n\n可选：复制 `.env.example` 为 `.env`，填 `GITHUB_TOKEN` 提升 GitHub 限流；\n填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` 启用 AI 生成。不填也能跑：\n生成会走确定性启发式路径，测试与 CI 均在该路径下验证。\n\n> 测试默认走 hermetic 路径（`conftest.py` 设 `USE_CHROMA=false`），\n> 不下载嵌入模型，秒级完成。需要真实向量检索时设 `USE_CHROMA=true`。\n\n## 目录\n\n| 路径 | 说明 |\n|---|---|\n| `src/backend/api/` | HTTP 层：profile / search / guide / followup / settings 路由 |\n| `src/backend/core/github/` | GitHub API 封装、限流缓存、仓库勘探（M0） |\n| `src/backend/core/profile/` | 画像 schema 与构建 |\n| `src/backend/core/index/` | 四视角分层索引与检索（M1） |\n| `src/backend/core/decide/` | 适不适合新手的决策树（纯规则，可单测） |\n| `src/backend/core/generate/` | Stage A–D 结构化生成 + 证据锚点校验（M2） |\n| `src/backend/core/followup/` | 三步追问：这步太粗 / 看不懂为什么 / 报错了 |\n| `tests/` | pytest（默认离线、无密钥） |",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L1-L34",
+      "line_start": 1,
+      "line_end": 34,
+      "verification": "literal_quote",
+      "intents": [
+        "setup",
+        "test"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S2",
+      "kind": "file",
+      "source": "README.md",
+      "quote": "浏览器打开 http://127.0.0.1:5173 即可。前端由 nginx 提供静态站点并把 `/api`\n反向代理到后端容器（同源，无需 CORS / 额外配置）。\n\n- 默认 `USE_CHROMA=false`：走**确定性检索**，零模型下载、秒级启动，适合离线评审。\n  需要本地向量检索时在 `.env` 里设 `USE_CHROMA=true`（首次会下载嵌入模型）。\n- 向量库与 GitHub 响应缓存挂在命名卷上，重启不丢、不重抓。\n- 详细演示流程见 [docs/demo_script.md](docs/demo_script.md)。\n\n---\n\n## 本机运行（后端）\n\n需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。\n\n```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 69 个单测（评测体系另有 14 个：pytest benchmark/tests）\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```\n\n可选：`backend/.env`（复制 `.env.example`）填 `GITHUB_TOKEN` 提升限流；不填也能跑（限流更低）。",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/README.md#L28-L49",
+      "line_start": 28,
+      "line_end": 49,
+      "verification": "literal_quote",
+      "intents": [
+        "setup",
+        "test"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S3",
+      "kind": "file",
+      "source": "benchmark/README.md",
+      "quote": "- [x] golden_guides/*.json：5/5 完成（requests / click / cookiecutter / mocha / camelot）\n- [x] 5 个仓库的 build/test_cmd 已人工复核并标 `verified: true`\n- [x] L1 烟测（`l1_smoke.py`）\n- [x] L2 接入真实生成器（`python -m benchmark.l2_golden.runner` 跑出五维度真数字）\n- [x] L3 接 baseline + layered 生成器（`l3_ablation/`，含 `--provider auto` 走真实模型）\n- [x] 延迟指标：L2/L3 报告记录单仓库耗时（`elapsed_s` / `elapsed_s_mean`）\n- [ ] L4 填真实 PR/commit 链接（`l4_contribution/records.json`，见下）\n\n## 环境准备（command_exec 的前提）\n\n`command_exec` 只有在命令**真能跑**时才有意义，因此 L2/L3 会为每个仓库准备独立环境：\n\n| 语言 | 动作 |\n|---|---|\n| Python | 建 venv，尝试 `pip install -r requirements-dev.txt`、`pip install -e .[dev]` / `-e .`，并补装 `tox` |\n| JavaScript | 解析 `npm` 全路径后执行 `npm ci`（有 lock）或 `npm install` |\n\n| 环境变量 | 作用 |\n|---|---|\n| `OG_CMD_TIMEOUT` | 单条命令超时秒数（默认 900）。超时记为失败并标注 `(超时 >Ns)` |\n| `OG_SKIP_PROVISION=1` | 跳过依赖安装（快速跑批，此时 `command_exec` 仅供参考） |",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/benchmark/README.md#L49-L69",
+      "line_start": 49,
+      "line_end": 69,
+      "verification": "literal_quote",
+      "intents": [
+        "setup"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S4",
+      "kind": "file",
+      "source": "README.md",
+      "quote": "```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 69 个单测（评测体系另有 14 个：pytest benchmark/tests）\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```\n\n可选：`backend/.env`（复制 `.env.example`）填 `GITHUB_TOKEN` 提升限流；不填也能跑（限流更低）。\n\n> 测试默认走 hermetic 路径（`backend/conftest.py` 设 `USE_CHROMA=false`），**不下载嵌入模型**，秒级完成。\n\n## 本机运行（前端）\n\n需先装 Node.js 24 LTS 与 pnpm。\n\n```bash\ncd frontend\npnpm install\npnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000\n```\n\n浏览器开 http://127.0.0.1:5173，输入 `https://github.com/psf/requests` 之类即可看路线图。\n\n## LLM 配置\n\n不配置 Key 也能跑：生成会走**确定性启发式**路径（`core/generate/pipeline.py` 的 `_generate_heuristic`），用于演示与 CI。要启用 AI 生成，二选一：\n\n- 页面右上角「设置我的 LLM」填写（发送到本地后端并仅存**当前进程内存**，不写盘；只适合单用户本地演示）\n- `backend/.env` 填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/README.md#L42-L70",
+      "line_start": 42,
+      "line_end": 70,
+      "verification": "literal_quote",
+      "intents": [
+        "test"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S5",
+      "kind": "tree",
+      "source": "backend/uv.lock",
+      "quote": "backend/uv.lock",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/uv.lock",
+      "line_start": null,
+      "line_end": null,
+      "verification": "tree_entry",
+      "intents": [
+        "arch"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S6",
+      "kind": "tree",
+      "source": "backend/README.md",
+      "quote": "backend/README.md",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md",
+      "line_start": null,
+      "line_end": null,
+      "verification": "tree_entry",
+      "intents": [
+        "arch"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S7",
+      "kind": "tree",
+      "source": "backend/Dockerfile",
+      "quote": "backend/Dockerfile",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/Dockerfile",
+      "line_start": null,
+      "line_end": null,
+      "verification": "tree_entry",
+      "intents": [
+        "arch"
+      ],
+      "note": ""
+    }
+  ],
+  "missing": [],
+  "next_actions": [
+    "打开下方原文，核对完整前置条件及当前开发环境。",
+    "若仍不明确，补充操作系统、具体任务或脱敏异常，并继续追问。",
+    "记录实际退出码、失败与跳过数量，区分局部测试和完整测试。"
+  ],
+  "warnings": [
+    "文件证据固定于提交 8c21e6d43798c707b5aa5001112719e832ae95a8；issue 信息是独立采集的快照，操作前需核对最新状态。",
+    "本次使用原文整理，没有调用问答生成模型。"
+  ],
+  "links": [
+    {
+      "label": "仓库说明",
+      "url": "https://github.com/codingsjx/openguide#readme"
+    },
+    {
+      "label": "开放任务",
+      "url": "https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen"
+    }
+  ]
+}

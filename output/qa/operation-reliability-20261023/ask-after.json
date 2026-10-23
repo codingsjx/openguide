@@ -1,0 +1,142 @@
+{
+  "repo_url": "https://github.com/codingsjx/openguide",
+  "question": "后端测试应该在哪个目录运行？需要先安装什么依赖？",
+  "resolved_question": "后端测试应该在哪个目录运行？需要先安装什么依赖？",
+  "context_used": false,
+  "revision": "8c21e6d43798c707b5aa5001112719e832ae95a8",
+  "intents": [
+    "setup",
+    "test"
+  ],
+  "status": "answered",
+  "mode": "extractive",
+  "fallback_reason": "",
+  "verification_issue": "",
+  "points": [
+    {
+      "text": "已找到可核对的环境搭建入口：backend/README.md。",
+      "citations": [
+        "S1"
+      ]
+    },
+    {
+      "text": "已找到可核对的测试入口：backend/README.md。",
+      "citations": [
+        "S1"
+      ]
+    },
+    {
+      "text": "原文操作的建议执行位置：backend。这是按原文上下文推导的位置，命令尚未执行。",
+      "citations": [
+        "S1"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "command": "uv sync",
+      "citation": "S1",
+      "working_directory": "backend",
+      "directory_basis": "document_context"
+    },
+    {
+      "command": "uv run pytest tests/ -q",
+      "citation": "S1",
+      "working_directory": "backend",
+      "directory_basis": "document_context"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "kind": "file",
+      "source": "backend/README.md",
+      "quote": "# OpenGuide 后端（FastAPI）\n\n仓库勘探 → 画像 → 四视角分层索引 → 结构化指南生成 + 证据校验 + 三步追问。\n\n## 运行\n\n需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。\n\n```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 68 个单测\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```\n\n可选：复制 `.env.example` 为 `.env`，填 `GITHUB_TOKEN` 提升 GitHub 限流；\n填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` 启用 AI 生成。不填也能跑：\n生成会走确定性启发式路径，测试与 CI 均在该路径下验证。\n\n> 测试默认走 hermetic 路径（`conftest.py` 设 `USE_CHROMA=false`），\n> 不下载嵌入模型，秒级完成。需要真实向量检索时设 `USE_CHROMA=true`。\n\n## 目录\n\n| 路径 | 说明 |\n|---|---|\n| `src/backend/api/` | HTTP 层：profile / search / guide / followup / settings 路由 |\n| `src/backend/core/github/` | GitHub API 封装、限流缓存、仓库勘探（M0） |\n| `src/backend/core/profile/` | 画像 schema 与构建 |\n| `src/backend/core/index/` | 四视角分层索引与检索（M1） |\n| `src/backend/core/decide/` | 适不适合新手的决策树（纯规则，可单测） |\n| `src/backend/core/generate/` | Stage A–D 结构化生成 + 证据锚点校验（M2） |\n| `src/backend/core/followup/` | 三步追问：这步太粗 / 看不懂为什么 / 报错了 |\n| `tests/` | pytest（默认离线、无密钥） |",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L1-L34",
+      "line_start": 1,
+      "line_end": 34,
+      "verification": "literal_quote",
+      "intents": [
+        "setup",
+        "test"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S2",
+      "kind": "file",
+      "source": "backend/Dockerfile",
+      "quote": "# OpenGuide backend image (FastAPI + 四视角索引 + 指南生成).\n#\n# Build context is ./backend. Dependencies come from uv.lock so the image is\n# reproducible and matches local dev / CI.\nFROM python:3.12-slim\n\nENV PYTHONUNBUFFERED=1 \\\n    PYTHONDONTWRITEBYTECODE=1 \\\n    PIP_NO_CACHE_DIR=1 \\\n    UV_LINK_MODE=copy \\\n    UV_PROJECT_ENVIRONMENT=/app/.venv\n\n# uv pinned to a known version (matches the lock's revision) installed from\n# PyPI, so the build does not depend on a container-registry tag existing.\nRUN pip install --no-cache-dir \"uv==0.12.23\"\n\nWORKDIR /app\n\n# Dependency layer first so source edits don't bust the cache.\nCOPY pyproject.toml uv.lock ./\nRUN uv sync --frozen\n\nCOPY README.md ./\nCOPY src ./src\nCOPY tests ./tests\nCOPY conftest.py ./",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/Dockerfile#L1-L26",
+      "line_start": 1,
+      "line_end": 26,
+      "verification": "literal_quote",
+      "intents": [
+        "setup"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S3",
+      "kind": "file",
+      "source": "backend/pyproject.toml",
+      "quote": "[project]\nname = \"backend\"\nversion = \"0.1.0\"\ndescription = \"Evidence-grounded onboarding guide generator for open-source contributors\"\nreadme = \"README.md\"\nrequires-python = \">=3.12\"\ndependencies = [\n    \"chromadb>=1.5.9\",\n    \"fastapi>=0.115\",\n    \"httpx>=0.27\",\n    \"pydantic>=2.7\",\n    \"pydantic-settings>=2.3\",\n    \"sentence-transformers>=6.0.1\",\n    \"uvicorn[standard]>=0.52.4\",\n]\n\n[project.scripts]\nbackend = \"backend:main\"\n\n[build-system]\nrequires = [\"uv_build>=0.12.7,<0.13.0\"]\nbuild-backend = \"uv_build\"\n\n[dependency-groups]\ndev = [\n    \"pytest>=9.1.1\",\n]",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/pyproject.toml#L1-L27",
+      "line_start": 1,
+      "line_end": 27,
+      "verification": "literal_quote",
+      "intents": [
+        "setup"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S4",
+      "kind": "file",
+      "source": "backend/README.md",
+      "quote": "| 路径 | 说明 |\n|---|---|\n| `src/backend/api/` | HTTP 层：profile / search / guide / followup / settings 路由 |\n| `src/backend/core/github/` | GitHub API 封装、限流缓存、仓库勘探（M0） |\n| `src/backend/core/profile/` | 画像 schema 与构建 |\n| `src/backend/core/index/` | 四视角分层索引与检索（M1） |\n| `src/backend/core/decide/` | 适不适合新手的决策树（纯规则，可单测） |\n| `src/backend/core/generate/` | Stage A–D 结构化生成 + 证据锚点校验（M2） |\n| `src/backend/core/followup/` | 三步追问：这步太粗 / 看不懂为什么 / 报错了 |\n| `tests/` | pytest（默认离线、无密钥） |\n\n完整接口约定见 [../docs/code_outline.md](../docs/code_outline.md)。",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/backend/README.md#L25-L36",
+      "line_start": 25,
+      "line_end": 36,
+      "verification": "literal_quote",
+      "intents": [
+        "test"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S5",
+      "kind": "file",
+      "source": "README.md",
+      "quote": "## 本机运行（后端）\n\n需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。\n\n```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 69 个单测（评测体系另有 14 个：pytest benchmark/tests）\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```\n\n可选：`backend/.env`（复制 `.env.example`）填 `GITHUB_TOKEN` 提升限流；不填也能跑（限流更低）。\n\n> 测试默认走 hermetic 路径（`backend/conftest.py` 设 `USE_CHROMA=false`），**不下载嵌入模型**，秒级完成。",
+      "url": "https://github.com/codingsjx/openguide/blob/8c21e6d43798c707b5aa5001112719e832ae95a8/README.md#L38-L51",
+      "line_start": 38,
+      "line_end": 51,
+      "verification": "literal_quote",
+      "intents": [
+        "test"
+      ],
+      "note": ""
+    }
+  ],
+  "missing": [],
+  "next_actions": [
+    "打开下方原文，核对完整前置条件及当前开发环境。",
+    "若仍不明确，补充操作系统、具体任务或脱敏异常，并继续追问。",
+    "记录实际退出码、失败与跳过数量，区分局部测试和完整测试。"
+  ],
+  "warnings": [
+    "文件证据固定于提交 8c21e6d43798c707b5aa5001112719e832ae95a8；issue 信息是独立采集的快照，操作前需核对最新状态。",
+    "本次使用原文整理，没有调用问答生成模型。"
+  ],
+  "links": [
+    {
+      "label": "仓库说明",
+      "url": "https://github.com/codingsjx/openguide#readme"
+    },
+    {
+      "label": "开放任务",
+      "url": "https://github.com/codingsjx/openguide/issues?q=is%3Aissue+is%3Aopen"
+    }
+  ]
+}

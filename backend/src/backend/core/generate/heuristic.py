@@ -6,7 +6,7 @@ from pathlib import PurePosixPath
 
 from backend.core.generate.evidence import verify_step_evidence
 from backend.core.generate.schemas import Evidence, GuideStep
-from backend.core.generate.command_context import document_directory, input_paths, is_dependency_declaration
+from backend.core.generate.command_context import document_directory, input_paths, is_dependency_declaration, command_from_line
 
 LABELS = {"A": "环境搭建", "B": "测试基线", "C": "挑选 issue", "D": "首次 PR 路径"}
 
@@ -25,7 +25,7 @@ def _commands(sig, snippets, pattern):
             continue
         lines = snippet['text'].splitlines() + re.findall(r'`([^`\n]+)`', snippet['text'])
         for line in lines:
-            command = re.sub(r'^[$>]\s*', '', line.strip()).strip()
+            command = command_from_line(line)
             if (not re.match(pattern, command) or is_dependency_declaration(command) or command in seen or len(command) > 300
                     or re.search(r'<[^>]+>|\{[^}]*\}|\$\(|&&|\|\||[;`]', command)
                     or re.search(r'\byour[_-]?(?:user)?name(?:[_-]here)?\b|\byour[-_]org\b', command, re.I)):
@@ -80,6 +80,7 @@ def _complementary(sig, candidates, limit):
 def generate_stage(sig, stage, snippets, command_pattern):
     if stage == 'A':
         candidates = _commands(sig, snippets, command_pattern)
+        candidates = [s for s in candidates if not s.evidence.source.startswith('.github/workflows/')]
         clone = [s for s in candidates if s.command.startswith('git clone ')]
         environment_commands = [s for s in candidates if re.match(r'^(?:uv venv|python(?:3)? -m venv|virtualenv|conda (?:create|env create))(?=\s|$)', s.command)]
         environment = [s for s in environment_commands if not re.search(r'publish|release|upload|deploy', s.command, re.I)]

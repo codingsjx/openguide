@@ -34,7 +34,8 @@ class Model:
             evidence = {'kind':'file','source':'README.md','quote':'pip install -e .[dev]'}
         elif stage == 'D':
             evidence = {'kind':'file','source':'CONTRIBUTING.md','quote':'Fork the repository and create a branch.'}
-        return {'steps': [{'title': f'Preserved AI {stage}', 'evidence': evidence}]}
+        return {'steps': [{'title': f'Preserved AI {stage}',
+            'command':'pip install -e .[dev]' if stage=='A' else None,'evidence': evidence}]}
 
 
 def generate(client=None, **kwargs):

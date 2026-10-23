@@ -16,7 +16,7 @@ from urllib.parse import urlsplit, unquote
 
 from backend.core.github.recon import RawSignals
 from backend.core.generate.schemas import Evidence
-from backend.core.generate.command_context import is_dependency_declaration
+from backend.core.generate.command_context import is_dependency_declaration, source_command_line, without_shell_comment
 
 # Issue refs like "#42" / "issues/42" / a full github issue url.
 _ISSUE_RE = re.compile(r"(?:issues?/)?(\d{1,6})$")
@@ -147,19 +147,20 @@ def verify_step_evidence(step, sig: RawSignals) -> Evidence:
         if dependency_file or is_dependency_declaration(command):
             return Evidence(kind="missing", reason="依赖版本声明不是可执行命令")
         # A tool name inside a dependency/version string is not a command.
-        candidates = []
-        for line in text.splitlines():
-            line = re.sub(r"^(?:\$|>)\s*", "", line.strip())
-            line = re.sub(r"^-?\s*run:\s*", "", line)
-            candidates.append(line)
+        candidates = [source_command_line(line) for line in text.splitlines()]
         inline_commands = re.findall(r"`([^`\n]+)`", text)
-        if command not in candidates and command not in inline_commands:
+        line_match = next((i for i, original in enumerate(candidates)
+            if command == original or command == without_shell_comment(original)), None)
+        inline_match = next((original for original in inline_commands
+            if command == original or command == without_shell_comment(original)), None)
+        if line_match is None and inline_match is None:
             return Evidence(kind="missing", reason="指定来源未包含该命令")
+        original = candidates[line_match] if line_match is not None else inline_match
         if ev.kind == "file":
-            relative_line = (candidates.index(command) + 1) if command in candidates else text[:text.find(f"`{command}`")].count("\n") + 1
+            relative_line = line_match + 1 if line_match is not None else text[:text.find(f"`{inline_match}`")].count("\n") + 1
             ev.line_start = (ev.line_start or 1) + relative_line - 1
             ev.line_end = ev.line_start
-        ev.quote, ev.verification = step.command.strip(), "command_verified"
+        ev.quote, ev.verification = original, "command_verified"
     if ev.kind == "file" and ev.quote and ev.line_start is None:
         full = next(d.text for d in sig.doc_files if d.path == ev.source.split("#", 1)[0])
         pos = full.find(ev.quote)

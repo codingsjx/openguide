@@ -15,12 +15,13 @@ from backend.core.generate.pipeline import _STAGE_CMD_PATTERNS, _fallback_reason
 from backend.core.github.recon import RawSignals
 from backend.core.index.retrieval import _contains_any
 from backend.core.index.service import RepoIndex
+from backend.core.ask.scope import component_mentions, question_component, path_component, source_allowed, component_excerpt
 
 Intent = Literal['setup', 'test', 'contribute', 'arch', 'issue', 'why']
 LABELS = {'setup':'环境搭建','test':'测试','contribute':'贡献规范','arch':'文件与目录','issue':'任务选择','why':'背景说明'}
 QUERIES = {
-    'setup':'development install requirements-dev editable venv runtime version',
-    'test':'run tests pytest test suite Makefile test ci',
+    'setup':'development install requirements-dev editable venv runtime version uv sync pip install npm ci pnpm install dependencies',
+    'test':'run tests pytest test suite Makefile uv run npm pnpm build',
     'contribute':'contributing pull request fork branch review tests template',
     'arch':'architecture source directory module entry point',
     'issue':'good first issue help wanted task',
@@ -83,6 +84,10 @@ class AnswerResult(BaseModel):
 
 def resolve_question(question: str, history: list[str]) -> tuple[list[str], str, bool]:
     explicit = [kind for kind, keys in KEYWORDS.items() if _contains_any(question, *keys)]
+    if ('arch' in explicit and any(k in explicit for k in ('setup','test'))
+            and re.search(r'运行|执行|命令|安装|测试|\brun\b|\binstall\b',question,re.I)
+            and not re.search(r'架构|模块|哪个文件|哪些文件|source tree|architecture',question,re.I)):
+        explicit.remove('arch')
     if history and re.search(r'这条命令|这个命令|上面的命令|前面的命令|this command|that command',question,re.I) and re.search(r'目录|哪里|位置|where|directory',question,re.I):
         previous_kinds, _, _ = resolve_question(history[-1],history[:-1])
         command_kinds=[kind for kind in previous_kinds if kind in {'setup','test'}]
@@ -105,7 +110,7 @@ def _clean(text: str) -> str:
     return '\n'.join(line for line in text.splitlines() if not re.match(r'^===== .+ =====\s*$', line.strip())).strip()
 
 
-def _source(sig: RawSignals, source: str, text: str, intent: str) -> AnswerSource | None:
+def _source(sig: RawSignals, source: str, text: str, intent: str, scope_bounds: tuple[int,int] | None = None) -> AnswerSource | None:
     repo_url = f'https://github.com/{sig.meta.owner}/{sig.meta.repo}'
     path = source.split('#', 1)[0]
     doc = next((d for d in sig.doc_files if d.path == path), None)
@@ -129,6 +134,10 @@ def _source(sig: RawSignals, source: str, text: str, intent: str) -> AnswerSourc
         if end_pos-start_pos > 2400:
             end_pos=full.rfind('\n',start_pos,start_pos+2400)
             if end_pos<=start_pos: end_pos=start_pos+2400
+        if scope_bounds:
+            start_pos=max(start_pos,scope_bounds[0])
+            end_pos=min(end_pos,scope_bounds[1])
+        if end_pos<=start_pos: return None
         raw=full[start_pos:end_pos]
         pos=start_pos+len(raw)-len(raw.lstrip())
         excerpt=raw.strip()
@@ -146,18 +155,27 @@ def _source(sig: RawSignals, source: str, text: str, intent: str) -> AnswerSourc
     return None
 
 
-def collect_sources(sig: RawSignals, index: RepoIndex, intents: list[str], query: str) -> list[AnswerSource]:
+def collect_sources(sig: RawSignals, index: RepoIndex, intents: list[str], query: str, *, component: str | None = None, scope_query: str | None = None) -> list[AnswerSource]:
     sources: list[AnswerSource] = []
     for intent in intents:
         requested_issues = {int(n) for n in re.findall(r'(?:#|issues/)(\d+)', query)} if intent == 'issue' else set()
-        hits = index.search(query + '\n' + QUERIES[intent], kind=intent, top_k=12).hits
+        hits = index.search(query + '\n' + QUERIES[intent] + ('\n'+component if component else ''), kind=intent, top_k=12).hits
         # Dev installation and test entry points outrank release workflows.
         hits.sort(key=lambda h: (
+            component is not None and path_component(str((h.meta or {}).get('source',''))) == component,
             not str((h.meta or {}).get('source','')).startswith('.github/workflows/'),
             bool(re.search(r'requirements-dev|python -m pytest|pytest tests|npm test', h.text)), h.score), reverse=True)
         count = 0
         for hit in hits:
-            item = _source(sig, str((hit.meta or {}).get('source') or ''), hit.text, intent)
+            path = str((hit.meta or {}).get('source') or '')
+            if not source_allowed(path,scope_query or query,component,intent): continue
+            bounds, text = None, hit.text
+            doc = next((d for d in sig.doc_files if d.path == path.split('#',1)[0]),None)
+            if doc and intent in {'setup','test'}:
+                scoped = component_excerpt(doc.text.replace('\r\n','\n').replace('\r','\n'),path,text,component)
+                if scoped is None: continue
+                text,bounds = scoped
+            item = _source(sig, path, text, intent, bounds)
             if not item:
                 continue
             if requested_issues and (item.kind != 'issue' or int(item.source[1:]) not in requested_issues): continue
@@ -179,6 +197,7 @@ def collect_sources(sig: RawSignals, index: RepoIndex, intents: list[str], query
             # The tree proves file existence only, not what a function does.
             terms = re.findall(r'[A-Za-z_][A-Za-z0-9_./-]{2,}', query.lower())
             paths = sorted(sig.file_tree, key=lambda p: (not any(t in p.lower() for t in terms), not bool(re.search(r'(^|/)(src|lib|backend|frontend|app)/',p)), len(p)))
+            paths = [p for p in paths if source_allowed(p,scope_query or query,component,intent)]
             for path in paths[:3]:
                 sources.append(AnswerSource(id='',kind='tree',source=path,quote=path,
                     url=f'{sig.meta.html_url or "https://github.com/"+sig.meta.owner+"/"+sig.meta.repo}/blob/{quote(sig.meta.default_branch,safe="")}/{quote(path,safe="/")}',
@@ -187,7 +206,7 @@ def collect_sources(sig: RawSignals, index: RepoIndex, intents: list[str], query
     return sources
 
 
-def literal_commands(sig: RawSignals, index: RepoIndex, sources: list[AnswerSource], intents: list[str]) -> list[AnswerCommand]:
+def literal_commands(sig: RawSignals, index: RepoIndex, sources: list[AnswerSource], intents: list[str], component: str | None = None) -> list[AnswerCommand]:
     result = []
     for intent, stage in [('setup','A'), ('test','B')]:
         if intent not in intents: continue
@@ -195,6 +214,8 @@ def literal_commands(sig: RawSignals, index: RepoIndex, sources: list[AnswerSour
         steps = audit_steps(sig, index, generate_stage(sig,stage,snippets,_STAGE_CMD_PATTERNS[stage]))
         for step in steps:
             if not step.command or step.evidence.verification != 'command_verified': continue
+            actual_component=path_component(step.working_directory or '')
+            if component and actual_component and actual_component != component: continue
             source = next((s for s in sources if s.source == step.evidence.source.split('#',1)[0] and step.command in s.quote), None)
             if source and not any(c.command == step.command for c in result):
                 result.append(AnswerCommand(command=step.command,citation=source.id,
@@ -252,8 +273,10 @@ def answer_question(sig: RawSignals, index: RepoIndex, question: str, history: l
     result = AnswerResult(repo_url=repo_url,question=question,resolved_question=resolved,context_used=used,
         revision=sig.meta.default_branch,intents=intents,warnings=list(sig.collection_warnings),
         links=[{'label':'仓库说明','url':repo_url+'#readme'}, {'label':'开放任务','url':repo_url+'/issues?q=is%3Aissue+is%3Aopen'}])
-    result.sources = collect_sources(sig,index,intents,resolved)
-    result.commands = literal_commands(sig,index,result.sources,intents)
+    component = question_component(question,history,used)
+    scope_query = question if component_mentions(question) else resolved
+    result.sources = collect_sources(sig,index,intents,resolved,component=component,scope_query=scope_query)
+    result.commands = literal_commands(sig,index,result.sources,intents,component)
     for intent in intents:
         if not any(intent in s.intents for s in result.sources): result.missing.append(f'未找到能逐字核对的{LABELS[intent]}原文；不能据此给出确定操作。')
     if result.sources and all(s.kind == 'tree' for s in result.sources):
@@ -272,6 +295,10 @@ def answer_question(sig: RawSignals, index: RepoIndex, question: str, history: l
             text = f'已找到可核对的{LABELS[intent]}入口：{source.source}。'
             if source.kind == 'tree': text += '这里仅确认该文件存在，文件职责和修改方案还需查看代码。'
             result.points.append(AnswerPoint(text=text,citations=[source.id]))
+    directories={c.working_directory for c in result.commands if c.working_directory is not None}
+    for directory in sorted(directories):
+        citations=list(dict.fromkeys(c.citation for c in result.commands if c.working_directory==directory))
+        result.points.append(AnswerPoint(text=f'原文操作的建议执行位置：{"仓库根目录" if directory=="." else directory}。这是按原文上下文推导的位置，命令尚未执行。',citations=citations))
     result.mode='extractive'
     if client and client.available() and any(s.verification == 'literal_quote' for s in result.sources):
         try:

@@ -5,7 +5,7 @@ export const fallbackLabels: Record<string, string> = {
   model_auth_failed: '模型服务拒绝认证或权限', model_rate_limited: '模型服务限流',
   model_error: '模型请求未完成', invalid_output: '模型输出格式或步骤无效',
   evidence_unverified: 'AI 步骤未保留可核验出处',
-  incomplete_workflow: 'AI 步骤遗漏多组件操作，已按原文补齐',
+  incomplete_workflow: 'AI 步骤缺少原文操作入口，已补齐',
 }
 
 export function guideStatus(guide: Guide): { title: string; description: string; type: 'info' | 'warning' } {
@@ -35,7 +35,7 @@ export function groupGuideWarnings(warnings: string[] = []) {
   const groups = { collection: [] as string[], preparation: [] as string[], generation: [] as string[], reference: [] as string[], other: [] as string[] }
   for (const text of new Set(warnings)) {
     if (/文件证据固定于提交|已保存指南仅在本机|静态交互示例/.test(text)) groups.reference.push(text)
-    else if (/阶段未保留|阶段模型未完成|阶段未覆盖|模型不可用|部分 make 命令/.test(text)) groups.generation.push(text)
+    else if (/阶段未保留|阶段模型未完成|阶段未覆盖|阶段缺少|模型不可用|部分 make 命令/.test(text)) groups.generation.push(text)
     else if (/符号链接|Windows 克隆/.test(text)) groups.preparation.push(text)
     else if (/抓取失败|采样失败|未取得|未完整取得|未完整成功|信息未取得|超过大小限制|截断|覆盖不完整/.test(text)) groups.collection.push(text)
     else groups.other.push(text)
