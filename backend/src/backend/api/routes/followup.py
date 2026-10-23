@@ -90,5 +90,6 @@ def follow_up(req: FollowupRequest) -> dict:
         "local_checks": r.local_checks,
         "preparation_checks": r.preparation_checks,
         "completion_checks": r.completion_checks,
+        "explanations": r.explanations,
         "warnings": list(dict.fromkeys(sig.collection_warnings + r.warnings)),
     }

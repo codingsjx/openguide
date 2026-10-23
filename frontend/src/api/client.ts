@@ -75,6 +75,7 @@ export interface FollowupResult {
   sub_steps: import('../types/guide').GuideStep[]
   preparation_checks?: string[]
   completion_checks?: string[]
+  explanations?: { label: string; text: string; reference_url?: string }[]
   sources: string[]
   evidence: import('../types/guide').Evidence[]
   revision: string

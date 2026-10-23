@@ -30,7 +30,7 @@ import GuideStatus, { GuideNotices } from '../GuideStatus'
 import GuideEntryHelp from '../GuideEntryHelp'
 import { downloadGuide } from '../../types/savedGuide'
 import LearningOverview from '../LearningOverview'
-import { emptyLearningProgress, learningIdentity, learningLabels, learningMarkdown, loadLearningProgress, nextLearningAction, pendingPrerequisites, rememberLearningGuide, saveLearningProgress, type LearningProgress, type LearningStatus } from '../../types/learningProgress'
+import { emptyExecution, executionLabels, executionProblems, updateLearningRecord, emptyLearningProgress, learningIdentity, learningLabels, learningMarkdown, loadLearningProgress, nextLearningAction, pendingPrerequisites, rememberLearningGuide, saveLearningProgress, type LearningExecution, type LearningProgress, type LearningStatus } from '../../types/learningProgress'
 
 const { Paragraph, Text, Title } = Typography
 
@@ -175,8 +175,13 @@ function FollowupBar({
             {result.text}
           </Paragraph>
           <Paragraph type="secondary" style={{ marginTop: 8 }}>原文匹配只证明出处存在，不代表已确认根因或执行过命令。{result.mode === 'rules' ? '本次使用本地规则与检索。' : result.mode === 'llm_evidence_selection' ? '本次由 AI 选择原文，再逐字核验。' : '本次展示已核验的检索原文。'}</Paragraph>
+          {result.explanations?.map((item) => <div key={item.label} style={{ marginTop: 12 }}>
+            <Text strong>{item.label}</Text>
+            <Paragraph style={{ marginTop: 4 }}>{item.text}</Paragraph>
+            {item.reference_url && <a href={item.reference_url} target="_blank" rel="noreferrer">工具官方说明 ↗</a>}
+          </div>)}
           {Boolean(result.preparation_checks?.length) && <div style={{ marginTop: 12 }}>
-            <Text strong>1. 开始前核对（工具提供）</Text>
+            <Text strong>{result.intent === 'explain' ? '开始前核对（工具提供）' : '1. 开始前核对（工具提供）'}</Text>
             <ol>{result.preparation_checks!.map((item) => <li key={item}>{item}</li>)}</ol>
           </div>}
           {result.sub_steps.length > 0 && <div style={{ marginTop: 12 }}>
@@ -199,7 +204,7 @@ function FollowupBar({
             </Card>)}
           </div>}
           {Boolean(result.completion_checks?.length) && <div style={{ marginTop: 12 }}>
-            <Text strong>3. 如何判断与继续（工具提供）</Text>
+            <Text strong>{result.intent === 'explain' ? '如何判断与继续（工具提供）' : '3. 如何判断与继续（工具提供）'}</Text>
             <ol>{result.completion_checks!.map((item) => <li key={item}>{item}</li>)}</ol>
           </div>}
           <GuideNotices guide={{ ...guide, default_branch: result.revision }} warnings={result.warnings} />
@@ -281,6 +286,23 @@ function EvidencePanel({ guide, step }: { guide: Guide; step: GuideStep | null }
 
 // ---- Wizard body ----------------------------------------------------------
 
+// Actual values are user-entered; never fill them from suggested guide commands.
+function ExecutionFields({ execution, onChange }: { execution: LearningExecution; onChange: (value: LearningExecution) => void }) {
+  return <div style={{ display: 'grid', gap: 10 }}>
+    <label>执行情况<select aria-label="实际执行情况" value={execution.status} style={{ display: 'block', width: '100%', padding: 8 }}
+      onChange={(event) => onChange({ ...execution, status: event.target.value as LearningExecution['status'] })}>
+      {Object.entries(executionLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+    </select></label>
+    {([['command', '实际执行命令', '填写你实际运行的命令（可与指南不同）'], ['directory', '实际执行目录', '例如：项目副本/backend'],
+      ['exitCode', '实际退出码', '例如 0 或 1；未知时留空'], ['scope', '实际运行范围', '例如：仅后端单元测试；未测前端'] ] as const).map(([field, label, placeholder]) =>
+      <label key={field}>{label}<Input aria-label={label} placeholder={placeholder} maxLength={field === 'exitCode' ? 20 : 1000}
+        value={execution[field]} onChange={(event) => onChange({ ...execution, [field]: event.target.value })} /></label>)}
+    <label>结果、失败与跳过项摘要<Input.TextArea aria-label="实际结果摘要" rows={3} maxLength={1000} showCount
+      placeholder="按实际输出记录通过、失败、跳过或超时情况；不填原始日志" value={execution.summary}
+      onChange={(event) => onChange({ ...execution, summary: event.target.value })} /></label>
+  </div>
+}
+
 function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
   guide: Guide; url: string; onRegenerateAi?: () => void; onRegenerate?: () => void
 }) {
@@ -299,6 +321,8 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
   const allDone = steps.length > 0 && done.size === steps.length
   const prerequisites = step ? pendingPrerequisites(guide, step, progress) : []
   const record = step ? progress.records[String(step.step_id)] : undefined
+  const execution = record?.execution ?? emptyExecution()
+  const resultProblems = executionProblems(record?.execution)
   const canAsk = !guide.is_demo && !guide.is_saved
   useEffect(() => {
     if (!navigationRequested.current) return
@@ -324,7 +348,7 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
   function recordStatus(status: LearningStatus, advance = false) {
     if (!step) return
     if (advance && current < steps.length - 1) navigationRequested.current = true
-    persist({ ...progress, records: { ...progress.records, [String(step.step_id)]: { status, note: record?.note ?? '' } },
+    persist({ ...progress, records: { ...progress.records, [String(step.step_id)]: updateLearningRecord(record, { status }) },
       currentStepId: advance ? (steps[current + 1]?.step_id ?? step.step_id) : step.step_id })
     if (advance) setDiagnosticStep(null)
   }
@@ -349,6 +373,7 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
   )
 
   function markDone() {
+    if (resultProblems.length) { void message.warning('执行记录有待核对项，请先修正或如实保留为失败、超时、未运行。'); return }
     const completingAll = !done.has(current) && done.size + 1 === steps.length
     recordStatus('done', true)
     if (current === steps.length - 1 && completingAll) {
@@ -484,7 +509,15 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
               <Paragraph type="secondary" style={{ marginTop: 6, marginBottom: 8 }}>{nextLearningAction(step, progress, prerequisites, canAsk)}</Paragraph>
               <Input.TextArea aria-label="本步结果或卡点摘要" rows={2} maxLength={1000} showCount value={record?.note ?? ''}
                 placeholder={step.stage === 'C' ? '记录任务来源、复现方式、范围与验收方法' : step.stage === 'D' ? '记录实际修改、验证范围和待审阅事项' : '记录实际目录、退出码或卡点摘要；不要填写密钥或原始日志'}
-                onChange={(event) => persist({ ...progress, records: { ...progress.records, [String(step.step_id)]: { status: record?.status ?? 'pending', note: event.target.value } } })} />
+                onChange={(event) => persist({ ...progress, records: { ...progress.records, [String(step.step_id)]: updateLearningRecord(record, { note: event.target.value }) } })} />
+              {step.command && <details style={{ marginTop: 16 }} open={record?.execution !== undefined}>
+                <summary style={{ cursor: 'pointer' }}>实际执行记录 · {executionLabels[execution.status]}</summary>
+                <Paragraph type="secondary" style={{ marginTop: 8 }}>自行填写并仅保存在本机，工具未执行或核验。实际值不会从指南自动填入；通过不代表完整测试通过。导出学习记录会包含这些内容，请勿填写密钥、个人路径或原始日志。</Paragraph>
+                <ExecutionFields execution={execution} onChange={(next) => persist({ ...progress, records: { ...progress.records,
+                  [String(step.step_id)]: updateLearningRecord(record, { execution: next }) } })} />
+                {resultProblems.length > 0 && <Alert type="warning" showIcon message="执行记录待核对" description={<ul>{resultProblems.map((problem) => <li key={problem}>{problem}</li>)}</ul>} style={{ marginTop: 8 }} />}
+                <Paragraph type="secondary" style={{ marginTop: 8 }}>学习进度与执行情况独立；未运行、失败、跳过项会如实保留在导出中。</Paragraph>
+              </details>}
               <Space wrap style={{ marginTop: 14 }}>
                 <Button onClick={markBlocked}>我卡住了{canAsk ? '，展开排错' : ''}</Button>
                 <Button onClick={() => recordStatus('skipped', true)}>暂缓，继续浏览</Button>

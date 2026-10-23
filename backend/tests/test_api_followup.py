@@ -30,6 +30,22 @@ def test_invalid_followup_step_is_not_silently_changed_to_stage_a():
     assert response.status_code == 422
 
 
+def test_explain_serializes_tool_help_separately_from_repository_evidence(monkeypatch):
+    sig = RawSignals(meta=RepoMeta(owner='o',repo='r',default_branch='b'*40),
+        doc_files=[DocFile(path='backend/README.md',name='README.md',text='cd backend\nuv sync')],
+        file_tree=['backend/README.md','backend/pyproject.toml'])
+    monkeypatch.setattr('backend.api.routes.followup.recon', lambda *a, **k: sig)
+    monkeypatch.setattr('backend.api.routes.followup.enrich_docs_and_tree', lambda s, **k: s)
+    response=TestClient(app).post('/api/followup',json={'url':'o/r','intent':'explain',
+        'step':{'stage':'A','title':'Install','command':'uv sync','evidence':{'source':'backend/README.md'}}})
+    assert response.status_code==200
+    data=response.json()
+    assert data['explanations'][0]['reference_url'].startswith('https://docs.astral.sh/')
+    assert data['evidence'][0]['source']=='backend/README.md'
+    assert '锁文件' not in data['evidence'][0]['quote']
+    assert data['revision']=='b'*40
+
+
 def test_diagnose_uses_interactive_timeout_without_retries(monkeypatch):
     from backend.core.followup.service import FollowupResult
     sig = RawSignals(meta=RepoMeta(owner='o', repo='r'))

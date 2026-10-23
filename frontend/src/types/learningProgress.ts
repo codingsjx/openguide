@@ -1,7 +1,29 @@
 import type { Guide, GuideStep } from './guide'
 
 export type LearningStatus = 'pending' | 'done' | 'blocked' | 'skipped'
-export interface LearningRecord { status: LearningStatus; note: string }
+export type ExecutionStatus = 'unrecorded' | 'not_run' | 'passed' | 'failed' | 'timed_out'
+export interface LearningExecution {
+  status: ExecutionStatus; command: string; directory: string; exitCode: string; scope: string; summary: string
+}
+export interface LearningRecord { status: LearningStatus; note: string; execution?: LearningExecution }
+export const executionLabels: Record<ExecutionStatus, string> = {
+  unrecorded: '尚未记录执行情况', not_run: '未运行', passed: '自行记录通过', failed: '失败', timed_out: '超时',
+}
+export const emptyExecution = (): LearningExecution => ({ status: 'unrecorded', command: '', directory: '', exitCode: '', scope: '', summary: '' })
+export function updateLearningRecord(record: LearningRecord | undefined, patch: Partial<LearningRecord>): LearningRecord {
+  return { status: 'pending', note: '', ...record, ...patch }
+}
+export function executionProblems(execution?: LearningExecution): string[] {
+  if (!execution) return []
+  const problems: string[] = []
+  if (execution.exitCode.trim() && !/^-?\d{1,10}$/.test(execution.exitCode.trim())) problems.push('退出码应填写整数；未取得时留空。')
+  if (execution.status === 'not_run' && execution.exitCode.trim()) problems.push('“未运行”与已填退出码不一致，请核对实际情况。')
+  if (execution.status === 'passed') {
+    if (!execution.command.trim() || !execution.directory.trim() || !execution.scope.trim() || !execution.summary.trim()) problems.push('记录通过前，请补齐实际命令、实际目录、运行范围和结果摘要。')
+    if (execution.exitCode.trim() !== '0') problems.push('记录通过时请核对退出码为 0；失败或超时应如实记录。')
+  }
+  return problems
+}
 export interface LearningProgress { identity: string; currentStepId: number; records: Record<string, LearningRecord> }
 export interface ProgressStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
 const LAST_GUIDE_KEY = 'openguide.learning.last-guide.v1'
@@ -52,6 +74,14 @@ export function loadLearningProgress(guide: Guide, storage: ProgressStorage): Le
       const r = record as LearningRecord
       if (!ids.has(id) || !r || !['pending', 'done', 'blocked', 'skipped'].includes(r.status) || typeof r.note !== 'string' || r.note.length > 1000) return empty
       records[id] = { status: r.status, note: r.note }
+      if (r.execution !== undefined) {
+        const e = r.execution
+        // Ignore a damaged extension without discarding legacy notes/progress.
+        if (e && typeof e.status === 'string' && Object.hasOwn(executionLabels, e.status) &&
+          ['command', 'directory', 'exitCode', 'scope', 'summary'].every((field) => typeof e[field as keyof LearningExecution] === 'string' && e[field as keyof LearningExecution].length <= (field === 'exitCode' ? 20 : 1000))) {
+          records[id].execution = { status: e.status, command: e.command, directory: e.directory, exitCode: e.exitCode, scope: e.scope, summary: e.summary }
+        }
+      }
     }
     return { ...empty, records, currentStepId: ids.has(String(data.currentStepId)) ? Number(data.currentStepId) : empty.currentStepId }
   } catch { return empty }
@@ -124,6 +154,14 @@ export function learningMarkdown(guide: Guide, progress: LearningProgress): stri
       `指南建议目录：${escape(step.directory_basis === 'clone_destination' ? '自行选择的项目存放目录' : step.working_directory || '尚未确认')}`, '')
     lines.push(`来源：${escape(step.evidence.kind === 'missing' ? '待核对' : step.evidence.source)}`,
       `本步摘要：${record?.note.trim() ? escape(record.note) : '未填写'}`, '')
+    const e = record?.execution
+    if (e) {
+      lines.push('### 使用者填写的执行记录（未经核验）', `执行情况：${executionLabels[e.status]}`,
+        `实际命令：${e.command.trim() ? escape(e.command) : '未填写'}`, `实际目录：${e.directory.trim() ? escape(e.directory) : '未填写'}`,
+        `退出码：${e.exitCode.trim() ? escape(e.exitCode) : '未取得'}`, `运行范围：${e.scope.trim() ? escape(e.scope) : '未填写'}`,
+        `结果、失败与跳过项摘要：${e.summary.trim() ? escape(e.summary) : '未填写'}`,
+        ...executionProblems(e).map((problem) => `待核对：${problem}`), '')
+    }
   }
   return lines.join('\n')
 }

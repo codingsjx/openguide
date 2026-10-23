@@ -5,7 +5,7 @@ import ts from 'typescript'
 
 const source = await readFile(new URL('../src/types/learningProgress.ts', import.meta.url), 'utf8')
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
-const { emptyLearningProgress, learningIdentity, progressKey, loadLearningProgress, saveLearningProgress, pendingPrerequisites, nextLearningAction, learningMarkdown, rememberLearningGuide, lastLearningGuide } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
+const { emptyExecution, executionProblems, updateLearningRecord, emptyLearningProgress, learningIdentity, progressKey, loadLearningProgress, saveLearningProgress, pendingPrerequisites, nextLearningAction, learningMarkdown, rememberLearningGuide, lastLearningGuide } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
 
 const guide = () => ({ repo_url: 'https://github.com/o/r', default_branch: 'a'.repeat(40), steps: [
   { step_id: 1, stage: 'A', title: 'Install dependencies', command: 'uv sync', working_directory: 'backend', evidence: { kind: 'file', source: 'backend/README.md', quote: 'uv sync' }, expected: 'Check installation' },
@@ -113,4 +113,42 @@ test('oversized progress is not reported saved when it cannot be restored', () =
   p.identity+='x'.repeat(500_000)
   assert.equal(saveLearningProgress(p,store),false)
   assert.equal(store.values.size,0)
+})
+
+test('execution records survive note/status changes and restore without changing guide identity', () => {
+  const g=guide(),p=emptyLearningProgress(g),store=memory()
+  const execution={...emptyExecution(),status:'failed',command:'uv run pytest tests/unit -q',directory:'copy/backend',exitCode:'1',scope:'unit only',summary:'2 failed; integration not run'}
+  p.records['2']=updateLearningRecord(undefined,{execution})
+  p.records['2']=updateLearningRecord(p.records['2'],{note:'need help'})
+  p.records['2']=updateLearningRecord(p.records['2'],{status:'blocked'})
+  saveLearningProgress(p,store)
+  assert.deepEqual(loadLearningProgress(g,store),p)
+  const text=learningMarkdown(g,p)
+  for(const value of ['失败','copy/backend','unit only','2 failed; integration not run','退出码：1','未经核验']) assert.ok(text.includes(value))
+  assert.equal(p.records['2'].status,'blocked')
+  assert.equal(p.identity,learningIdentity(g))
+})
+
+test('manual completion never fabricates an execution result; inconsistent claims stay visible', () => {
+  assert.equal(updateLearningRecord(undefined,{status:'done'}).execution,undefined)
+  assert.deepEqual(executionProblems(),[])
+  assert.deepEqual(executionProblems({...emptyExecution(),status:'not_run'}),[])
+  assert.ok(executionProblems({...emptyExecution(),status:'not_run',exitCode:'0'}).length)
+  assert.ok(executionProblems({...emptyExecution(),status:'passed',exitCode:'1'}).length)
+  assert.ok(executionProblems({...emptyExecution(),exitCode:'success'}).length)
+  assert.deepEqual(executionProblems({...emptyExecution(),status:'passed',command:'pytest',directory:'copy/backend',scope:'unit',summary:'3 passed',exitCode:'0'}),[])
+  const g=guide(),p=emptyLearningProgress(g),store=memory()
+  p.records['1']={status:'pending',note:'old note',execution:{...emptyExecution(),status:'passed',exitCode:'1'}}
+  saveLearningProgress(p,store)
+  assert.equal(loadLearningProgress(g,store).records['1'].execution.exitCode,'1')
+  assert.match(learningMarkdown(g,p),/待核对：记录通过时/)
+})
+
+test('damaged optional execution fields do not erase legacy progress and notes', () => {
+  const g=guide(),p=emptyLearningProgress(g),store=memory()
+  for(const execution of [null,{...emptyExecution(),status:'auto_verified'},{...emptyExecution(),summary:'x'.repeat(1001)},{...emptyExecution(),command:42}]) {
+    p.records['1']={status:'done',note:'preserve',execution}
+    saveLearningProgress(p,store)
+    assert.deepEqual(loadLearningProgress(g,store).records['1'],{status:'done',note:'preserve'})
+  }
 })
