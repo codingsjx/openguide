@@ -490,15 +490,19 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
               description={`${step.execution_record.summary}；环境：${step.execution_record.environment}。仅适用于记录中的提交与环境，不代表当前机器已验证。`}
               style={{ marginTop: 10, marginBottom: 10 }} />}
 
-            {step.fail_hints && step.fail_hints.length > 0 && (
+            {step.fail_hints?.some((h) => !h.startsWith('模型的来源类型字段') && !h.startsWith('引用中的空白格式')) && (
               <div style={{ marginTop: 6 }}>
-                {step.fail_hints.map((h, i) => (
+                {step.fail_hints.filter((h) => !h.startsWith('模型的来源类型字段') && !h.startsWith('引用中的空白格式')).map((h, i) => (
                   <Text type="warning" key={i} style={{ display: 'block' }}>
                     ⚠ {h}
                   </Text>
                 ))}
               </div>
             )}
+            {step.fail_hints?.some((h) => h.startsWith('模型的来源类型字段') || h.startsWith('引用中的空白格式')) && <details style={{ marginTop: 8 }}>
+              <summary style={{ cursor: 'pointer' }}>引用核对记录</summary>
+              {step.fail_hints.filter((h) => h.startsWith('模型的来源类型字段') || h.startsWith('引用中的空白格式')).map((h) => <Paragraph key={h} type="secondary" style={{ marginTop: 6 }}>{h}</Paragraph>)}
+            </details>}
 
             <div style={{ marginTop: 8 }}>
               <EvidenceBadge guide={guide} ev={step.evidence} />

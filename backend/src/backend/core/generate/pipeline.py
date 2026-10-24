@@ -173,8 +173,17 @@ def build_guide(
             if (required and not required <= current) or missing_runtime:
                 retained = [s for s in guide.steps if s.stage == stage and
                     s.evidence.verification in {'quote_verified', 'command_verified'}]
-                supplements = [item for item in rules if not any(_same_operation(item, old) for old in retained)]
-                guide.steps = [s for s in guide.steps if s.stage != stage] + retained + supplements
+                # Keep the source workflow's acquisition/runtime/install order.
+                # Replacing matched slots preserves useful AI explanations;
+                # appending all rules after AI would put cloning after install.
+                ordered, remaining = [], list(retained)
+                for item in rules:
+                    match = next((old for old in remaining if _same_operation(item, old)), None)
+                    ordered.append(match if match is not None else item)
+                    if match is not None:
+                        remaining.remove(match)
+                ordered.extend(remaining)
+                guide.steps = [s for s in guide.steps if s.stage != stage] + ordered
                 guide.stage_modes[stage] = 'mixed' if retained else 'heuristic'
                 guide.stage_fallbacks[stage] = 'incomplete_workflow'
                 guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段缺少已核验的操作入口，已保留通过核验的 AI 步骤并补齐原文规则步骤；各步分别标注来源。')

@@ -80,3 +80,24 @@ def test_quote_whitespace_compatibility_is_opt_in_and_cannot_rewrite_words():
     assert verify_step_evidence(step,sig,allow_quote_whitespace=True).quote=='Requires Python 3.12\nand uv.'
     step.evidence.quote='Requires Python 3.13 and uv.'
     assert verify_step_evidence(step,sig,allow_quote_whitespace=True).kind=='missing'
+
+
+def test_source_acquisition_and_runtime_stay_before_retained_ai_installation():
+    g=build_guide(signals(),llm_client=PartialModel(),check_suitability=False)
+    setup=[s for s in g.steps if s.stage=='A']
+    assert '本地副本' in setup[0].title
+    python_requirement=next(i for i,s in enumerate(setup) if not s.command and 'Python 3.12' in s.evidence.quote)
+    python_install=next(i for i,s in enumerate(setup) if s.command=='uv sync')
+    node_requirement=next(i for i,s in enumerate(setup) if not s.command and 'Node.js 24' in s.evidence.quote)
+    node_install=next(i for i,s in enumerate(setup) if s.command=='pnpm install')
+    assert python_requirement<python_install and node_requirement<node_install
+
+
+def test_a_verified_clone_removes_the_generic_missing_clone_placeholder():
+    from backend.core.generate.workflow import prepare_workflow
+    from backend.core.generate.schemas import GuideStep,Evidence
+    sig=signals();sig.doc_files[0].text='git clone https://github.com/o/r.git'
+    items=[GuideStep(step_id=1,stage='A',title='取得本地副本，核对仓库获取方式',evidence=Evidence(kind='missing')),
+           GuideStep(step_id=2,stage='A',title='Clone',command='git clone https://github.com/o/r.git',evidence=Evidence(source='backend/README.md',verification='command_verified'))]
+    result=prepare_workflow(sig,items)
+    assert len(result)==1 and result[0].command.startswith('git clone')

@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException
 
 from backend.core.generate.pipeline import build_guide
 from backend.core.generate.llm import LLMClient
+from backend.config import get_settings
 from backend.core.generate.schemas import Guide
 from backend.core.github.client import GitHubClient, GitHubClientError
 from backend.core.github.parse import parse_github_url
@@ -49,6 +50,6 @@ def make_guide(req: GuideRequest) -> Guide:
     # an early peer disconnect. No timeout/auth/rate-limit retry is enabled.
     # Offline experiment clients retain their own default timeout policy.
     guide = build_guide(sig, index=idx, use_llm=req.use_llm,
-        llm_client=LLMClient(timeout_s=float(req.model_timeout_s), retry_limit=0, allow_literal_linebreaks=True, disconnect_retry_limit=1) if req.use_llm else None)
+        llm_client=LLMClient(timeout_s=float(req.model_timeout_s), retry_limit=0, allow_literal_linebreaks=True, disconnect_retry_limit=1, stream_json=get_settings().llm_streaming) if req.use_llm else None)
     guide.model_timeout_s = req.model_timeout_s if req.use_llm else None
     return guide

@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_base_url: str = "https://api.openai.com/v1"
     llm_model: str = "gpt-5.5"
+    # Product JSON calls may receive SSE upstream, then verify the whole JSON.
+    # Set false for compatible providers that do not support streaming.
+    llm_streaming: bool = False
 
     # Local embedding + vector store settings.
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"

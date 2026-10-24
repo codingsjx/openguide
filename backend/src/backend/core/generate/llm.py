@@ -78,7 +78,7 @@ def llm_configured() -> bool:
 
 
 class LLMClient:
-    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2, allow_literal_linebreaks: bool = False, disconnect_retry_limit: int = 0) -> None:
+    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2, allow_literal_linebreaks: bool = False, disconnect_retry_limit: int = 0, stream_json: bool = False) -> None:
         s = get_settings()
         config = session_settings()
         key, base, model = config if config is not None else (_OVERRIDE_KEY, _OVERRIDE_BASE, _OVERRIDE_MODEL)
@@ -93,12 +93,71 @@ class LLMClient:
         self._retry_limit = retry_limit
         self._allow_literal_linebreaks = allow_literal_linebreaks
         self._disconnect_retry_limit = min(1, max(0, disconnect_retry_limit))
+        self._stream_json = stream_json
+        self._stream_had_content = False
+        self._last_response_streamed = False
 
     def public_config(self) -> dict:
         """Non-secret experiment metadata. Never include credentials or URL query."""
         from urllib.parse import urlsplit
         url = urlsplit(self._base)
-        return {"model": self._model, "endpoint_host": url.hostname}
+        return {"model": self._model, "endpoint_host": url.hostname, "json_streaming_requested": self._stream_json}
+
+    def _receive_stream(self, payload, headers, wait, deadline):
+        """Assemble visible content only. Never return a partial JSON object,
+        execute a tool call, or store reasoning-content deltas.
+        """
+        import httpx
+        import time
+        content, usage, response_id, model = [], {}, None, self._model
+        finished, finish_reason, characters, events = False, None, 0, 0
+        wire = {**payload, 'stream': True, 'stream_options': {'include_usage': True}}
+        with httpx.stream('POST', f'{self._base}/chat/completions', headers=headers, json=wire, timeout=wait) as response:
+            response.raise_for_status()
+            if 'text/event-stream' not in response.headers.get('content-type', '').lower():
+                # Some compatible providers ignore stream=true and return JSON.
+                response.read()
+                try:return response.json()
+                except ValueError as exc:raise LLMUnavailable('LLM 响应结构无效') from exc
+            self._last_response_streamed = True
+            for line in response.iter_lines():
+                if deadline is not None and time.perf_counter() > deadline:
+                    raise httpx.ReadTimeout('Model stream exceeded configured wait')
+                if not line.startswith('data:'):
+                    continue
+                events += 1
+                if events > 20000:
+                    raise LLMUnavailable('LLM 响应流超过大小限制')
+                data = line[5:].strip()
+                if data == '[DONE]':
+                    finished = True
+                    break
+                try:chunk = json.loads(data)
+                except ValueError as exc:raise LLMUnavailable('LLM 响应流格式无效') from exc
+                if not isinstance(chunk, dict) or chunk.get('error'):
+                    raise LLMUnavailable('LLM 响应流无效')
+                response_id = chunk.get('id') or response_id
+                model = chunk.get('model') or model
+                if isinstance(chunk.get('usage'), dict):
+                    usage = chunk['usage']
+                choices = chunk.get('choices', [])
+                if not isinstance(choices, list):raise LLMUnavailable('LLM 响应流结构无效')
+                for choice in choices:
+                    if not isinstance(choice, dict) or choice.get('index', 0) != 0:
+                        continue
+                    delta = choice.get('delta') or {}
+                    if not isinstance(delta, dict):raise LLMUnavailable('LLM 响应流结构无效')
+                    text = delta.get('content')
+                    if text is not None:
+                        if not isinstance(text, str):raise LLMUnavailable('LLM 响应流正文不是文本')
+                        if text:self._stream_had_content = True
+                        content.append(text);characters += len(text)
+                        if characters > 131072:raise LLMUnavailable('LLM 响应流超过大小限制')
+                    finish_reason = choice.get('finish_reason') or finish_reason
+            if finish_reason == 'length':raise LLMUnavailable('LLM 返回达到输出上限，未确认完整')
+            if not finished and finish_reason != 'stop':raise LLMUnavailable('LLM 响应流未完整结束')
+        return {'id': response_id, 'model': model, 'usage': usage,
+                'choices': [{'message': {'content': ''.join(content)}}]}
 
     def available(self) -> bool:
         return bool(self._key)
@@ -154,18 +213,26 @@ class LLMClient:
             self.attempt_count += 1
             started = time.perf_counter()
             wait = self._timeout_s if deadline is None else max(0.001, min(self._timeout_s, deadline - started))
+            self._stream_had_content = False
+            self._last_response_streamed = False
             try:
-                resp = httpx.post(
-                    f"{self._base}/chat/completions",
-                    headers=headers,
-                    json=payload,
-                    timeout=wait,
-                )
-                resp.raise_for_status()
+                if self._stream_json:
+                    data = self._receive_stream(payload, headers, wait, deadline)
+                else:
+                    resp = httpx.post(
+                        f"{self._base}/chat/completions",
+                        headers=headers,
+                        json=payload,
+                        timeout=wait,
+                    )
+                    resp.raise_for_status()
+            except LLMUnavailable:
+                self._request_event(time.perf_counter() - started)
+                raise
             except Exception as exc:  # noqa: BLE001 - network/API errors surfaced
                 self._request_event(time.perf_counter() - started, exc)
                 last_exc = exc
-                if (isinstance(exc, httpx.RemoteProtocolError) and disconnect_retries < self._disconnect_retry_limit
+                if (isinstance(exc, httpx.RemoteProtocolError) and not self._stream_had_content and disconnect_retries < self._disconnect_retry_limit
                         and deadline is not None and deadline - time.perf_counter() > 1):
                     disconnect_retries += 1
                     self.disconnect_retry_count += 1
@@ -179,14 +246,15 @@ class LLMClient:
                 raise LLMUnavailable(f"LLM 调用失败: {exc}") from exc
             self._request_event(time.perf_counter() - started)
             try:
-                data = resp.json()
+                if not self._stream_json:
+                    data = resp.json()
                 content = data["choices"][0]["message"]["content"]
             except (ValueError, KeyError, IndexError, TypeError) as exc:
                 raise LLMUnavailable("LLM 响应结构无效") from exc
             self.trace.append({"messages": messages, "content": content,
-                               "usage": data.get("usage", {}), "model": data.get("model", self._model),
+                               "usage": data.get("usage") if isinstance(data.get("usage"), dict) else {}, "model": data.get("model", self._model),
                                "response_id": data.get("id"), "attempt": attempt + 1,
-                               "disconnect_retries": disconnect_retries})
+                               "disconnect_retries": disconnect_retries, "response_streamed": self._last_response_streamed})
             parsed, normalization = parse_json_object(content, allow_literal_linebreaks=self._allow_literal_linebreaks)
             self.trace[-1]['format_normalization'] = normalization
             return parsed

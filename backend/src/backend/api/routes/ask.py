@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from backend.core.ask.service import AnswerResult, answer_question, resolve_question
 from backend.core.generate.llm import LLMClient
+from backend.config import get_settings
 from backend.core.github.client import GitHubClient, GitHubClientError
 from backend.core.github.parse import parse_github_url
 from backend.core.github.recon import enrich_docs_and_tree, recon
@@ -55,4 +56,4 @@ def ask_repo(req: AskRequest) -> AnswerResult:
     index = RepoIndex(owner, repo)
     index.index(sig)
     return answer_question(sig,index,question,req.history,
-        LLMClient(timeout_s=float(req.model_timeout_s),retry_limit=0,allow_literal_linebreaks=True,disconnect_retry_limit=1) if req.use_llm else None)
+        LLMClient(timeout_s=float(req.model_timeout_s),retry_limit=0,allow_literal_linebreaks=True,disconnect_retry_limit=1,stream_json=get_settings().llm_streaming) if req.use_llm else None)
