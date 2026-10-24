@@ -15,6 +15,18 @@ _LABELS = {"A": "环境搭建", "B": "测试基线", "C": "挑选 issue", "D": "
 _CLONE = re.compile(r"^git clone\b")
 _INSTALL = re.compile(r"^(?:python(?:3)? -m pip install|pip(?:3)? install|uv (?:sync|pip install)|npm (?:ci|install)|pnpm install|yarn install)\b")
 _ENVIRONMENT = re.compile(r'^(?:uv venv|python(?:3)? -m venv|virtualenv|conda (?:create|env create))(?=\s|$)')
+CONDITIONAL_INSTALL_NOTE = '原文明确将此安装列为可选或条件性操作；仅在需要对应功能时执行，不作为默认测试的必做前置步骤。'
+
+
+def _conditional_install(doc, command, line_number):
+    if not doc or not re.search(r'--extra\s+\S+', command):
+        return False
+    lines = doc.text.splitlines()
+    line = (line_number or 1) - 1
+    if not 0 <= line < len(lines):
+        return False
+    context = '\n'.join(lines[max(0, line - 2):line + 1])
+    return bool(re.search(r'可选|按需|需要[^\n。]{0,40}功能时|\boptional\b|\bonly if\b|\bif\b[^\n.]{0,40}\b(?:need|want)\b', context, re.I))
 
 
 def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]:
@@ -70,6 +82,14 @@ def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]
         source = step.evidence.source.split("#", 1)[0]
         path = PurePosixPath(source)
         build_doc = next((doc for doc in sig.doc_files if doc.path == source), None)
+        conditional = (step.stage == 'A' and step.evidence.verification == 'command_verified'
+                       and _INSTALL.match(command) and _conditional_install(build_doc, command, step.evidence.line_start))
+        if conditional:
+            if not step.title.startswith('可选：'):
+                step.title = '可选：' + step.title
+            step.context_notes.append(CONDITIONAL_INSTALL_NOTE)
+            if not step.expected.startswith(CONDITIONAL_INSTALL_NOTE):
+                step.expected = CONDITIONAL_INSTALL_NOTE + step.expected
         if step.evidence.verification == "command_verified" and build_doc and path.name in {"Makefile", "makefile", "GNUmakefile"}:
             step.working_directory = str(path.parent)
             step.directory_basis = "build_file"
@@ -104,7 +124,7 @@ def prepare_workflow(sig: RawSignals, steps: list[GuideStep]) -> list[GuideStep]
             step.prerequisite_step_ids.extend(s.step_id for s in matching_environments+matching_installs)
             if not matching_installs:
                 step.context_notes.append("尚未确认与本步骤组件和目录匹配的安装入口，请先核对该组件的开发依赖。")
-        if step.stage == "A" and _INSTALL.match(command):
+        if step.stage == "A" and _INSTALL.match(command) and not conditional:
             install_steps.append(step)
         if step.stage == 'A' and _ENVIRONMENT.match(command):
             environment_steps.append(step)

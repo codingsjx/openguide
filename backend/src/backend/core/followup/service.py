@@ -22,7 +22,7 @@ from backend.core.index.service import RepoIndex
 from backend.core.followup.diagnostics import diagnostic_plan
 from backend.core.ask.scope import path_component, source_allowed, component_excerpt
 from backend.core.generate.prerequisites import runtime_steps
-from backend.core.generate.workflow import prepare_workflow
+from backend.core.generate.workflow import prepare_workflow, CONDITIONAL_INSTALL_NOTE
 from backend.core.generate.command_context import STAGE_COMMAND_PATTERNS
 
 _DIAGNOSE_SYSTEM = (
@@ -121,8 +121,9 @@ def granular(index: RepoIndex, step: GuideStep, query: str = "") -> FollowupResu
             component = path_component(operation.working_directory or '') or path_component(operation.evidence.source)
             snips = [s for s in _top_snippets(index, q, kind=kind, top_k=5)
                      if source_allowed(s['source'], query, component, kind)]
-            operation.title = '按原文执行当前操作'
-            operation.expected = '记录实际退出码和输出；没有代你执行，不预设通过数量。'
+            conditional = CONDITIONAL_INSTALL_NOTE in operation.context_notes
+            operation.title = ('可选：' if conditional else '') + '按原文执行当前操作'
+            operation.expected = (CONDITIONAL_INSTALL_NOTE if conditional else '') + '记录实际退出码和输出；没有代你执行，不预设通过数量。'
             before = ['先打开固定版本出处，核对当前组件、操作系统及前置条件。',
                       '在你选择的项目存放目录执行，克隆后再进入仓库。' if operation.directory_basis == 'clone_destination' else
                       f"在新的终端确认当前位置为 {operation.working_directory}；勿在其他组件目录执行。" if operation.working_directory else '执行目录尚未确认；先在出处中找到目录说明，再运行命令。']
@@ -218,6 +219,8 @@ def explain(index: RepoIndex, step: GuideStep, query: str = "") -> FollowupResul
              '执行目录尚未确认，请先打开出处核对，不要直接在当前终端尝试。') +
             '仓库为什么选择这个工具、能否省略或替换，本次未确认；下面摘录仅说明原文上下文。'})
         before = ['先核对仓库要求的工具版本、执行目录和依赖准备情况；通用说明不能替代项目要求。']
+        if CONDITIONAL_INSTALL_NOTE in operation.context_notes:
+            before.insert(0, CONDITIONAL_INSTALL_NOTE)
         after = ['以实际退出码和输出判断；安装完成不代表测试通过，构建完成也不代表全部测试通过。',
                  '把实际命令、目录、退出码、运行范围及失败/跳过项填入“实际执行记录”；异常时使用“报错了”。']
     text = '先理解当前操作，再核对它在仓库中的上下文。通用说明不代表维护者已说明选型原因，工具没有代你执行。' if explanations else (
