@@ -2,8 +2,8 @@
 
 Credentials are never persisted in code. The backend reads defaults from `.env`
 (Settings), but the frontend can override them at runtime via the settings API
-so each user/demo can bring their own relay Base URL + API key. Overrides are
-kept in-process only (module-level) — never written to disk, never logged.
+so each page can bring its own relay Base URL + API key. Browser overrides use
+an isolated expiring memory store; CLI defaults are separate. Never persisted.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ import logging
 from typing import Any
 
 from backend.config import get_settings
+from backend.core.generate.session import configure_session, session_settings
 
 _OVERRIDE_KEY = ""
 _OVERRIDE_BASE = ""
@@ -58,7 +59,9 @@ def parse_json_object(content: str, *, allow_literal_linebreaks: bool = False) -
 
 
 def configure_llm(api_key: str = "", base_url: str = "", model: str = "") -> None:
-    """Set in-process overrides (used by the settings API). Empty keeps prior."""
+    """Page overrides are isolated; CLI callers retain explicit process defaults."""
+    if configure_session(api_key, base_url, model):
+        return
     global _OVERRIDE_KEY, _OVERRIDE_BASE, _OVERRIDE_MODEL
     if api_key:
         _OVERRIDE_KEY = api_key
@@ -70,15 +73,18 @@ def configure_llm(api_key: str = "", base_url: str = "", model: str = "") -> Non
 
 def llm_configured() -> bool:
     s = get_settings()
-    return bool(_OVERRIDE_KEY or s.llm_api_key)
+    config = session_settings()
+    return bool((config[0] if config is not None else _OVERRIDE_KEY) or s.llm_api_key)
 
 
 class LLMClient:
     def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2, allow_literal_linebreaks: bool = False) -> None:
         s = get_settings()
-        self._key = _OVERRIDE_KEY or s.llm_api_key
-        self._base = (_OVERRIDE_BASE or s.llm_base_url).rstrip("/")
-        self._model = _OVERRIDE_MODEL or s.llm_model
+        config = session_settings()
+        key, base, model = config if config is not None else (_OVERRIDE_KEY, _OVERRIDE_BASE, _OVERRIDE_MODEL)
+        self._key = key or s.llm_api_key
+        self._base = (base or s.llm_base_url).rstrip("/")
+        self._model = model or s.llm_model
         self.trace: list[dict] = []
         self.attempt_count = 0
         self.request_events: list[dict] = []

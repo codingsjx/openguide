@@ -48,4 +48,6 @@ test('API sends the chosen timeout and keeps cancellation wired while extending 
   assert.deepEqual(cleared,[1])
   await api.postGuide('o/r',false,undefined,120)
   assert.equal(timers[1],180_000)
+  assert.match(requests[0].headers['X-OpenGuide-Session'],/^[a-f0-9]{32}$/)
+  assert.equal(requests[0].headers['X-OpenGuide-Session'],requests[1].headers['X-OpenGuide-Session'])
 })

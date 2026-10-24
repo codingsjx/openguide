@@ -38,6 +38,7 @@ export default function LlmSettings() {
         model: v.model || DEFAULTS.model,
       })
       setConfigured(r.configured)
+      form.resetFields(['api_key'])
       setOpen(false)
       void message.success('LLM 设置已保存（仅当前会话有效）')
     } catch (e) {
@@ -63,7 +64,7 @@ export default function LlmSettings() {
         cancelText="取消"
       >
         <p style={{ color: '#888' }}>
-          Key 会发送到当前本地后端并仅保存在进程内存中，不写入磁盘；重启后需重新填写。请勿在共享部署中使用此功能。
+          Key 会发送到当前后端，只在本页面会话对应的服务器内存中保留，不写入文件。刷新页面、后端重启或闲置 30 分钟后需重新填写；其他页面不会继承此配置。公网部署还需访问控制与用量限制。
         </p>
         <Form form={form} layout="vertical">
           <Form.Item

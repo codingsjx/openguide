@@ -22,7 +22,7 @@ services:
       USE_CHROMA: ${USE_CHROMA:-false}
       VECTORSTORE_DIR: /app/.chroma
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       # 持久化向量库与 GitHub 响应缓存，重启不必重抓/重建索引。
       - chroma_data:/app/.chroma
@@ -40,7 +40,7 @@ services:
       context: ./frontend
     ports:
       # 与 README 里的开发地址保持一致，评审按文档访问即可。
-      - "5173:80"
+      - "127.0.0.1:5173:80"
     depends_on:
       backend:
         condition: service_healthy

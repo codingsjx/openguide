@@ -3,6 +3,8 @@
 import { DEFAULT_GUIDE_TIMEOUT, guideRequestTimeoutMs } from '../types/guideTimeout'
 
 const BASE = import.meta.env.VITE_API_BASE ?? ''
+// Opaque page token only, never a model credential and never persisted.
+const PAGE_SESSION = crypto.randomUUID().replaceAll('-', '')
 
 export class ApiError extends Error {
   readonly status: number
@@ -23,8 +25,8 @@ async function request<T>(path: string, init?: RequestInit, timeoutMs = 60_000):
   let res: Response
   try {
     res = await fetch(`${BASE}${path}`, {
-      headers: { 'Content-Type': 'application/json' },
       ...init,
+      headers: { ...Object.fromEntries(new Headers(init?.headers).entries()), 'Content-Type': 'application/json', 'X-OpenGuide-Session': PAGE_SESSION },
       signal: controller.signal,
     })
   } catch (error) {
