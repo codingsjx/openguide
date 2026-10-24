@@ -1,0 +1,161 @@
+{
+  "date": "2026-10-24",
+  "records": [
+    {
+      "repo": "pallets/click",
+      "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "plan_sha256": "ad49f6b7d479812e03b75cc132ea7fb9b5bf57e3ef4a1a92e8c37e5338b4f566",
+      "runner_sha256": "a39b9fb2dc488c4cbc331178be527bd91f389ceac979ac68efd37153081921ed",
+      "fresh_environment": false,
+      "os": "Windows-11-10.0.22631-SP0",
+      "python": "Python 3.12.8",
+      "is_security_sandbox": false,
+      "credential_environment_inherited": false,
+      "limitations": [
+        "single machine and fixed commit only",
+        "agent source review is not independent human annotation",
+        "system proxy settings can still affect tests even when proxy environment variables are absent"
+      ],
+      "status": "passed",
+      "commands": [
+        {
+          "id": "bootstrap_pip",
+          "phase": "setup",
+          "argv": [
+            "{python}",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "pip"
+          ],
+          "cwd": ".",
+          "source": null,
+          "derivation": "reviewer environment bootstrap for dependency-group support",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 5.059,
+          "test_summary": null,
+          "log_sha256": "21e781a3f352c86469f08cc6be86266f9901eb0b52e7f7c72bed8de49c9efd5c"
+        },
+        {
+          "id": "install_test_group",
+          "phase": "setup",
+          "argv": [
+            "{python}",
+            "-m",
+            "pip",
+            "install",
+            "-e",
+            ".",
+            "--group",
+            "tests"
+          ],
+          "cwd": ".",
+          "source": "pyproject.toml dependency-groups.tests and build-system",
+          "derivation": "reviewer provisioned editable checkout and declared tests group",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 2.813,
+          "test_summary": null,
+          "log_sha256": "444bfe310cff7394c582c7f28ada5b0b6a397e11b045f9b33d92cf6dcfcf0792"
+        },
+        {
+          "id": "direct_pytest_baseline",
+          "phase": "test",
+          "argv": [
+            "{python}",
+            "-m",
+            "pytest",
+            "tests"
+          ],
+          "cwd": ".",
+          "source": "pyproject.toml tool.pytest.ini_options.testpaths and tool.tox.env_run_base.commands",
+          "derivation": "reviewer direct pytest entrypoint; does not validate tox random, its parallelism or extra environments",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 6.528,
+          "test_summary": "2179 passed, 107 skipped, 31000 deselected, 1 xfailed in 5.53s",
+          "log_sha256": "27fc96d4ae4d2340786d379956d2f12d28dbfacc2a11181648df2f28bee4bc15"
+        }
+      ]
+    },
+    {
+      "repo": "psf/requests",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "plan_sha256": "1b22af77305c253088dfdb408adc0d222eca88d0287059821fd5b9e4cab1bc80",
+      "runner_sha256": "a39b9fb2dc488c4cbc331178be527bd91f389ceac979ac68efd37153081921ed",
+      "fresh_environment": false,
+      "os": "Windows-11-10.0.22631-SP0",
+      "python": "Python 3.12.8",
+      "is_security_sandbox": false,
+      "credential_environment_inherited": false,
+      "limitations": [
+        "single machine and fixed commit only",
+        "agent source review is not independent human annotation",
+        "system proxy settings can still affect tests even when proxy environment variables are absent"
+      ],
+      "status": "failed_or_incomplete",
+      "commands": [
+        {
+          "id": "install",
+          "phase": "setup",
+          "argv": [
+            "{python}",
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            "requirements-dev.txt"
+          ],
+          "cwd": ".",
+          "source": "Makefile#L3",
+          "derivation": "literal-source-command",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 6.465,
+          "test_summary": null,
+          "log_sha256": "f2f39f6983c18db20d3dee647f43b17e782c6735d66dbf1d1714648cf6786425"
+        },
+        {
+          "id": "ci_recipe",
+          "phase": "test",
+          "argv": [
+            "{python}",
+            "-m",
+            "pytest",
+            "tests",
+            "--junitxml=report.xml"
+          ],
+          "cwd": ".",
+          "source": "Makefile#L8",
+          "derivation": "literal-source-command",
+          "status": "failed",
+          "exit_code": 1,
+          "elapsed_s": 176.962,
+          "test_summary": "5 failed, 626 passed, 3 skipped, 1 xfailed, 18 warnings in 176.05s (0:02:56)",
+          "log_sha256": "938af5ce218000a0e3f723bb919b5b9bcf841f4f56c5d83c53a9b559b502cb77"
+        },
+        {
+          "id": "structures_subset",
+          "phase": "test",
+          "argv": [
+            "{python}",
+            "-m",
+            "pytest",
+            "tests/test_structures.py"
+          ],
+          "cwd": ".",
+          "source": "Makefile#L5; tests/test_structures.py",
+          "derivation": "reviewer-selected subset of the test target; not claimed as the original generated command or full suite",
+          "status": "passed",
+          "exit_code": 0,
+          "elapsed_s": 0.698,
+          "test_summary": "24 passed in 0.05s",
+          "log_sha256": "50df0856f9b901fd8bbfe596dd79d80506a949fa2c100f1532a8b51fc9ae03e7"
+        }
+      ]
+    }
+  ],
+  "limit": "Agent-reviewed plans and reused dependency environments; not automatically generated commands or independent human trials."
+}

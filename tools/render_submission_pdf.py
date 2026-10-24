@@ -157,6 +157,8 @@ def table_block(rows, S) -> Table:
         weights.append(min(max(longest, 6), 46))
     total = sum(weights)
     widths = [CONTENT_W * w / total for w in weights]
+    if rows[0] == ["资源", "版本", "许可元数据", "使用方式"]:
+        widths = [CONTENT_W * w for w in (0.27, 0.14, 0.39, 0.20)]
     t = Table(data, colWidths=widths, repeatRows=1, hAlign="LEFT", splitByRow=1)
     style = [
         ("BACKGROUND", (0, 0), (-1, 0), TBL_HEAD),
@@ -290,7 +292,7 @@ def build(md_path: Path, out_path: Path) -> Path:
         ("作品名称", "OpenGuide开源贡献向导"),
         ("验证状态", "工程验证已进行；用户效果与上游贡献闭环待补充"),
         ("许可", "MIT"),
-        ("文档版本", "2026-10-21 · 修订工作稿"),
+        ("文档版本", "2026-10-24 · 收尾候选，待团队审核"),
     ]
     mt = Table([[Paragraph(f"<b>{k}</b>", S["table"]), Paragraph(v, S["table"])] for k, v in meta],
                colWidths=[26 * mm, CONTENT_W - 26 * mm], hAlign="LEFT")

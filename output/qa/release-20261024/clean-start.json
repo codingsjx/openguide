@@ -1,0 +1,33 @@
+{
+  "fresh_project": "D:\\chatgpt\\openguide-clean-20261024",
+  "credentials_copied": false,
+  "download_cache_may_be_reused": true,
+  "steps": [
+    {
+      "step": "locked_core_install",
+      "exit_code": 0,
+      "elapsed_s": 0.627
+    },
+    {
+      "step": "core_import",
+      "exit_code": 0,
+      "elapsed_s": 1.66
+    }
+  ],
+  "candidate_commit": "b4dfc86",
+  "health_status": 200,
+  "health_body": {
+    "status": "ok"
+  },
+  "no_default_model_key": true,
+  "frontend": {
+    "package_manager": "10.34.7",
+    "install_exit_code": 0,
+    "tests_passed": 58,
+    "build_exit_code": 0,
+    "lint_exit_code": 0,
+    "cache_reused": true,
+    "initial_parent_directory_pm_invocation_failed": "pnpm --dir selected Corepack 12.5.1; reran from project directory with declared pnpm 10.34.7"
+  },
+  "docker_local_test": "unavailable: Docker executable not installed"
+}

@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-24",
+  "kind": "labelled-screenshot-replay-not-live-recording",
+  "planned_duration_seconds": 240,
+  "duration_seconds": 239.9,
+  "width": 1600,
+  "height": 900,
+  "fps": 10,
+  "audio": false,
+  "sources": [
+    {
+      "file": "output/qa/release-20261024/home.png",
+      "sha256": "b24dabdbcba93b5fa6fc172d94fcc78a2ea964e751e5a9cec9eff87653b4e7aa"
+    },
+    {
+      "file": "output/qa/release-20261024/install.png",
+      "sha256": "5a83d797d74c68ce8b97ea9c579ec8f473841cc59b0f4673a324e796447530f8"
+    },
+    {
+      "file": "output/qa/release-20261024/conditional-install.png",
+      "sha256": "1e00fada91c5ea08a57a0e09f70b8c4949073782a823b21a1db04e1f7c577077"
+    },
+    {
+      "file": "output/qa/release-20261024/explain.png",
+      "sha256": "656328a758dc2ca6cc32ce53a6f2c60d5e6ca0a0924ddb1bb5eeb9d5d5076bdd"
+    },
+    {
+      "file": "output/qa/release-20261024/tests.png",
+      "sha256": "6ef78c10920024da4a700512434877e5bbdc245269508c4213f3a272f35040b8"
+    },
+    {
+      "file": "output/qa/release-20261024/records.png",
+      "sha256": "0c7eeff2820ab62e230b963d5456802ad108c6babe1f22e49da0f1b40b14e35f"
+    },
+    {
+      "file": "output/qa/release-20261024/task.png",
+      "sha256": "8789cdade8a7e4e14d3ccc1269eaafd73df04e0ca44f960bd35062bdd55f9fe9"
+    },
+    {
+      "file": "output/qa/release-20261024/draft.png",
+      "sha256": "924844631a3b098415e89602ceff64a4a81b799e998609a3659ad75534bc3970"
+    },
+    {
+      "file": "output/qa/release-20261024/qa.png",
+      "sha256": "40ff3bc1252b62e70a46a39a81f14804399ae4788391379d492d6ea48e299388"
+    },
+    {
+      "file": "output/qa/release-20261024/session-settings.png",
+      "sha256": "4248ae59ecca754e385283a696d76f85fd70df14d42449cdf3c403adb78a1e51"
+    }
+  ],
+  "chapters": [
+    {
+      "start_s": 0,
+      "title": "从读懂仓库，到准备首次贡献"
+    },
+    {
+      "start_s": 20,
+      "title": "先核对原文安装入口"
+    },
+    {
+      "start_s": 40,
+      "title": "条件性功能，不变成必装项"
+    },
+    {
+      "start_s": 60,
+      "title": "看不懂为什么：解释与原文分开"
+    },
+    {
+      "start_s": 80,
+      "title": "测试、构建与局部范围分开"
+    },
+    {
+      "start_s": 100,
+      "title": "实际结果由用户如实填写"
+    },
+    {
+      "start_s": 120,
+      "title": "没有候选，也有下一步"
+    },
+    {
+      "start_s": 140,
+      "title": "有实际改动，再整理 PR 草稿"
+    },
+    {
+      "start_s": 160,
+      "title": "贡献问答：先看回答，再核对出处"
+    },
+    {
+      "start_s": 180,
+      "title": "模型配置按页面会话隔离"
+    },
+    {
+      "start_s": 200,
+      "title": "验证结果按范围报告"
+    },
+    {
+      "start_s": 220,
+      "title": "开放成果与仍需完成的审核"
+    }
+  ],
+  "sha256": "b4934f7535b3c1f4be002d260a331f634402c72dcac4440f7ac1850e93f5460f",
+  "bytes": 1418944,
+  "team_final_review": "pending"
+}

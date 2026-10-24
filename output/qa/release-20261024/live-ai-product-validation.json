@@ -1,0 +1,21 @@
+{
+  "status": "response_received",
+  "http_status": 200,
+  "elapsed_s": 35.686,
+  "generation_mode": "heuristic",
+  "stage_modes": {
+    "A": "heuristic",
+    "B": "heuristic",
+    "C": "heuristic",
+    "D": "heuristic"
+  },
+  "stage_fallbacks": {
+    "A": "model_error",
+    "C": "no_stage_evidence",
+    "D": "model_error",
+    "B": "incomplete_workflow"
+  },
+  "model_timeout_s": 25,
+  "commands_executed": false,
+  "independent_human_review": "pending"
+}

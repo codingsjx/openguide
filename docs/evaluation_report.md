@@ -1,187 +1,36 @@
-# 当前版本评测口径
+# 当前版本评测报告
 
-当前固定参考与受控实验见 [第四轮记录](evidence_round4_20261018.md)。独立人工复核 pending；Requests 的两次对照中全局与路由参考匹配持平，未证明普遍优越性；任务资料槽修复仅有单例验证，不泛化。
+日期：2026-10-24。程序候选基线 b4dfc86；本轮模型对照对应之前的 22cd0e9，不作为后续条件性安装修复的效果证据，完整证据入口为 output/qa/release-20261024/。历史报告归档于 history/evaluation_report_before_20261024.md，不能作为当前质量结论。
 
-第二轮已补充命令实跑与诊断，见 [执行验证](execution_findings_20261018.md)。历史实验中的“未运行命令”描述只适用于对应历史轮次；不得混用两轮分母。
-
-本轮已完成的真实调用与发现见 [真实模型实验记录](real_model_findings_20261018.md)。
-
-2026-10-18：命令匹配改为保留动作、目标和参数的严格匹配；步骤覆盖改为一对一匹配；新增命令覆盖率。旧分数仅作为历史记录保留，不能作为修复后版本质量结论。
-
-新增真实模型受控实验入口 `python -m benchmark.controlled_ablation`。输出位于 `benchmark/reports/controlled_*/`，包括固定 SHA 的输入、提示、原始输出、token 用量、耗时和失败状态。普通 RAG 与四视角比较检验路由；审计组与原始组使用同一生成。单次调用组的预算不同，不能单独归因机制效果。
-
-来源存在、原文匹配、命令原文匹配分开报告；均不代表建议语义正确或命令执行成功。第三方端点返回的模型身份没有独立验证。旧 golden 尚需对应本轮 SHA 复核，真实模型初步实验不等于完成竞赛效果验证。
-
-用户实验、真实贡献、命令执行结果未完成时保留待验证，不填补假数据。详见 [验收记录](competition_readiness.md)。
-
----
-
-> 以下是历史评测报告。旧 L3 的 10% 与 85% 来自人为构造的替身，不能解释为真实模型的幻觉率或改进幅度。旧命令正确率与有据断言率不代表语义正确率。
-
-# 评测报告
-
-**运行日期**：2026-10-06
-**运行命令**：`python -m benchmark.l2_golden.runner` / `python -m benchmark.l3_ablation.runner`
-**原始数据**：`benchmark/reports/`（`l2_results.jsonl`、`summary_l2_*.json`、`l3_ablation_*.json`）
-
-> **口径红线**（见 [`../benchmark/README.md`](../benchmark/README.md)）：
-> 历史集合曾标记 `verified: true`，但该字段不能证明已完成独立人工复核；当前固定参考仍为 pending。以下历史数字不能作为已人工验证的当前效果结论；L1 烟测不产出质量数字。
-> L3 本次使用确定性替身臂（无 LLM Key），报告中标注为 fake，**不得当作模型质量引用**。
-
----
-
-## 1. 运行配置
-
-| 项 | 值 |
-|---|---|
-| 生成模式 | 无 LLM Key（确定性启发式路径）—— 与 CI / 离线评审一致，任何人可复现 |
-| 向量检索 | `USE_CHROMA=false`（确定性词元检索，零模型下载） |
-| 命令超时 | `OG_CMD_TIMEOUT=300`（单条命令上限，超时记为失败并标注原因） |
-| 依赖准备 | 每个仓库独立 venv / `npm ci`，由评测框架自动完成（见 §4） |
-| golden 仓库 | 5 个，全部 `verified: true` |
-
----
-
-## 2. L2 黄金评估：总体结果
-
-| 指标 | 数值 | 含义 |
+| 证据层 | 本轮实际完成 | 能支持的结论 |
 |---|---|---|
-| 步骤完整率 `step_coverage` | **53%** | 生成的步骤覆盖了 26 个 golden 步骤中的多少 |
-| 证据命中率 `evidence_hit` | **75%** | 生成步骤的证据来源能否解析到真实仓库文件/issue |
-| 命令正确率 `command_correct` | **67%** | 生成的命令与 golden 参考命令的语义一致率 |
-| 命令可执行率 `command_exec` | **23%** | 命令在真实 clone + 已装依赖的环境里能否成功退出 |
-| 有据断言率 `assert_rate` | **85%** | 非 `missing` 证据占全部生成步骤的比例 |
-| 单仓库生成耗时 | 均值 **41.9s** | 含网络抓取与索引构建 |
+| 工程回归 | 336 后端/评测测试、58 前端测试，构建与 lint 通过 | 已覆盖相应逻辑，不证明新手成功率 |
+| 新目录安装 | 锁定核心依赖、无凭据 HTTP 200；前端锁定安装和检查通过 | 当前原生部署可复现，缓存被复用；容器见本轮 GitHub CI |
+| 五仓库规则检查 | 五个固定提交，保留缺失步骤及未知目录 | 来源和结构约束可核对，不是五仓库均可运行 |
+| 两仓库命令复跑 | Click 直接 pytest 通过；Requests 全量 5 失败、626 通过；诊断子集 24 通过 | 仅适用于指定环境和范围；子集不可替代全量 |
+| 当前模型对照 | 16 预期组中 0 可计分；15 次请求尝试、3 响应、5781 服务报告 tokens | 本轮不能比较方案质量；失败完整保留 |
+| 用户与贡献 | 无正式真人试用、无新增上游贡献结果 | 不计算成功率、节省时间或贡献接受率 |
 
-样本量：5 个仓库 / 26 个 golden 步骤 / 20 个生成步骤。
+## 协议与口径
 
-### 2.1 逐仓库明细
+普通全局 RAG 与路由组使用相同快照、阶段提示、上下文与输出预算，关闭路由组的专属命令加分；两次重复交替顺序。同输出审计复用原生成，检验组合后处理，不能分别归因其中每项机制。单次生成组调用预算不同，只作产品基线。
 
-| 仓库 | 步骤完整率 | 证据命中率 | 命令正确率 | 命令可执行率 | 有据断言率 | 耗时 |
-|---|---|---|---|---|---|---|
-| `psf/requests` | 60% | 75% | 67% | 50% | 75% | 171.7s |
-| `mochajs/mocha` | 67% | 75% | 100% | 0% | 100% | 28.0s |
-| `cookiecutter/cookiecutter` | 60% | 75% | 67% | 67% | 75% | 6.2s |
-| `camelot-dev/camelot` | 60% | 75% | 100% | 0% | 100% | 1.8s |
-| `pallets/click` | 20% | 75% | 0% | 0% | 75% | 1.6s |
+来源存在、逐字引用匹配、命令匹配、语义正确、实际运行成功、用户任务成功分别统计，不能互相替代。固定参考只有源码规则核对与 AI 源码审阅，独立人工复核仍 pending，因此 quality_claim_eligible=false。服务返回模型名、token 与身份未独立核验。
 
----
+本轮真实模型状态为 incomplete，全部预期组的状态、失败类型、实际尝试和有效配对情况见 model-comparison.json。不得把规则回退改记为实验成功，不只报告成功组，也不把本轮与历史不同代码/协议合并成一个提升率。
 
-## 3. 对低分项的归因（诚实分析）
+## 实跑边界
 
-低分不是"藏起来"，而是**评测体系真的在起作用**。逐项说明原因。
+命令计划是 AI 源码审阅后的显式 argv，非直接执行模型输出。使用 Windows 11、Python 3.12.8 和既有专用环境，没有宣称全新依赖环境或系统沙箱。Click 2179 passed、107 skipped、31000 deselected、1 xfailed；Requests 完整 recipe 626 passed、5 failed、3 skipped、1 xfailed；Requests 子集 24 passed。失败及未选中项均保留，未确认 Requests 失败的统一根因。
 
-### 3.1 命令可执行率 23%：三类真实原因
+## 已知限制
 
-框架会为每个仓库建独立环境并**真实安装依赖**（详见 §4），因此这里的失败是真实失败：
+- 五仓库资料检查仍发现 Click 安装、Mocha 安装/测试及部分命令目录缺口。
+- 当前页面模型配置隔离经过并发、TTL/容量及 API 测试；公网访问控制与费用限制由部署者另配。
+- 本机没有 Docker；b4dfc86 的 GitHub CI 五项任务均成功，含 Docker 与同源 API 冷启动，详见 ci-status.json 和 https://github.com/codingsjx/openguide/actions/runs/40069811219 。这不保证其他宿主环境一致。
+- 构建仍有大包提示；无性能提升或统计显著性结论。
+- 正式人工复核、真人试用与团队对材料/授权的审核仍待完成。
 
-| 原因 | 案例 | 证据 |
-|---|---|---|
-| **聚合测试套件过重** | `mochajs/mocha` 的 `npm test` = `run-s lint test-node test-browser`，含 lint 与浏览器测试，超出 300s 上限 | `(超时 >300s)` 与 lint/knip 报错输出 |
-| **命令依赖未声明的插件** | `pallets/click` 的 `tox r -e random` 需要 `uv-venv-lock-runner`（tox-uv 插件），contributing 文档未提 | `runner 'uv-venv-lock-runner' ... is not available (plugin may not be installed)` |
-| **测试本身依赖外部网络** | `psf/requests` 的 `python -m pytest tests` 确实**运行了**，但有 2 个网络/TLS 相关用例失败 | pytest 输出尾部；golden guide 已记录"2 个失败为环境相关，非代码问题" |
+## 产品端真实 AI 检查
 
-**这三类都指向同一个有价值的产品结论**：指南给出的命令"语法正确"不等于"新手照着能跑通"。
-这正是我们同时保留 `command_correct`（跑对没有）与 `command_exec`（跑得动吗）两个指标的
-原因——单看任何一个都会失真。
-
-> 后续改进方向：指南在给出聚合命令时，应同时给出**最小可用子集**
-> （如 mocha 的 `npm run test-node`、click 的 `pytest tests/`），降低新手第一次尝试的门槛。
-
-### 3.2 `pallets/click` 步骤完整率 20%：命令正确率与完整率的连带效应
-
-click 的 golden guide 含 5 步，生成 4 步，但只有 1 步在标题/阶段匹配上对上。
-根本原因是生成阶段把 contributing 文档里的 `tox r -e random` 当作测试命令，
-而 golden 认为测试基线应是 `pytest`——命令选错会同时拉低
-`step_coverage`（步骤匹配）与 `command_correct`（命令匹配）。
-
-**这不是匹配算法的问题，而是命令选取质量问题**，已在 §3.1 的改进方向里覆盖。
-
-### 3.3 有据断言率 85%：这是**设计使然**，不是缺陷
-
-`assert_rate` 度量"非 missing 证据的占比"。分层管线在**无法验证**某步出处时，
-会诚实地标 `missing`（宁可承认没找到），因此它的 `assert_rate` 天然低于
-"什么都说有证据"的朴素方案。对照 L3 数据（§5）可以看清这一点：
-朴素方案 `assert_rate` 100%，但其 `evidence_hit` 只有 10%——
-**它声称的出处绝大多数是编的**。这正是「无证据不宣称」要防的情况。
-
----
-
-## 4. 评测框架的环境准备（本轮修复）
-
-要让 `command_exec` 有意义，必须先让命令**真的能跑**。本轮修复了三个使该指标失真的缺陷：
-
-| 缺陷 | 后果 | 修复 |
-|---|---|---|
-| 只建虚拟环境、**不装依赖** | `tox` / `npm test` 一律"不是内部或外部命令"，指标实际在测"这台机器预装了什么" | 自动执行 `pip install -e .[dev]` / `npm ci`（可用 `OG_SKIP_PROVISION=1` 跳过） |
-| Windows 上以裸名 `npm` 调用 subprocess | `CreateProcess` 不解析 `PATHEXT`，安装静默失败，且**失败仍写入"已准备"标记**导致永久跳过 | 用 `shutil.which` 解析出 `npm.cmd` 全路径；标记**仅在成功时**写入 |
-| 内层 `pip()` 声明 `-> None` 且不返回 | 所有 `== 0` 判断恒为假，标记永不写入，每次重复安装 | 修正返回值 |
-
-另：`git clone` 失败原先只报"clone 失败"，现改为抛出带 **git 原始 stderr** 的
-`CloneError`（区分"未找到 git"/"超时"/"退出码非 0"），便于现场排查。
-
----
-
-## 5. L3 消融：朴素单次生成 vs 分层四视角管线
-
-**同一批仓库、同一份 golden、同一套指标**，只替换生成器。
-
-| 指标 | naive 单次生成 | layered 分层管线 | 差值 |
-|---|---|---|---|
-| 步骤完整率 | 31% | **53%** | +22% |
-| 证据命中率 | 10% | **85%** | **+75%** |
-| 命令正确率 | 50% | **67%** | +17% |
-| 有据断言率 | 100% | 85% | −15% |
-
-### 5.1 怎么读这张表
-
-- **旧替身样例的路径命中差异仅用于检测器演示**：替身方案使用人为构造的出处，
-  其中只有 10% 能解析到真实文件；分层管线经证据校验后达到 85%。
-- **非 missing 比例不衡量事实正确性**：朴素方案 100% 断言都有"证据"，
-  但那些证据基本是编的。分层管线宁可把验证不过的标成 `missing`。
-  **两个指标必须一起读**——只看 `assert_rate` 会得出完全相反的结论。
-- **耗时**：本次两臂均用确定性替身（无 LLM Key），耗时≈0，**不能代表真实 LLM 成本**。
-  真实模型的耗时对比需配置 Key 后用 `--provider auto` 重跑。
-
-### 5.2 口径声明
-
-本次 L3 的 `baseline_is_fake: true`（见 `l3_ablation_*.json`）。
-替身臂的作用是**证明指标能检出「无据断言」**，而非提供模型质量对比数字。
-真实模型对比需在配置 LLM Key 后重跑。
-
----
-
-## 6. 尚未完成 / 已知限制
-
-| 项 | 状态 | 说明 |
-|---|---|---|
-| L4 真实 PR 记录 | **PENDING** | 尚无真实提交记录；`l4_contribution` 明确标注待补充，不当作通过 |
-| 真实 LLM 的 L2/L3 数字 | 未跑 | 需配置 Key；当前数字全部来自确定性路径（可复现性更好） |
-| `pallets/click` 的命令选取 | 已知问题 | 见 §3.1、§3.2 |
-| golden 集规模 | 5 个仓库 | 后续计划扩到 15–20 个，覆盖 Rust/Go/Java |
-
----
-
-## 7. 复现方式
-
-```bash
-# 环境：Python 3.12 + Node 24（Node 仅 JS 仓库的 command_exec 需要）
-pip install fastapi "uvicorn[standard]" httpx pydantic pydantic-settings pytest
-
-# L1 链路烟测（离线、不产出质量数字）
-python -m benchmark.l1_smoke
-
-# L2 黄金评估（联网；自动为每个仓库准备依赖）
-python -m benchmark.l2_golden.runner
-python -m benchmark.l2_golden.runner --repos psf/requests     # 单仓库
-
-# L3 消融
-python -m benchmark.l3_ablation.runner
-python -m benchmark.l3_ablation.runner --provider auto        # 真实 LLM（需 Key）
-
-# 环境变量
-#   OG_CMD_TIMEOUT=300     单条命令超时（秒）
-#   OG_SKIP_PROVISION=1    跳过依赖安装（快速跑批）
-```
-
-输出落在 `benchmark/reports/`：逐条 jsonl + 汇总 json。
+单次请求用每阶段 25 秒模型等待，在 35.686 秒返回 HTTP 200，全部阶段为 heuristic。A/D model_error，B incomplete_workflow，C no_stage_evidence。规则回退保护流程，但没有证明模型端到端稳定；不将应用成功返回算作 AI 成功。

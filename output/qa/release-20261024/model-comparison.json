@@ -1,0 +1,660 @@
+{
+  "kind": "controlled-reference-exploration",
+  "run_id": "controlled_20261024T060321Z",
+  "manifest": {
+    "started_at": "20261024T060321Z",
+    "code_sha256": "72c536883971cda6fd5dbbc0473fe7115954aa2f6ebb845e861fe78fda4e30ce",
+    "repeats": 2,
+    "retrieval": "local-token-overlap",
+    "model": {
+      "model": "gpt-5.5",
+      "endpoint_host": "api.a6api.com"
+    },
+    "paired_audit": true,
+    "golden_review_status": "pending_independent_human_review",
+    "protocol": "3-global-flat-task-slots",
+    "reference_dir": "benchmark/golden/pinned",
+    "controls": {
+      "routed_executable_boost": false,
+      "flat_single_corpus": true,
+      "flat_deduplicated": true,
+      "stage_calls": 4,
+      "snippets_per_stage": 4,
+      "snippet_character_cap": 1200,
+      "max_output_tokens_per_stage": 1800,
+      "temperature": 0.2,
+      "counterbalanced_arm_order": true,
+      "stage_a_task_slots": true,
+      "model_timeout_seconds": 45.0,
+      "model_retry_limit": 0,
+      "response_normalization": "accept_one_complete_json_fence; reject_broken_json"
+    }
+  },
+  "status": "incomplete",
+  "reference_checks": {
+    "pallets/click": {
+      "source_rule_validation": "passed",
+      "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "evaluation_scope": [
+        "B"
+      ],
+      "source_review": "agent_source_reviewed",
+      "independent_human_review": "pending",
+      "quality_claim_eligible": false,
+      "human_review_identity_independently_verified": false
+    },
+    "psf/requests": {
+      "source_rule_validation": "passed",
+      "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "evaluation_scope": [
+        "A",
+        "B"
+      ],
+      "source_review": "agent_source_reviewed",
+      "independent_human_review": "pending",
+      "quality_claim_eligible": false,
+      "human_review_identity_independently_verified": false
+    }
+  },
+  "source_code_unchanged": true,
+  "quality_claim_eligible": false,
+  "model_attempts": 15,
+  "recorded_responses": 3,
+  "reported_total_tokens": 5781,
+  "records": [
+    {
+      "repo": "pallets/click",
+      "arm": "single_shot",
+      "repeat": 0,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "8f2566d19bfb59fc2a07beaaf0823f0cc9f55c5713b27bff5ef90b773e4a7942",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "evaluation_scope": [
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 3.62,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "single_shot",
+        "flat_rag",
+        "layered_raw",
+        "layered_verified"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "flat_rag",
+      "repeat": 0,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "8f2566d19bfb59fc2a07beaaf0823f0cc9f55c5713b27bff5ef90b773e4a7942",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "evaluation_scope": [
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 42.867,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 2,
+      "effective_pipeline_attempts": 2,
+      "arm_order": [
+        "single_shot",
+        "flat_rag",
+        "layered_raw",
+        "layered_verified"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 1,
+      "reported_total_tokens": 1920
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "layered_raw",
+      "repeat": 0,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "8f2566d19bfb59fc2a07beaaf0823f0cc9f55c5713b27bff5ef90b773e4a7942",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "evaluation_scope": [
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 3.762,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "single_shot",
+        "flat_rag",
+        "layered_raw",
+        "layered_verified"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "layered_verified",
+      "repeat": 0,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "8f2566d19bfb59fc2a07beaaf0823f0cc9f55c5713b27bff5ef90b773e4a7942",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "evaluation_scope": [
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 0.0,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 0,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "single_shot",
+        "flat_rag",
+        "layered_raw",
+        "layered_verified"
+      ],
+      "error_type": "ValueError",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "layered_raw",
+      "repeat": 1,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "8f2566d19bfb59fc2a07beaaf0823f0cc9f55c5713b27bff5ef90b773e4a7942",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "evaluation_scope": [
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 3.7,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "layered_raw",
+        "layered_verified",
+        "flat_rag",
+        "single_shot"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "layered_verified",
+      "repeat": 1,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "8f2566d19bfb59fc2a07beaaf0823f0cc9f55c5713b27bff5ef90b773e4a7942",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "evaluation_scope": [
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 0.0,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 0,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "layered_raw",
+        "layered_verified",
+        "flat_rag",
+        "single_shot"
+      ],
+      "error_type": "ValueError",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "flat_rag",
+      "repeat": 1,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "8f2566d19bfb59fc2a07beaaf0823f0cc9f55c5713b27bff5ef90b773e4a7942",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "evaluation_scope": [
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 35.51,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 2,
+      "effective_pipeline_attempts": 2,
+      "arm_order": [
+        "layered_raw",
+        "layered_verified",
+        "flat_rag",
+        "single_shot"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 1,
+      "reported_total_tokens": 1814
+    },
+    {
+      "repo": "pallets/click",
+      "arm": "single_shot",
+      "repeat": 1,
+      "sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "snapshot_sha256": "8f2566d19bfb59fc2a07beaaf0823f0cc9f55c5713b27bff5ef90b773e4a7942",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+        "evaluation_scope": [
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 3.626,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "layered_raw",
+        "layered_verified",
+        "flat_rag",
+        "single_shot"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "single_shot",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "f37efd91af641322b7d43cf65a05d54ae32f366c05c27fd48bbba225a23c6008",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "evaluation_scope": [
+          "A",
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 3.654,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "single_shot",
+        "flat_rag",
+        "layered_raw",
+        "layered_verified"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "flat_rag",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "f37efd91af641322b7d43cf65a05d54ae32f366c05c27fd48bbba225a23c6008",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "evaluation_scope": [
+          "A",
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 46.294,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "single_shot",
+        "flat_rag",
+        "layered_raw",
+        "layered_verified"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "layered_raw",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "f37efd91af641322b7d43cf65a05d54ae32f366c05c27fd48bbba225a23c6008",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "evaluation_scope": [
+          "A",
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 3.624,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "single_shot",
+        "flat_rag",
+        "layered_raw",
+        "layered_verified"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "layered_verified",
+      "repeat": 0,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "f37efd91af641322b7d43cf65a05d54ae32f366c05c27fd48bbba225a23c6008",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "evaluation_scope": [
+          "A",
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 0.0,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 0,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "single_shot",
+        "flat_rag",
+        "layered_raw",
+        "layered_verified"
+      ],
+      "error_type": "ValueError",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "layered_raw",
+      "repeat": 1,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "f37efd91af641322b7d43cf65a05d54ae32f366c05c27fd48bbba225a23c6008",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "evaluation_scope": [
+          "A",
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 42.824,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 2,
+      "effective_pipeline_attempts": 2,
+      "arm_order": [
+        "layered_raw",
+        "layered_verified",
+        "flat_rag",
+        "single_shot"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 1,
+      "reported_total_tokens": 2047
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "layered_verified",
+      "repeat": 1,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "f37efd91af641322b7d43cf65a05d54ae32f366c05c27fd48bbba225a23c6008",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "evaluation_scope": [
+          "A",
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 0.0,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 0,
+      "effective_pipeline_attempts": 2,
+      "arm_order": [
+        "layered_raw",
+        "layered_verified",
+        "flat_rag",
+        "single_shot"
+      ],
+      "error_type": "ValueError",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "flat_rag",
+      "repeat": 1,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "f37efd91af641322b7d43cf65a05d54ae32f366c05c27fd48bbba225a23c6008",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "evaluation_scope": [
+          "A",
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 3.659,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "layered_raw",
+        "layered_verified",
+        "flat_rag",
+        "single_shot"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    },
+    {
+      "repo": "psf/requests",
+      "arm": "single_shot",
+      "repeat": 1,
+      "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "snapshot_sha256": "f37efd91af641322b7d43cf65a05d54ae32f366c05c27fd48bbba225a23c6008",
+      "status": "failed",
+      "evaluation_scope": null,
+      "reference_validation": {
+        "source_rule_validation": "passed",
+        "commit_sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+        "evaluation_scope": [
+          "A",
+          "B"
+        ],
+        "source_review": "agent_source_reviewed",
+        "independent_human_review": "pending",
+        "quality_claim_eligible": false,
+        "human_review_identity_independently_verified": false
+      },
+      "elapsed_s": 46.412,
+      "end_to_end_elapsed_s": null,
+      "model_attempts": 1,
+      "effective_pipeline_attempts": 1,
+      "arm_order": [
+        "layered_raw",
+        "layered_verified",
+        "flat_rag",
+        "single_shot"
+      ],
+      "error_type": "LLMUnavailable",
+      "reference_metrics": null,
+      "recorded_responses": 0,
+      "reported_total_tokens": 0
+    }
+  ],
+  "routing_pairs": [
+    {
+      "repo": "pallets/click",
+      "repeat": 0,
+      "evaluation_scope": null,
+      "eligible": false
+    },
+    {
+      "repo": "pallets/click",
+      "repeat": 1,
+      "evaluation_scope": null,
+      "eligible": false
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 0,
+      "evaluation_scope": null,
+      "eligible": false
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 1,
+      "evaluation_scope": null,
+      "eligible": false
+    }
+  ],
+  "unmeasured": [
+    "command_execution",
+    "semantic_assertion_correctness",
+    "user_task_success",
+    "community_contribution"
+  ],
+  "limitations": [
+    "command_exec not measured",
+    "golden annotations require review against snapshot SHA",
+    "single-shot differs in request count and token budget; routing effect uses flat_rag vs layered_raw",
+    "API model identity is provider-reported, not independently verified",
+    "postprocess arm includes evidence audit, make expansion, workflow normalization and context derivation",
+    "agent-reviewed references are not independent human ground truth",
+    "Two repeats and narrow, different per-repo scopes do not establish statistical significance or general superiority",
+    "Reference command match rate is not semantic correctness; source path hit is not entailment"
+  ]
+}

@@ -3,6 +3,8 @@
 [![CI](https://github.com/codingsjx/openguide/actions/workflows/ci.yml/badge.svg)](https://github.com/codingsjx/openguide/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+> 2026-10-24 收尾入口：[当前评测](docs/evaluation_report.md)、[收尾清单](docs/release_closure_20261024.md)、[更新的隐私与部署边界](docs/privacy_and_license.md)。核心回归 336 项、前端 58 项；CI 容器验证见对应提交记录。真人与独立人工复核仍待完成。
+
 输入一个 GitHub 仓库 URL，OpenGuide 从实际取得的资料生成**带原文证据、可逐步核对**的新手贡献路线图：环境怎么搭、测试怎么跑、issue 如何筛选、PR 如何准备。资料缺失时明确待确认，不保证自动完成贡献。
 
 > 证据分级：分别显示来源存在、引用原文匹配、命令原文匹配；未通过原文核验的命令隐藏。原文匹配不代表命令已执行或建议语义正确。当前验收与待补证据见 [国赛完善记录](docs/competition_readiness.md)。
@@ -46,7 +48,7 @@ docker compose up --build
 
 - 默认 `USE_CHROMA=false`：走**确定性检索**，核心安装不包含向量库或模型依赖。
   Docker 启用向量检索时，在 `.env` 同时设 `INSTALL_VECTOR=true` 和 `USE_CHROMA=true` 后重新构建；首次使用会下载模型。
-- 向量库与 GitHub 响应缓存挂在命名卷上，重启不丢、不重抓。
+- 向量库与 GitHub 响应缓存挂在命名卷上；有效期内可复用，过期读取会失效。
 - 详细演示流程见 [docs/demo_script.md](docs/demo_script.md)。
 
 ---
@@ -68,7 +70,7 @@ uv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 
 可选：`backend/.env`（复制 `.env.example`）填 `GITHUB_TOKEN` 提升限流；不填也能跑（限流更低）。
 
-> 测试默认走 hermetic 路径（`backend/conftest.py` 设 `USE_CHROMA=false`），**不下载嵌入模型**，秒级完成。
+> 测试默认走 hermetic 路径（`backend/conftest.py` 设 `USE_CHROMA=false`），**不下载嵌入模型**，实际耗时以日志为准。
 
 ## 本机运行（前端）
 
@@ -86,7 +88,7 @@ pnpm dev                # 起在 127.0.0.1:5173，/api 代理到后端 :8000
 
 不配置 Key 也能跑：生成会走**确定性启发式**路径（`core/generate/pipeline.py` 的 `_generate_heuristic`），用于演示与 CI。要启用 AI 生成，二选一：
 
-- 页面右上角「设置我的 LLM」填写（发送到本地后端并仅存**当前进程内存**，不写盘；只适合单用户本地演示）
+- 页面右上角「设置我的 LLM」填写（发送到后端并按**当前页面会话**隔离保存在内存；刷新或后端重启后重新填写，闲置 30 分钟失效。公网仍须访问控制和费用限制）
 - `backend/.env` 填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`
 
 任何 OpenAI 兼容端点均可，默认指向官方端点。使用第三方服务前请阅读 [docs/third_party_disclosure.md](docs/third_party_disclosure.md)。

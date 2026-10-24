@@ -1,0 +1,110 @@
+{
+  "core_commit": "b4dfc864d0896d9168c8c4f643210cd213c07c0b",
+  "files": {
+    "ci-session-isolation.json": {
+      "bytes": 1552,
+      "sha256": "5556484ac4cea3c990020e845eca698b8ea654008905483085e3d5c4e8271636"
+    },
+    "ci-status.json": {
+      "bytes": 1552,
+      "sha256": "bf1a0ed704c5144c4bdd752686b4ee57a5adbe4fb9ccb7451eabce8b8fece6b9"
+    },
+    "clean-start.json": {
+      "bytes": 902,
+      "sha256": "a1d7830f1ee232b00655972eb52821dbff8515956d6f5f6a1338cc62a633af43"
+    },
+    "conditional-install.png": {
+      "bytes": 77276,
+      "sha256": "1e00fada91c5ea08a57a0e09f70b8c4949073782a823b21a1db04e1f7c577077"
+    },
+    "conditional-install.txt": {
+      "bytes": 1218,
+      "sha256": "134f963fb2e007cacdbeb59e3f9b3207f88cc1316bd0993b6a73e854f4a7762a"
+    },
+    "draft.png": {
+      "bytes": 56541,
+      "sha256": "924844631a3b098415e89602ceff64a4a81b799e998609a3659ad75534bc3970"
+    },
+    "explain.png": {
+      "bytes": 86234,
+      "sha256": "656328a758dc2ca6cc32ce53a6f2c60d5e6ca0a0924ddb1bb5eeb9d5d5076bdd"
+    },
+    "home.png": {
+      "bytes": 51623,
+      "sha256": "b24dabdbcba93b5fa6fc172d94fcc78a2ea964e751e5a9cec9eff87653b4e7aa"
+    },
+    "install.png": {
+      "bytes": 58214,
+      "sha256": "5a83d797d74c68ce8b97ea9c579ec8f473841cc59b0f4673a324e796447530f8"
+    },
+    "live-ai-product-guide.json": {
+      "bytes": 18568,
+      "sha256": "8548e42efae0751f9d96eaca1975d1c7a454db2ee8f897cc173c29267be105dc"
+    },
+    "live-ai-product-validation.json": {
+      "bytes": 478,
+      "sha256": "63da1cc79a08afc7d12b84ece7fbb2d04de5c1edb26c78555ce748b0be47059b"
+    },
+    "live-rule-guide-before-conditional.json": {
+      "bytes": 17270,
+      "sha256": "67409ada29249247776c570e1c97711bedb1aa3b89cc65cd2372fe0e9f9e2148"
+    },
+    "live-rule-qa.md": {
+      "bytes": 1548,
+      "sha256": "890b27a6ace4dcb86d73e98c586de645abb48e4143882ab75bcb804e7e68f30b"
+    },
+    "model-comparison.json": {
+      "bytes": 21652,
+      "sha256": "ad0f2a56bdd4ad2cf1770d4e58ded81d35322e0bb3b4cb2b1462e637f72f5e3f"
+    },
+    "multi-repo-audit.json": {
+      "bytes": 9784,
+      "sha256": "acf3638adc21fce43f642725e1f49fab0a331e49ae73096e18ba185af74cce86"
+    },
+    "pdf-validation.json": {
+      "bytes": 97,
+      "sha256": "1b2a7bf8d9caffeba025eac8dd62b349a5e5bdacfb833825351d7c0acd8903f0"
+    },
+    "qa.png": {
+      "bytes": 60500,
+      "sha256": "40ff3bc1252b62e70a46a39a81f14804399ae4788391379d492d6ea48e299388"
+    },
+    "README.md": {
+      "bytes": 2528,
+      "sha256": "714b6e5756676e41a43f140a8726c86efd4656d4cb67af1fbec89760b6442904"
+    },
+    "records.png": {
+      "bytes": 67070,
+      "sha256": "0c7eeff2820ab62e230b963d5456802ad108c6babe1f22e49da0f1b40b14e35f"
+    },
+    "session-settings.png": {
+      "bytes": 62565,
+      "sha256": "4248ae59ecca754e385283a696d76f85fd70df14d42449cdf3c403adb78a1e51"
+    },
+    "task.png": {
+      "bytes": 75581,
+      "sha256": "8789cdade8a7e4e14d3ccc1269eaafd73df04e0ca44f960bd35062bdd55f9fe9"
+    },
+    "tests.png": {
+      "bytes": 74532,
+      "sha256": "6ef78c10920024da4a700512434877e5bbdc245269508c4213f3a272f35040b8"
+    },
+    "third-party-resources.json": {
+      "bytes": 8651,
+      "sha256": "152ac6aa239d49a05ea0bd85ab81c083466e10e493a4aec04b089bf5310135d0"
+    },
+    "upstream-command-rerun.json": {
+      "bytes": 5775,
+      "sha256": "7b4c39b2cef86556dbf6521cc0d22d9de1e20a9415d2c953ab4fe760e834a409"
+    },
+    "validation.json": {
+      "bytes": 953,
+      "sha256": "0efb75cc2e6238a633ff7f460d243ad36e2626b9648767936da23304f671d14f"
+    },
+    "video-validation.json": {
+      "bytes": 244,
+      "sha256": "f9b536afee919c6c1c4ad32db82378cc203d041c50939bad78044b5a619204ed"
+    }
+  },
+  "hash_scope": "Local candidate file bytes at capture; Git checkout newline conversion can change text bytes."
+}

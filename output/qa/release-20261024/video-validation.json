@@ -1,0 +1,12 @@
+{
+  "full_decode_exit_code": 0,
+  "duration_seconds": 239.9,
+  "resolution": "1600x900",
+  "size_bytes": 1418944,
+  "type": "screenshot replay, explicitly labelled, no audio",
+  "frame_samples_seconds": [
+    0,
+    70,
+    230
+  ]
+}

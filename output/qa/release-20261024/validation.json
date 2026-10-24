@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-24",
+  "core_commit": "b4dfc864d0896d9168c8c4f643210cd213c07c0b",
+  "core_source_sha256": "4e2e3a65662e42298ccc51838b2a918a1377ef92d6894dba6085136c8a8f8a75",
+  "backend_and_benchmark_tests_passed": 336,
+  "frontend_tests_passed": 58,
+  "frontend_build_exit_code": 0,
+  "frontend_lint_exit_code": 0,
+  "ci_all_five_jobs_passed": true,
+  "ci_report": "ci-status.json",
+  "clean_start_report": "clean-start.json",
+  "multi_repo_report": "multi-repo-audit.json",
+  "upstream_rerun_report": "upstream-command-rerun.json",
+  "model_comparison_report": "model-comparison.json",
+  "live_ai_product_report": "live-ai-product-validation.json",
+  "user_original_progress_preserved": true,
+  "user_original_guide_restored": true,
+  "independent_human_review": "pending",
+  "human_trial": "pending",
+  "model_generation_reliability": "not established; this product check fell back to rules",
+  "submission_uploaded": false
+}

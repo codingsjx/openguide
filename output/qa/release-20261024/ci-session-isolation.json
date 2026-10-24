@@ -1,0 +1,45 @@
+{
+  "queried_commit": "22cd0e9d1148492498528c7f2502112ebd03806c",
+  "runs": [
+    {
+      "id": 40069120606,
+      "head_sha": "22cd0e9d1148492498528c7f2502112ebd03806c",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/codingsjx/openguide/actions/runs/40069120606",
+      "created_at": "2026-10-24T06:10:07Z"
+    }
+  ],
+  "jobs": [
+    {
+      "name": "锁定依赖核心安装（无向量模型）",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/codingsjx/openguide/actions/runs/40069120606/job/120798534579"
+    },
+    {
+      "name": "前端类型检查与构建（Node 24）",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/codingsjx/openguide/actions/runs/40069120606/job/120798534684"
+    },
+    {
+      "name": "密钥扫描",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/codingsjx/openguide/actions/runs/40069120606/job/120798534731"
+    },
+    {
+      "name": "Docker 构建与同源 API 冷启动",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/codingsjx/openguide/actions/runs/40069120606/job/120798534746"
+    },
+    {
+      "name": "后端测试（Python 3.12）",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/codingsjx/openguide/actions/runs/40069120606/job/120798534769"
+    }
+  ]
+}

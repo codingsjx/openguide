@@ -1,0 +1,234 @@
+{
+  "date": "2026-10-24",
+  "scope": "direct runtime/development/optional dependencies; transitive packages remain in lockfiles",
+  "python": [
+    {
+      "name": "fastapi",
+      "version": "0.141.1",
+      "usage": "runtime",
+      "registry_source": "https://pypi.org/project/fastapi/0.141.1/",
+      "review_status": "pending_team_license_and_obligations_review",
+      "license_metadata": "MIT",
+      "metadata_status": "retrieved"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "usage": "runtime",
+      "registry_source": "https://pypi.org/project/httpx/0.28.1/",
+      "review_status": "pending_team_license_and_obligations_review",
+      "license_metadata": "BSD-3-Clause",
+      "metadata_status": "retrieved"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.13.5",
+      "usage": "runtime",
+      "registry_source": "https://pypi.org/project/pydantic/2.13.5/",
+      "review_status": "pending_team_license_and_obligations_review",
+      "license_metadata": "MIT",
+      "metadata_status": "retrieved"
+    },
+    {
+      "name": "pydantic-settings",
+      "version": "2.15.0",
+      "usage": "runtime",
+      "registry_source": "https://pypi.org/project/pydantic-settings/2.15.0/",
+      "review_status": "pending_team_license_and_obligations_review",
+      "license_metadata": "MIT",
+      "metadata_status": "retrieved"
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.52.4",
+      "usage": "runtime",
+      "registry_source": "https://pypi.org/project/uvicorn/0.52.4/",
+      "review_status": "pending_team_license_and_obligations_review",
+      "license_metadata": "BSD-3-Clause",
+      "metadata_status": "retrieved"
+    },
+    {
+      "name": "chromadb",
+      "version": "1.5.9",
+      "usage": "optional-vector",
+      "registry_source": "https://pypi.org/project/chromadb/1.5.9/",
+      "review_status": "pending_team_license_and_obligations_review",
+      "license_metadata": "License :: OSI Approved :: Apache Software License",
+      "metadata_status": "retrieved"
+    },
+    {
+      "name": "sentence-transformers",
+      "version": "6.0.1",
+      "usage": "optional-vector",
+      "registry_source": "https://pypi.org/project/sentence-transformers/6.0.1/",
+      "review_status": "pending_team_license_and_obligations_review",
+      "license_metadata": "Apache-2.0",
+      "metadata_status": "retrieved"
+    },
+    {
+      "name": "pytest",
+      "version": "9.1.1",
+      "usage": "development",
+      "registry_source": "https://pypi.org/project/pytest/9.1.1/",
+      "review_status": "pending_team_license_and_obligations_review",
+      "license_metadata": "MIT",
+      "metadata_status": "retrieved"
+    }
+  ],
+  "frontend": [
+    {
+      "name": "@ant-design/icons",
+      "version": "6.3.4",
+      "usage": "runtime",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/@ant-design/icons/v/6.3.4",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "antd",
+      "version": "6.6.2",
+      "usage": "runtime",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/antd/v/6.6.2",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "react",
+      "version": "19.2.8",
+      "usage": "runtime",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/react/v/19.2.8",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "react-dom",
+      "version": "19.2.8",
+      "usage": "runtime",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/react-dom/v/19.2.8",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "@types/node",
+      "version": "24.13.3",
+      "usage": "development",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/@types/node/v/24.13.3",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "@types/react",
+      "version": "19.2.18",
+      "usage": "development",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/@types/react/v/19.2.18",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "@types/react-dom",
+      "version": "19.2.7",
+      "usage": "development",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/@types/react-dom/v/19.2.7",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "version": "6.1.1",
+      "usage": "development",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/@vitejs/plugin-react/v/6.1.1",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "oxlint",
+      "version": "1.81.0",
+      "usage": "development",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/oxlint/v/1.81.0",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "typescript",
+      "version": "6.0.3",
+      "usage": "development",
+      "license_metadata": "Apache-2.0",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/typescript/v/6.0.3",
+      "review_status": "pending_team_license_and_obligations_review"
+    },
+    {
+      "name": "vite",
+      "version": "8.2.2",
+      "usage": "development",
+      "license_metadata": "MIT",
+      "metadata_status": "installed package metadata",
+      "registry_source": "https://www.npmjs.com/package/vite/v/8.2.2",
+      "review_status": "pending_team_license_and_obligations_review"
+    }
+  ],
+  "services": [
+    {
+      "name": "GitHub REST/raw",
+      "use": "public repository collection",
+      "terms_review": "pending_team_review"
+    },
+    {
+      "name": "api.a6api.com",
+      "request_model": "gpt-5.5",
+      "model_identity": "provider reported; not independently verified",
+      "use": "recorded model experiments",
+      "terms_review": "pending_team_review"
+    }
+  ],
+  "ai_assistance": "See docs/ai_assistance_disclosure.md; actual team review remains pending.",
+  "material_tools": [
+    {
+      "name": "reportlab",
+      "version": "5.0.1",
+      "license_metadata": "BSD license (see license.txt for details), Copyright (c) 2000-2025, ReportLab Inc.",
+      "usage": "material rendering only; not distributed runtime dependency",
+      "source": "https://pypi.org/project/reportlab/5.0.1/",
+      "review_status": "pending_team_review"
+    },
+    {
+      "name": "PyMuPDF",
+      "version": "1.28.2",
+      "license_metadata": "Dual Licensed - GNU AFFERO GPL 3.0 or Artifex Commercial License",
+      "usage": "material rendering only; not distributed runtime dependency",
+      "source": "https://pypi.org/project/PyMuPDF/1.28.2/",
+      "review_status": "pending_team_review"
+    },
+    {
+      "name": "Pillow",
+      "version": "12.3.0",
+      "license_metadata": "MIT-CMU",
+      "usage": "material rendering only; not distributed runtime dependency",
+      "source": "https://pypi.org/project/Pillow/12.3.0/",
+      "review_status": "pending_team_review"
+    },
+    {
+      "name": "imageio-ffmpeg",
+      "version": "0.6.0",
+      "license_metadata": "BSD-2-Clause",
+      "usage": "material rendering only; not distributed runtime dependency",
+      "source": "https://pypi.org/project/imageio-ffmpeg/0.6.0/",
+      "review_status": "pending_team_review"
+    }
+  ],
+  "font": {
+    "name": "Microsoft YaHei",
+    "source": "installed Windows fonts; no font source files redistributed",
+    "usage": "PDF subset embedding and rendered video text",
+    "review_status": "pending_team_embedding_and_distribution_review"
+  }
+}
