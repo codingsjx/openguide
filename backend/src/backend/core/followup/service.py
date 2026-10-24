@@ -23,7 +23,7 @@ from backend.core.followup.diagnostics import diagnostic_plan
 from backend.core.ask.scope import path_component, source_allowed, component_excerpt
 from backend.core.generate.prerequisites import runtime_steps
 from backend.core.generate.workflow import prepare_workflow, CONDITIONAL_INSTALL_NOTE
-from backend.core.generate.command_context import STAGE_COMMAND_PATTERNS
+from backend.core.generate.command_context import STAGE_COMMAND_PATTERNS, command_family
 
 _DIAGNOSE_SYSTEM = (
     "你是 OpenGuide 的报错定位助手。根据用户粘贴的报错日志和仓库上下文，"
@@ -259,9 +259,17 @@ def diagnose(index: RepoIndex, step: GuideStep, log_text: str, client: LLMClient
     """定位报错：本地规则预判 + LLM 结合仓库上下文定位文件。"""
     # 1. Local rules first (fast, deterministic, always available).
     category, rule_hits, local_checks = diagnostic_plan(log_text)
+    recovery = _environment_recovery(index, step) if category == 'python_environment' else []
+    preparation = (['先核对实际执行的解释器、目录和安装方式；以下是同组件的原文依赖入口，选择与你的环境工具对应的一项，不要混用全部命令。'] if recovery else [])
+    completion = (['在同一开发环境重跑刚才失败的确切命令，记录实际退出码和结果；没有重跑时不记为已解决。'] if recovery else [])
     # 2. Retrieve repo context for the LLM to ground on.
     query = f"{step.title} {step.command or ''} {log_text[:1200]}"
     ctx = _top_snippets(index, query, kind=_STAGE_TO_KIND.get(step.stage), top_k=3)
+    if recovery:
+        component = path_component(recovery[0].working_directory or '') or path_component(recovery[0].evidence.source)
+        ctx = [s for s in ctx if source_allowed(s['source'], '', component, 'setup')]
+        ctx = [{'source': s.evidence.source.split('#', 1)[0], 'text': s.evidence.quote} for s in recovery] + ctx
+        ctx = ctx[:3]
     ctx_text = "\n".join(f"[source: {s['source']}]\n{s['text']}" for s in ctx[:3])
     warnings = []
     if category == 'local_certificate_path' and local_checks:
@@ -304,14 +312,47 @@ def diagnose(index: RepoIndex, step: GuideStep, log_text: str, client: LLMClient
                 intent="diagnose",
                 text="待验证的排查方向（未执行命令、未确认根因）：\n" + "\n".join(rule_hits or ["请结合下列仓库原文检查当前步骤与环境。"]),
                 sources=[ev.source for ev in verified], evidence=verified, mode="llm_evidence_selection",
-                diagnostic_category=category, local_checks=local_checks,
+                diagnostic_category=category, local_checks=local_checks, sub_steps=recovery,
+                preparation_checks=preparation, completion_checks=completion,
             )
         except LLMUnavailable:
             warnings.append("模型不可用或未提供可核验原文，本次仅显示本地规则与检索资料。")
     text = "\n".join(rule_hits) if rule_hits else "（未能定位，建议贴更完整的报错日志）"
     return FollowupResult(intent="diagnose", text="待验证的本地规则提示（未确认根因）：\n" + text,
         sources=[s['source'] for s in ctx], evidence=_evidence(index, ctx), mode="rules", warnings=warnings,
-        diagnostic_category=category, local_checks=local_checks)
+        diagnostic_category=category, local_checks=local_checks, sub_steps=recovery,
+        preparation_checks=preparation, completion_checks=completion)
+
+
+def _environment_recovery(index: RepoIndex, step: GuideStep) -> list[GuideStep]:
+    """Select an existing same-component install; never construct a package name
+    from an error log or trust a client-posted directory/command.
+    """
+    sig = getattr(index, 'signals', None)
+    if not sig or not step.command:
+        return []
+    current = step.model_copy(deep=True)
+    current.execution_record = None
+    current.evidence = verify_step_evidence(current, sig)
+    if current.evidence.verification != 'command_verified':
+        return []
+    current = prepare_workflow(sig, [current])[0]
+    if current.working_directory is None:
+        return []
+    from backend.core.generate.pipeline import build_guide
+    plan = build_guide(sig, use_llm=False, check_suitability=False)
+    recovery = [s for s in plan.steps if s.stage == 'A' and s.command
+        and s.evidence.verification == 'command_verified'
+        and s.working_directory == current.working_directory
+        and command_family(s.command) == command_family(current.command)
+        and re.match(r'^(?:uv (?:sync|pip install)|pip\d? install|python\d? -m pip install|poetry (?:install|sync)|conda install)(?=\s|$)', s.command)
+        and CONDITIONAL_INSTALL_NOTE not in s.context_notes][:2]
+    for i, child in enumerate(recovery, 1):
+        child.step_id = i
+        child.prerequisite_step_ids = []
+        child.title = '原文依赖准备入口（先核对解释器与适用范围）'
+        child.expected = '按原文完成依赖准备后，在同一环境重跑失败命令；本工具没有执行或确认修复。'
+    return recovery
 
 
 def _local_rules(log_text: str) -> list[str]:

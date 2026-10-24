@@ -32,10 +32,23 @@ test('invalid JSON fails without side effects', () => {
 test('stage generation modes are preserved and invalid modes rejected', () => {
   const f = fixture(); f.stage_modes = { A: 'llm', B: 'heuristic' }
   assert.deepEqual(parseSavedGuide(JSON.stringify(f)).stage_modes, f.stage_modes)
+  f.stage_modes={A:'mixed',B:'llm'};f.model_request_attempts=3;f.model_disconnect_retries=1;f.steps[0].generation_source='llm'
+  const restored=parseSavedGuide(JSON.stringify(f))
+  assert.equal(restored.stage_modes.A,'mixed')
+  assert.equal(restored.steps[0].generation_source,'llm')
+  assert.equal(restored.model_disconnect_retries,1)
   f.stage_modes = { A: 'executed' }
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))
   f.stage_modes = { Z: 'llm' }
   assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})
+
+test('invalid model accounting and step provenance cannot enter a saved guide',()=>{
+  for(const patch of [{model_request_attempts:-1},{model_request_attempts:1.5},{model_disconnect_retries:'one'}]) {
+    assert.throws(()=>parseSavedGuide(JSON.stringify({...fixture(),...patch})))
+  }
+  const f=fixture();f.steps[0].generation_source='executed'
+  assert.throws(()=>parseSavedGuide(JSON.stringify(f)))
 })
 
 test('import preserves the no-context skipped-call reason',()=>{

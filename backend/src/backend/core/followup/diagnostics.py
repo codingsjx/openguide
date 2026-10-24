@@ -31,7 +31,7 @@ def diagnostic_plan(log_text: str) -> tuple[str, list[str], list[dict[str, str]]
         category = "certificate_trust"
         hints.append("TLS 信任校验失败：先区分远程服务证书、本地 CA 配置及测试生成的证书，并核对报错端点和仓库测试说明；不要关闭证书校验来掩盖错误。")
 
-    if "module not found" in low or "modulenotfounderror" in low:
+    if "module not found" in low or "modulenotfounderror" in low or 'no module named' in low:
         category = category if category != "unknown" else "python_environment"
         hints.append("可能缺少依赖或使用了错误环境。核对当前解释器与仓库开发依赖说明，不要直接安装报错中看起来同名的包。")
         check("确认 Python 与 pip 属于同一环境", 'python -c "import sys; print(sys.executable); print(sys.prefix); print(sys.base_prefix)"', "venv 中 prefix 与 base_prefix 应不同；继续用此解释器的 python -m pip 核对安装。")

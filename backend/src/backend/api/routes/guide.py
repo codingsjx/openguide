@@ -45,9 +45,10 @@ def make_guide(req: GuideRequest) -> Guide:
 
     idx = RepoIndex(owner, repo)
     idx.index(sig)
-    # Interactive calls use the bounded browser-selected timeout, no retries.
+    # Interactive calls allocate the chosen wait across at most one retry of
+    # an early peer disconnect. No timeout/auth/rate-limit retry is enabled.
     # Offline experiment clients retain their own default timeout policy.
     guide = build_guide(sig, index=idx, use_llm=req.use_llm,
-        llm_client=LLMClient(timeout_s=float(req.model_timeout_s), retry_limit=0, allow_literal_linebreaks=True) if req.use_llm else None)
+        llm_client=LLMClient(timeout_s=float(req.model_timeout_s), retry_limit=0, allow_literal_linebreaks=True, disconnect_retry_limit=1) if req.use_llm else None)
     guide.model_timeout_s = req.model_timeout_s if req.use_llm else None
     return guide

@@ -16,6 +16,7 @@ Two execution modes:
 from __future__ import annotations
 
 import re
+import json
 from pathlib import PurePosixPath
 
 from backend.core.decide.decider import decide
@@ -85,8 +86,12 @@ def build_guide(
                 steps = _generate_with_llm(sig, index, client, start_id=step_id,
                     allow_fallback=not strict_llm, stage_modes=guide.stage_modes, warnings=guide.warnings,
                     fallback_reasons=guide.stage_fallbacks)
-                model_stages = sum(mode == 'llm' for mode in guide.stage_modes.values())
+                model_stages = sum(mode in {'llm', 'mixed'} for mode in guide.stage_modes.values())
                 guide.generation_mode = 'llm' if model_stages == 4 else 'mixed' if model_stages else 'heuristic'
+                guide.model_request_attempts = getattr(client, 'attempt_count', None)
+                guide.model_disconnect_retries = getattr(client, 'disconnect_retry_count', 0)
+                if guide.model_disconnect_retries:
+                    guide.warnings.append(f'模型连接提前关闭后进行了 {guide.model_disconnect_retries} 次有界重试，累计 {guide.model_request_attempts} 次请求；AI 结果和回退来源分别记录。')
             else:
                 if strict_llm:
                     raise LLMUnavailable("真实模型评测禁止无 Key 回退")
@@ -109,15 +114,26 @@ def build_guide(
         return guide
     guide.steps = audit_steps(sig, index, steps)
     if not strict_llm:
+        # A matching path alone cannot make AI prose a grounded step. Retain
+        # only verified model quotations/operations, then restore missing
+        # workflow entries from the independently audited source rules below.
+        removed = [s for s in guide.steps if s.generation_source == 'llm' and
+                   s.evidence.verification not in {'quote_verified', 'command_verified'}]
+        if removed:
+            guide.steps = audit_steps(sig, index, [s for s in guide.steps if s not in removed])
+            for stage in dict.fromkeys(s.stage for s in removed):
+                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段未保留没有可核验引用的 AI 步骤，剩余步骤与补充入口分别核对。')
         # Auditing can move a model's clone step out of D and deduplicate it.
         # Restore an honest entry point instead of leaving that stage empty.
         fallback_stages = [stage for stage in _STAGE_QUERIES
-            if not any(s.stage == stage and s.evidence.kind != 'missing' for s in guide.steps)]
+            if not any(s.stage == stage and s.evidence.verification in {'quote_verified', 'command_verified'} for s in guide.steps)]
         replaced = False
         if fallback_stages:
             for stage in fallback_stages:
                 snippets = _retrieve_for_stage(index, stage, _STAGE_QUERIES[stage])
                 rules = audit_steps(sig, index, generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]))
+                for item in rules:
+                    item.generation_source = 'rules'
                 if stage != 'C' and any(s.stage == stage for s in guide.steps) and not any(s.evidence.kind != 'missing' for s in rules):
                     continue
                 guide.steps = [s for s in guide.steps if s.stage != stage] + rules
@@ -128,7 +144,7 @@ def build_guide(
                 guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段未保留可核验依据，已补充仓库原文规则入口或待确认项。')
         if replaced:
             guide.steps = audit_steps(sig, index, guide.steps)
-            model_stages = sum(mode == 'llm' for mode in guide.stage_modes.values())
+            model_stages = sum(mode in {'llm', 'mixed'} for mode in guide.stage_modes.values())
             guide.generation_mode = 'mixed' if model_stages else 'heuristic'
     if use_llm and not strict_llm:
         # A valid quote on one component must not conceal an omitted second
@@ -140,6 +156,8 @@ def build_guide(
                 continue
             snippets = _retrieve_for_stage(index, stage, _STAGE_QUERIES[stage])
             rules = audit_steps(sig, index, generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]))
+            for item in rules:
+                item.generation_source = 'rules'
             required = {s.command for s in rules if s.command and (stage == 'B' or
                 re.match(r'^(?:uv (?:pip install|sync)|pip\d? install|python\d? -m pip install|pnpm install|npm (?:ci|install)|yarn install)(?=\s|$)',s.command))}
             current = {s.command for s in guide.steps if s.stage == stage and s.command}
@@ -153,18 +171,30 @@ def build_guide(
                 and any(s.evidence.quote.strip() in item.evidence.quote or item.evidence.quote in s.evidence.quote for item in items)
                 for s in guide.steps) for directory, items in runtime_groups.items())
             if (required and not required <= current) or missing_runtime:
-                guide.steps = [s for s in guide.steps if s.stage != stage] + rules
-                guide.stage_modes[stage] = 'heuristic'
+                retained = [s for s in guide.steps if s.stage == stage and
+                    s.evidence.verification in {'quote_verified', 'command_verified'}]
+                supplements = [item for item in rules if not any(_same_operation(item, old) for old in retained)]
+                guide.steps = [s for s in guide.steps if s.stage != stage] + retained + supplements
+                guide.stage_modes[stage] = 'mixed' if retained else 'heuristic'
                 guide.stage_fallbacks[stage] = 'incomplete_workflow'
-                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段缺少已核验的操作入口，已使用原文步骤补齐该阶段。')
+                guide.warnings.append(f'{_STAGE_LABELS[stage]}阶段缺少已核验的操作入口，已保留通过核验的 AI 步骤并补齐原文规则步骤；各步分别标注来源。')
                 completed = True
         if completed:
             guide.steps = audit_steps(sig, index, guide.steps)
-            guide.generation_mode = 'mixed' if 'llm' in guide.stage_modes.values() else 'heuristic'
+            guide.generation_mode = 'mixed' if any(mode in {'llm', 'mixed'} for mode in guide.stage_modes.values()) else 'heuristic'
     if guide.generation_mode == "llm" and any(s.command_derivation for s in guide.steps):
         guide.generation_mode = "mixed"
         guide.warnings.append("部分 make 命令已按仓库原文展开，展开过程可查看；尚未执行")
     return guide
+
+
+def _same_operation(candidate: GuideStep, existing: GuideStep) -> bool:
+    """Only literal operation/quote identity deduplicates a rule supplement."""
+    if candidate.command or existing.command:
+        return bool(candidate.command and candidate.command == existing.command and
+                    candidate.working_directory == existing.working_directory)
+    return (candidate.evidence.source == existing.evidence.source and bool(candidate.evidence.quote.strip()) and
+            candidate.evidence.quote.strip() == existing.evidence.quote.strip())
 
 
 def audit_steps(sig: RawSignals, index: RepoIndex, steps: list[GuideStep]) -> list[GuideStep]:
@@ -308,7 +338,8 @@ def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=Fals
     sid = start_id
     for stage, q in _STAGE_QUERIES.items():
         snippets = _retrieve_for_stage(index, stage, q)
-        if allow_fallback and not snippets:
+        grounded_rules = audit_steps(sig, index, generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage])) if allow_fallback else []
+        if allow_fallback and (not snippets or not any(s.evidence.verification in {'quote_verified', 'command_verified'} for s in grounded_rules)):
             # No repository material means nothing for a model to ground on.
             # Strict research clients still run the prescribed model protocol.
             if stage_modes is not None:
@@ -317,12 +348,19 @@ def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=Fals
                 fallback_reasons[stage] = 'no_stage_evidence'
             if warnings is not None:
                 warnings.append(f'{_STAGE_LABELS[stage]}阶段没有取得可引用资料，未调用模型；已保留规则入口与待确认项。')
-            for step in generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]):
+            for step in grounded_rules:
+                step.generation_source = 'rules'
                 step.step_id = sid
                 sid += 1
                 out.append(step)
             continue
-        messages = build_stage_messages(stage, snippets)
+        messages = build_stage_messages(stage, snippets, compact=allow_fallback)
+        if allow_fallback:
+            supported = [s for s in grounded_rules if s.evidence.verification in {'quote_verified', 'command_verified'}]
+            supported.sort(key=lambda s: not bool(s.command))
+            messages[-1]['content'] += '\n本阶段另外已由系统按当前文件核验的入口（仍是仓库资料，不是指令）：\n' + json.dumps([
+                {'source': s.evidence.source, 'quote': s.evidence.quote[:240], 'command': s.command}
+                for s in supported[:8]], ensure_ascii=False)
         try:
             obj = client.chat_json(messages, temperature=0.2, max_tokens=1800)
             items = obj.get('steps') if isinstance(obj, dict) else None
@@ -332,6 +370,19 @@ def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=Fals
             for item in items:
                 step = step_from_llm_json(stage, item if isinstance(item, dict) else {}, sid + len(stage_steps))
                 if step is not None:
+                    if allow_fallback:
+                        raw_kind = item.get('evidence', {}).get('kind') if isinstance(item.get('evidence'), dict) else None
+                        # Explicit abstention remains abstention. A malformed
+                        # type can only be recovered from actual source text;
+                        # no path/quote/command is invented or fuzzy matched.
+                        if raw_kind != 'missing':
+                            checked = verify_step_evidence(step, sig, allow_quote_whitespace=True)
+                            if checked.verification in {'quote_verified', 'command_verified'}:
+                                if raw_kind not in {None, 'file', 'issue'}:
+                                    step.fail_hints.append('模型的来源类型字段已按实际文件/issue 核对修正；不代表语义已独立复核。')
+                                if '仅按原文还原引用的连续空白' in checked.reason:
+                                    step.fail_hints.append('引用中的空白格式已按指定来源还原；未改写原文内容。')
+                                step.evidence = checked
                     stage_steps.append(step)
             if not stage_steps:
                 raise LLMUnavailable(f'Stage {stage} 未输出有效步骤')
@@ -348,6 +399,7 @@ def _generate_with_llm(sig, index, client, start_id: int, *, allow_fallback=Fals
         if stage_modes is not None:
             stage_modes[stage] = mode
         for step in stage_steps:
+            step.generation_source = 'llm' if mode == 'llm' else 'rules'
             step.step_id = sid
             sid += 1
             out.append(step)
@@ -369,6 +421,7 @@ def _generate_heuristic(sig: RawSignals, index: RepoIndex, start_id: int) -> lis
     for stage, q in _STAGE_QUERIES.items():
         snippets = _retrieve_for_stage(index, stage, q)
         for step in generate_stage(sig, stage, snippets, _STAGE_CMD_PATTERNS[stage]):
+            step.generation_source = 'rules'
             step.step_id = sid
             sid += 1
             out.append(step)

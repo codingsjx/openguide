@@ -56,15 +56,17 @@ export default function GuideStatus({ guide, step, onRegenerateAi, onRegenerate 
       </>} />
     {step && mode && <Space wrap size={4} style={{ marginBottom: 8 }}>
       <Text type="secondary">当前 · {labels[step.stage]}</Text>
-      <Tag color={mode === 'llm' ? 'blue' : 'default'}>{mode === 'llm' ? 'AI 生成' : '规则整理'}</Tag>
+      <Tag color={mode !== 'heuristic' ? 'blue' : 'default'}>{mode === 'llm' ? 'AI 生成' : mode === 'mixed' ? 'AI + 原文补齐' : '规则整理'}</Tag>
       {reason && <Text type="secondary">{fallbackLabels[reason]}</Text>}
     </Space>}
     <GuideNotices guide={guide} warnings={guide.warnings} onRegenerate={onRegenerate}
-      generationDetails={Object.keys(guide.stage_modes ?? {}).length > 0 ? Object.entries(labels).map(([stage, label]) => {
+      generationDetails={Object.keys(guide.stage_modes ?? {}).length > 0 || guide.model_request_attempts != null ? <>
+      {guide.model_request_attempts != null && <Paragraph>模型实际请求 {guide.model_request_attempts} 次；连接提前关闭后重试 {guide.model_disconnect_retries ?? 0} 次。仅记录请求，不等于生成全部成功。</Paragraph>}
+      {Object.keys(guide.stage_modes ?? {}).length > 0 ? Object.entries(labels).map(([stage, label]) => {
         const stageKey = stage as 'A' | 'B' | 'C' | 'D'
         const stageMode = guide.stage_modes?.[stageKey]
         const fallback = guide.stage_fallbacks?.[stageKey]
-        return <Paragraph key={stage} style={{ marginBottom: 6 }}><Text strong>{label}：</Text>{stageMode === 'llm' ? 'AI 生成' : stageMode === 'heuristic' ? '规则整理' : '来源未记录'}{fallback ? `；${fallbackLabels[fallback]}` : ''}</Paragraph>
-      }) : undefined} />
+        return <Paragraph key={stage} style={{ marginBottom: 6 }}><Text strong>{label}：</Text>{stageMode === 'llm' ? 'AI 生成' : stageMode === 'mixed' ? 'AI + 原文规则补齐' : stageMode === 'heuristic' ? '规则整理' : '来源未记录'}{fallback ? `；${fallbackLabels[fallback]}` : ''}</Paragraph>
+      }) : undefined}</> : undefined} />
   </>
 }

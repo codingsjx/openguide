@@ -110,7 +110,7 @@ def resolve_evidence_source(source: str, sig: RawSignals) -> Evidence:
     return Evidence(kind="missing", source=src, quote="")
 
 
-def verify_step_evidence(step, sig: RawSignals) -> Evidence:
+def verify_step_evidence(step, sig: RawSignals, *, allow_quote_whitespace: bool = False) -> Evidence:
     """Verify provenance and literal support; never claim semantic entailment.
 
     A file existing is distinct from its text supporting a command. Commands
@@ -135,9 +135,14 @@ def verify_step_evidence(step, sig: RawSignals) -> Evidence:
             ev.line_start, ev.line_end = int(anchor[1]), int(anchor[2] or anchor[1])
             text = "\n".join(text.splitlines()[ev.line_start - 1:ev.line_end])
     quote = step.evidence.quote.strip()
+    whitespace_restored = False
     if quote:
         if quote not in text:
-            return Evidence(kind="missing", reason="引用原文不在指定来源中")
+            match = re.search(r'\s+'.join(re.escape(part) for part in quote.split()), text) if allow_quote_whitespace and len(quote) <= 6000 else None
+            if not match:
+                return Evidence(kind="missing", reason="引用原文不在指定来源中")
+            quote = match[0]
+            whitespace_restored = True
         ev.quote, ev.verification = quote, "quote_verified"
     if step.command:
         command = step.command.strip()
@@ -167,4 +172,6 @@ def verify_step_evidence(step, sig: RawSignals) -> Evidence:
         ev.line_start = full[:pos].count("\n") + 1
         ev.line_end = ev.line_start + ev.quote.count("\n")
     ev.reason = "原文匹配不等于命令已运行或建议语义正确"
+    if whitespace_restored:
+        ev.reason += '；仅按原文还原引用的连续空白'
     return ev

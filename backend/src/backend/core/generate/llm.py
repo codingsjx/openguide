@@ -78,7 +78,7 @@ def llm_configured() -> bool:
 
 
 class LLMClient:
-    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2, allow_literal_linebreaks: bool = False) -> None:
+    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2, allow_literal_linebreaks: bool = False, disconnect_retry_limit: int = 0) -> None:
         s = get_settings()
         config = session_settings()
         key, base, model = config if config is not None else (_OVERRIDE_KEY, _OVERRIDE_BASE, _OVERRIDE_MODEL)
@@ -87,10 +87,12 @@ class LLMClient:
         self._model = model or s.llm_model
         self.trace: list[dict] = []
         self.attempt_count = 0
+        self.disconnect_retry_count = 0
         self.request_events: list[dict] = []
         self._timeout_s = timeout_s
         self._retry_limit = retry_limit
         self._allow_literal_linebreaks = allow_literal_linebreaks
+        self._disconnect_retry_limit = min(1, max(0, disconnect_retry_limit))
 
     def public_config(self) -> dict:
         """Non-secret experiment metadata. Never include credentials or URL query."""
@@ -107,6 +109,8 @@ class LLMClient:
         event = {'elapsed_ms': round(elapsed * 1000), 'attempt': self.attempt_count,
                  'status': error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None,
                  'result': 'timeout' if isinstance(error, httpx.TimeoutException) else 'request_failed' if error else 'response_received'}
+        if error:
+            event['error_type'] = type(error).__name__
         self.request_events.append(event)
         if error:
             logging.getLogger(__name__).warning('Model request result=%s elapsed_ms=%s status=%s attempt=%s',
@@ -131,7 +135,7 @@ class LLMClient:
 
         import httpx
 
-        headers = {"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"}
+        headers = {"Authorization": f"Bearer {self._key}", "Content-Type": "application/json", "User-Agent": "OpenGuide/0.1"}
         payload: dict[str, Any] = {
             "model": self._model,
             "messages": messages,
@@ -141,22 +145,36 @@ class LLMClient:
         }
         last_exc: Exception | None = None
         retries = min(retries, self._retry_limit)
-        for attempt in range(retries + 1):
+        # Product-only recovery for a peer closing before a response. Allocate
+        # the remaining network wait to the second attempt; never retry auth,
+        # rate limits, timeouts or invalid JSON through this recovery path.
+        deadline = time.perf_counter() + self._timeout_s if self._disconnect_retry_limit else None
+        normal_retries, disconnect_retries, attempt = 0, 0, 0
+        while True:
             self.attempt_count += 1
             started = time.perf_counter()
+            wait = self._timeout_s if deadline is None else max(0.001, min(self._timeout_s, deadline - started))
             try:
                 resp = httpx.post(
                     f"{self._base}/chat/completions",
                     headers=headers,
                     json=payload,
-                    timeout=self._timeout_s,
+                    timeout=wait,
                 )
                 resp.raise_for_status()
             except Exception as exc:  # noqa: BLE001 - network/API errors surfaced
                 self._request_event(time.perf_counter() - started, exc)
                 last_exc = exc
-                if attempt < retries:
-                    time.sleep(1.5 * (attempt + 1))
+                if (isinstance(exc, httpx.RemoteProtocolError) and disconnect_retries < self._disconnect_retry_limit
+                        and deadline is not None and deadline - time.perf_counter() > 1):
+                    disconnect_retries += 1
+                    self.disconnect_retry_count += 1
+                    attempt += 1
+                    continue
+                if normal_retries < retries:
+                    normal_retries += 1
+                    attempt += 1
+                    time.sleep(1.5 * normal_retries)
                     continue
                 raise LLMUnavailable(f"LLM 调用失败: {exc}") from exc
             self._request_event(time.perf_counter() - started)
@@ -167,7 +185,8 @@ class LLMClient:
                 raise LLMUnavailable("LLM 响应结构无效") from exc
             self.trace.append({"messages": messages, "content": content,
                                "usage": data.get("usage", {}), "model": data.get("model", self._model),
-                               "response_id": data.get("id"), "attempt": attempt + 1})
+                               "response_id": data.get("id"), "attempt": attempt + 1,
+                               "disconnect_retries": disconnect_retries})
             parsed, normalization = parse_json_object(content, allow_literal_linebreaks=self._allow_literal_linebreaks)
             self.trace[-1]['format_normalization'] = normalization
             return parsed

@@ -36,7 +36,7 @@ def _step_instructions(stage: str) -> str:
     return "仅依据仓库贡献规范给出分支、修改、测试和提交 PR 的步骤；保留模板、测试及审查要求，缺少说明则待确认。不要重复阶段 A 的克隆。"
 
 
-def build_stage_messages(stage: str, context_snippets: list[dict]) -> list[dict[str, str]]:
+def build_stage_messages(stage: str, context_snippets: list[dict], *, compact: bool = False) -> list[dict[str, str]]:
     """context_snippets: [{source, text}] retrieved from the repo perspectives."""
     user = [
         f"现在生成 Stage {stage}（{_STAGE_LABELS.get(stage, stage)}）的步骤。\n",
@@ -50,14 +50,20 @@ def build_stage_messages(stage: str, context_snippets: list[dict]) -> list[dict[
         # Only real file paths or issue refs are usable as evidence sources.
         display = src if src and not src.startswith("v") else "（仓库原文，无具体文件）"
         user.append(f"\n--[source: {display}]--\n{s['text'][:1200]}")
-    user.append(
+    if compact:
+        user.append('\n输出 JSON {"steps": [...]}，最多六步；只填 title、command、expected、evidence(kind/source/quote)。'
+            'title 简短，expected 只写操作目的与核对方法（不超过80字），quote 逐字摘录且不超过180字。'
+            '不重复 step_id、stage、stage_label，不写实际通过数量或已经执行。保留完整命令及参数，不能截断命令。'
+            '优先解释当前组件的关键操作；未覆盖的原文步骤由系统明确补齐，不要为了凑步骤编造内容。')
+    else:
+        user.append(
         "\n\n输出 JSON 对象 {\"steps\": [...]}，steps 中每个元素字段："
         "step_id(int), stage=该阶段代号, stage_label(中文), title(一句话), "
         "command(可执行命令或 null), expected(期望结果), "
         "fail_hints(字符串数组,可空), evidence(对象: kind∈[file,issue,missing], "
         "source=来自原文的 source 或空, quote=引用的原文短句)。"
         '如无资料支撑某步，设 evidence.kind="missing"。'
-    )
+        )
     return [{"role": "system", "content": _SYSTEM}, {"role": "user", "content": "".join(user)}]
 
 

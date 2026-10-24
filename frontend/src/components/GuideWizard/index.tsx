@@ -181,11 +181,11 @@ function FollowupBar({
             {item.reference_url && <a href={item.reference_url} target="_blank" rel="noreferrer">工具官方说明 ↗</a>}
           </div>)}
           {Boolean(result.preparation_checks?.length) && <div style={{ marginTop: 12 }}>
-            <Text strong>{result.intent === 'explain' ? '开始前核对（工具提供）' : '1. 开始前核对（工具提供）'}</Text>
+            <Text strong>{result.intent === 'granular' ? '1. 开始前核对（工具提供）' : '开始前核对（工具提供）'}</Text>
             <ol>{result.preparation_checks!.map((item) => <li key={item}>{item}</li>)}</ol>
           </div>}
           {result.sub_steps.length > 0 && <div style={{ marginTop: 12 }}>
-            <Text strong>2. 仓库原文中的要求与操作</Text>
+            <Text strong>{result.intent === 'diagnose' ? '同组件的原文恢复入口（尚未执行）' : '2. 仓库原文中的要求与操作'}</Text>
             {result.sub_steps.some((child) => !child.command) && <ul style={{ paddingLeft: 20 }}>
               {result.sub_steps.filter((child) => !child.command).map((child) => <li key={child.step_id} style={{ marginBottom: 10 }}>
                 <Text style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{child.evidence.quote}</Text>{' '}
@@ -204,7 +204,7 @@ function FollowupBar({
             </Card>)}
           </div>}
           {Boolean(result.completion_checks?.length) && <div style={{ marginTop: 12 }}>
-            <Text strong>{result.intent === 'explain' ? '如何判断与继续（工具提供）' : '3. 如何判断与继续（工具提供）'}</Text>
+            <Text strong>{result.intent === 'granular' ? '3. 如何判断与继续（工具提供）' : '如何判断与继续（工具提供）'}</Text>
             <ol>{result.completion_checks!.map((item) => <li key={item}>{item}</li>)}</ol>
           </div>}
           <GuideNotices guide={{ ...guide, default_branch: result.revision }} warnings={result.warnings} />
@@ -453,6 +453,9 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
             <Title level={5} style={{ marginTop: 0 }}>
               第 {current + 1}/{steps.length} 步 · {step.title}
             </Title>
+            {step.generation_source && step.generation_source !== 'unknown' && <Tag color={step.generation_source === 'llm' ? 'blue' : 'default'}>
+              {step.generation_source === 'llm' ? '本步由 AI 生成，操作与引用另经原文核对' : '本步为原文规则整理'}
+            </Tag>}
 
             {step.command && <Paragraph>
               <Text strong>{step.directory_basis === 'build_file' ? '建议执行位置（按构建文件推导）：' : step.directory_basis === 'document_context' ? '建议执行位置（按原文上下文推导）：' : '执行位置：'}</Text>{step.directory_basis === 'clone_destination' ? '你选择的项目存放目录（克隆后进入仓库）' : step.working_directory === '.' ? '仓库根目录' : step.working_directory || '待确认，请先核对来源中的目录说明'}

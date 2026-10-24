@@ -15,9 +15,13 @@ export function parseSavedGuide(text: string): Guide {
     throw new Error('阶段回退原因格式无效')
   }
   if (data.stage_modes != null && (typeof data.stage_modes !== 'object' || Array.isArray(data.stage_modes) ||
-      Object.entries(data.stage_modes).some(([stage, mode]) => !['A', 'B', 'C', 'D'].includes(stage) || !['heuristic', 'llm'].includes(mode as string)))) {
+      Object.entries(data.stage_modes).some(([stage, mode]) => !['A', 'B', 'C', 'D'].includes(stage) || !['heuristic', 'llm', 'mixed'].includes(mode as string)))) {
     throw new Error('阶段生成来源格式无效')
   }
+  for (const field of ['model_request_attempts', 'model_disconnect_retries']) {
+    if (data[field] != null && (!Number.isInteger(data[field]) || data[field] < 0 || data[field] > 128)) throw new Error('模型请求统计格式无效')
+  }
+  if (data.steps.some((s: Guide['steps'][number]) => s?.generation_source != null && !['llm', 'rules', 'unknown'].includes(s.generation_source))) throw new Error('步骤生成来源格式无效')
   const relativePath = (value: unknown) => typeof value === 'string' && value.length > 0 && !/^(?:\/|[A-Za-z]:)/.test(value) && !value.includes('\\') && !value.split('/').includes('..')
   if (data.issue_discovery != null) {
     const d = data.issue_discovery

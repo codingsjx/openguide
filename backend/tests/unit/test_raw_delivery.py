@@ -58,3 +58,17 @@ def test_raw_size_limit_and_path_validation():
                 client._download_pinned_raw("o", "r", path, ref)
     finally:
         client.close()
+
+
+def test_github_get_recovers_one_early_disconnect_without_changing_request(monkeypatch):
+    client=GitHubClient(token='test-only-credential');client._client.close();seen=[]
+    def handler(request):
+        seen.append(request)
+        if len(seen)==1:raise httpx.RemoteProtocolError('fixture early close')
+        return httpx.Response(200,json={'sha':SHA})
+    client._client=httpx.Client(base_url='https://api.github.com',transport=httpx.MockTransport(handler))
+    try:
+        assert client._get_json('/repos/o/r/commits/main')=={'sha':SHA}
+        assert len(seen)==2 and seen[0].url==seen[1].url
+        assert client.read_disconnect_retries==1
+    finally:client.close()

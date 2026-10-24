@@ -104,7 +104,7 @@ def test_inline_pip_alternative_is_not_added_after_a_verified_uv_install():
     assert 'pip install -r backend/requirements.txt' not in [s.command for s in guide.steps]
 
 
-def test_partial_ai_installation_is_replaced_with_complete_literal_stage():
+def test_partial_ai_installation_is_preserved_and_completed_with_literal_rules():
     class PartialModel:
         calls=0
         def available(self): return True
@@ -114,7 +114,8 @@ def test_partial_ai_installation_is_replaced_with_complete_literal_stage():
                 'evidence':{'source':'README.md','quote':'pnpm install --frozen-lockfile'}}]}
     guide=build_guide(signals(),llm_client=PartialModel(),check_suitability=False)
     assert guide.stage_fallbacks['A']=='incomplete_workflow'
-    assert guide.stage_modes['A']=='heuristic'
+    assert guide.stage_modes['A']=='mixed'
+    assert any(s.title=='Only front-end' and s.generation_source=='llm' for s in guide.steps)
     assert INSTALL_COMMAND in [s.command for s in guide.steps]
     strict=build_guide(signals(),llm_client=PartialModel(),check_suitability=False,strict_llm=True)
     assert strict.stage_modes['A']=='llm' and 'incomplete_workflow' not in strict.stage_fallbacks.values()

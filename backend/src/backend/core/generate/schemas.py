@@ -38,6 +38,7 @@ class GuideStep(BaseModel):
     stage: Literal["A", "B", "C", "D"]
     stage_label: str = ""  # 如 "环境搭建"
     title: str
+    generation_source: Literal['llm', 'rules', 'unknown'] = 'unknown'
     command: str | None = None  # 无可执行命令则为 None
     original_command: str | None = None
     command_derivation: str = ""
@@ -79,9 +80,11 @@ class Guide(BaseModel):
     reasons: list[str] = Field(default_factory=list)
     steps: list[GuideStep] = Field(default_factory=list)
     generation_mode: Literal["heuristic", "llm", "mixed"] = "heuristic"
-    stage_modes: dict[Literal["A", "B", "C", "D"], Literal["heuristic", "llm"]] = Field(default_factory=dict)
+    stage_modes: dict[Literal["A", "B", "C", "D"], Literal["heuristic", "llm", "mixed"]] = Field(default_factory=dict)
     requested_mode: Literal['ai', 'rules', 'unknown'] = 'unknown'
     model_timeout_s: int | None = Field(default=None, ge=10, le=120)
+    model_request_attempts: int | None = Field(default=None, ge=0)
+    model_disconnect_retries: int = Field(default=0, ge=0)
     stage_fallbacks: dict[Literal['A', 'B', 'C', 'D'], Literal[
         'not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited',
         'model_error', 'invalid_output', 'evidence_unverified', 'incomplete_workflow', 'no_stage_evidence']] = Field(default_factory=dict)

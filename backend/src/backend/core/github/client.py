@@ -44,6 +44,7 @@ class GitHubClient:
             headers={"User-Agent": "openguide"}, timeout=settings.github_timeout_s,
             follow_redirects=False)
         self.raw_files_fetched = 0
+        self.read_disconnect_retries = 0
 
     def close(self) -> None:
         self._client.close()
@@ -189,8 +190,21 @@ class GitHubClient:
     # -- internals ---------------------------------------------------------
 
     def _get_json(self, url: str, params: dict | None = None) -> dict | list:
+        started = time.perf_counter()
         try:
             res = self._client.get(url, params=params)
+        except httpx.RemoteProtocolError:
+            # GET is idempotent. Retry only a peer disconnect, once, using the
+            # remaining read wait; do not retry authentication or certificate
+            # failures. HTTPX removes the closed connection from its pool.
+            remaining = get_settings().github_timeout_s - (time.perf_counter() - started)
+            if remaining <= 1:
+                raise GitHubClientError(f'GitHub 读取连接提前关闭: {url}')
+            self.read_disconnect_retries += 1
+            try:
+                res = self._client.get(url, params=params, timeout=remaining)
+            except httpx.HTTPError as exc:
+                raise GitHubClientError(f'GitHub 读取连接重试失败: {url}') from exc
         except httpx.HTTPError as exc:
             raise GitHubClientError(f"网络请求失败 {url}: {exc}") from exc
 
