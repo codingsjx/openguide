@@ -1,0 +1,219 @@
+{
+  "kind": "product-mainline-repeat-check",
+  "code_sha256": "0482803d541145a4e5079df3904b6b2b6ca8f1bd476180fb3a667fee4e27e35c",
+  "source_code_unchanged": true,
+  "tool_sha256": "fb32bae1a0043002f680819621735e9a1b0b0312d8109efe5eb247901bd69e8d",
+  "records": [
+    {
+      "repo": "codingsjx/ai-software",
+      "repeat": 0,
+      "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+      "input_sha256": "2a9b471372f905719b35c40df3d5a484d1df5abcd0e141aefa52b8a7e4d9f059",
+      "code_sha256": "0482803d541145a4e5079df3904b6b2b6ca8f1bd476180fb3a667fee4e27e35c",
+      "status": "returned",
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "mixed",
+        "B": "heuristic",
+        "C": "heuristic",
+        "D": "heuristic"
+      },
+      "stage_fallbacks": {
+        "B": "model_error",
+        "C": "no_stage_evidence",
+        "D": "no_stage_evidence",
+        "A": "incomplete_workflow"
+      },
+      "ai_steps": 5,
+      "rule_steps": 7,
+      "commands": 6,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "ready_for_manual_review": true,
+      "elapsed_s": 18.221,
+      "attempts": 3,
+      "disconnect_retries": 1,
+      "response_count": 1,
+      "reported_total_tokens": 6780,
+      "token_usage_complete": true,
+      "streaming_requested": true,
+      "streamed_responses": 1
+    },
+    {
+      "repo": "codingsjx/ai-software",
+      "repeat": 1,
+      "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+      "input_sha256": "2a9b471372f905719b35c40df3d5a484d1df5abcd0e141aefa52b8a7e4d9f059",
+      "code_sha256": "0482803d541145a4e5079df3904b6b2b6ca8f1bd476180fb3a667fee4e27e35c",
+      "status": "returned",
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "mixed",
+        "B": "llm",
+        "C": "heuristic",
+        "D": "heuristic"
+      },
+      "stage_fallbacks": {
+        "C": "no_stage_evidence",
+        "D": "no_stage_evidence",
+        "A": "incomplete_workflow"
+      },
+      "ai_steps": 7,
+      "rule_steps": 5,
+      "commands": 6,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "ready_for_manual_review": true,
+      "elapsed_s": 9.046,
+      "attempts": 2,
+      "disconnect_retries": 0,
+      "response_count": 2,
+      "reported_total_tokens": 12473,
+      "token_usage_complete": true,
+      "streaming_requested": true,
+      "streamed_responses": 2
+    },
+    {
+      "repo": "codingsjx/ai-software",
+      "repeat": 2,
+      "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+      "input_sha256": "2a9b471372f905719b35c40df3d5a484d1df5abcd0e141aefa52b8a7e4d9f059",
+      "code_sha256": "0482803d541145a4e5079df3904b6b2b6ca8f1bd476180fb3a667fee4e27e35c",
+      "status": "returned",
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "mixed",
+        "B": "heuristic",
+        "C": "heuristic",
+        "D": "heuristic"
+      },
+      "stage_fallbacks": {
+        "B": "model_error",
+        "C": "no_stage_evidence",
+        "D": "no_stage_evidence",
+        "A": "incomplete_workflow"
+      },
+      "ai_steps": 6,
+      "rule_steps": 7,
+      "commands": 6,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "ready_for_manual_review": true,
+      "elapsed_s": 12.981,
+      "attempts": 2,
+      "disconnect_retries": 0,
+      "response_count": 1,
+      "reported_total_tokens": 6661,
+      "token_usage_complete": true,
+      "streaming_requested": true,
+      "streamed_responses": 1
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 0,
+      "source_revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "input_sha256": "2fd26ca6757fca3768071a0160a9275241dce786b0444c567c741dc1e0183821",
+      "code_sha256": "0482803d541145a4e5079df3904b6b2b6ca8f1bd476180fb3a667fee4e27e35c",
+      "status": "returned",
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "llm",
+        "B": "heuristic",
+        "C": "heuristic",
+        "D": "llm"
+      },
+      "stage_fallbacks": {
+        "B": "model_error",
+        "C": "no_stage_evidence"
+      },
+      "ai_steps": 9,
+      "rule_steps": 2,
+      "commands": 3,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "ready_for_manual_review": true,
+      "elapsed_s": 36.11,
+      "attempts": 3,
+      "disconnect_retries": 0,
+      "response_count": 2,
+      "reported_total_tokens": 12676,
+      "token_usage_complete": true,
+      "streaming_requested": true,
+      "streamed_responses": 2
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 1,
+      "source_revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "input_sha256": "2fd26ca6757fca3768071a0160a9275241dce786b0444c567c741dc1e0183821",
+      "code_sha256": "0482803d541145a4e5079df3904b6b2b6ca8f1bd476180fb3a667fee4e27e35c",
+      "status": "returned",
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "heuristic",
+        "B": "llm",
+        "C": "heuristic",
+        "D": "heuristic"
+      },
+      "stage_fallbacks": {
+        "A": "model_error",
+        "C": "no_stage_evidence",
+        "D": "model_error"
+      },
+      "ai_steps": 1,
+      "rule_steps": 11,
+      "commands": 3,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "ready_for_manual_review": true,
+      "elapsed_s": 16.221,
+      "attempts": 4,
+      "disconnect_retries": 1,
+      "response_count": 1,
+      "reported_total_tokens": 5951,
+      "token_usage_complete": true,
+      "streaming_requested": true,
+      "streamed_responses": 1
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 2,
+      "source_revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "input_sha256": "2fd26ca6757fca3768071a0160a9275241dce786b0444c567c741dc1e0183821",
+      "code_sha256": "0482803d541145a4e5079df3904b6b2b6ca8f1bd476180fb3a667fee4e27e35c",
+      "status": "returned",
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "llm",
+        "B": "llm",
+        "C": "heuristic",
+        "D": "llm"
+      },
+      "stage_fallbacks": {
+        "C": "no_stage_evidence"
+      },
+      "ai_steps": 10,
+      "rule_steps": 1,
+      "commands": 3,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "ready_for_manual_review": true,
+      "elapsed_s": 31.569,
+      "attempts": 6,
+      "disconnect_retries": 3,
+      "response_count": 3,
+      "reported_total_tokens": 18333,
+      "token_usage_complete": true,
+      "streaming_requested": true,
+      "streamed_responses": 3
+    }
+  ],
+  "expected_cases": 6,
+  "completed_cases": 6,
+  "limitations": [
+    "Product protocol, not the strict controlled experiment; do not pool scores.",
+    "Repeated fixed inputs do not establish general reliability or independent sampling.",
+    "No generated command is executed; source matching is not semantic correctness.",
+    "No human participants or upstream contribution outcomes."
+  ]
+}

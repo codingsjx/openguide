@@ -1,0 +1,95 @@
+{
+  "intent": "diagnose",
+  "text": "待验证的本地规则提示（未确认根因）：\n可能缺少依赖或使用了错误环境。核对当前解释器与仓库开发依赖说明，不要直接安装报错中看起来同名的包。",
+  "sub_steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "原文依赖准备入口（先核对解释器与适用范围）",
+      "generation_source": "rules",
+      "command": "uv sync",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "backend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文完成依赖准备后，在同一环境重跑失败命令；本工具没有执行或确认修复。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "backend/README.md",
+        "quote": "uv sync                        # 按 uv.lock 安装依赖",
+        "verification": "command_verified",
+        "line_start": 11,
+        "line_end": 11,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    }
+  ],
+  "sources": [
+    "backend/README.md",
+    "README.md",
+    "backend/README.md"
+  ],
+  "evidence": [
+    {
+      "kind": "file",
+      "source": "backend/README.md",
+      "quote": "uv sync                        # 按 uv.lock 安装依赖",
+      "verification": "quote_verified",
+      "line_start": 11,
+      "line_end": 11,
+      "reason": "原文匹配不等于命令已运行或建议语义正确"
+    },
+    {
+      "kind": "file",
+      "source": "README.md",
+      "quote": "存挂在命名卷上；有效期内可复用，过期读取会失效。\n- 详细演示流程见 [docs/demo_script.md](docs/demo_script.md)。\n\n---\n\n## 本机运行（后端）\n\n需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。\n\n```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 测试数量以当前运行记录为准（另运行 benchmark/tests）\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```\n\n默认依赖不安装 Chroma 和 sentence-transformers。需要向量功能时先运行\n`uv sync --extra vector`，再配置 `USE_CHROMA=true`；后续运行也使用\n`uv run --extra vector uvicorn backend.api.main:app --host 127.0.0.1 --port 8000`。\n\n可选：`backend/.env`（复制 `.env.example`）填 `GITHUB_TOKEN` 提升限流；不填也能跑（限流更低）。",
+      "verification": "quote_verified",
+      "line_start": 51,
+      "line_end": 71,
+      "reason": "原文匹配不等于命令已运行或建议语义正确"
+    },
+    {
+      "kind": "file",
+      "source": "backend/README.md",
+      "quote": "# OpenGuide 后端（FastAPI）\n\n仓库勘探 → 画像 → 四视角分层索引 → 结构化指南生成 + 证据校验 + 三步追问。\n\n## 运行\n\n需先装 [uv](https://docs.astral.sh/uv/)（本项目用 uv 管理 Python 3.12）。\n\n```bash\ncd backend\nuv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 默认离线测试\nuv run uvicorn backend.api.main:app --host 127.0.0.1 --port 8000\n```\n\n可选：复制 `.env.example` 为 `.env`，填 `GITHUB_TOKEN` 提升 GitHub 限流；\n填 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` 启用 AI 生成。不填也能跑：\n生成会走确定性启发式路径，测试与 CI 均在该路径下验证。\n\n在线指南先解析固定提交，再抓取同版本的目录与文档。公开文档优先使用\n`raw.githubusercontent.com`，原文服务失败时回到相同提交的 Contents API；\nAPI 令牌不会发往原文服务。此优化只减少文件请求占用的 API 额度，不能解决\n仓库元信息、提交与 issue 接口的全部限流问题。首次读取新仓库仍可能需要\n有效的 `GITHUB_TOKEN` 或等待额度恢复；本地规则模式同样依赖仓库资料。",
+      "verification": "quote_verified",
+      "line_start": 1,
+      "line_end": 24,
+      "reason": "原文匹配不等于命令已运行或建议语义正确"
+    }
+  ],
+  "revision": "22baa0dd1873db9f96d1c4017aa55689f03ae336",
+  "mode": "rules",
+  "diagnostic_category": "python_environment",
+  "local_checks": [
+    {
+      "label": "确认 Python 与 pip 属于同一环境",
+      "command": "python -c \"import sys; print(sys.executable); print(sys.prefix); print(sys.base_prefix)\"",
+      "expected": "venv 中 prefix 与 base_prefix 应不同；继续用此解释器的 python -m pip 核对安装。"
+    }
+  ],
+  "preparation_checks": [
+    "先核对实际执行的解释器、目录和安装方式；以下是同组件的原文依赖入口，选择与你的环境工具对应的一项，不要混用全部命令。"
+  ],
+  "completion_checks": [
+    "在同一开发环境重跑刚才失败的确切命令，记录实际退出码和结果；没有重跑时不记为已解决。"
+  ],
+  "explanations": [],
+  "warnings": [
+    "文件证据固定于提交 22baa0dd1873db9f96d1c4017aa55689f03ae336；issue 信息是独立采集的快照，操作前需核对最新状态。",
+    "模型不可用或未提供可核验原文，本次仅显示本地规则与检索资料。"
+  ]
+}

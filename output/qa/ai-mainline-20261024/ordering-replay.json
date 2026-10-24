@@ -1,0 +1,95 @@
+{
+  "kind": "same-real-output-postprocessing-replay",
+  "records": [
+    {
+      "repo": "codingsjx/ai-software",
+      "repeat": 0,
+      "original_live_code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "postprocess_code_sha256": "bc57a579ac271f32d4f6e24ae9d1d0da63d49f9bd886938b9714676442a04b4c",
+      "generation_mode": "mixed",
+      "ai_steps": 7,
+      "unverified_commands": 0,
+      "first_step": "取得本地副本，核对仓库获取方式",
+      "acquisition_before_install": true,
+      "source_runtime_before_installs": true,
+      "identical_successful_stage_prompts": true,
+      "new_model_requests": 0
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 0,
+      "original_live_code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "postprocess_code_sha256": "bc57a579ac271f32d4f6e24ae9d1d0da63d49f9bd886938b9714676442a04b4c",
+      "generation_mode": "mixed",
+      "ai_steps": 5,
+      "unverified_commands": 0,
+      "first_step": "按原文克隆仓库",
+      "acquisition_before_install": true,
+      "source_runtime_before_installs": true,
+      "identical_successful_stage_prompts": true,
+      "new_model_requests": 0
+    },
+    {
+      "repo": "codingsjx/ai-software",
+      "repeat": 1,
+      "original_live_code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "postprocess_code_sha256": "bc57a579ac271f32d4f6e24ae9d1d0da63d49f9bd886938b9714676442a04b4c",
+      "generation_mode": "mixed",
+      "ai_steps": 5,
+      "unverified_commands": 0,
+      "first_step": "取得本地副本，核对仓库获取方式",
+      "acquisition_before_install": true,
+      "source_runtime_before_installs": true,
+      "identical_successful_stage_prompts": true,
+      "new_model_requests": 0
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 1,
+      "original_live_code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "postprocess_code_sha256": "bc57a579ac271f32d4f6e24ae9d1d0da63d49f9bd886938b9714676442a04b4c",
+      "generation_mode": "mixed",
+      "ai_steps": 8,
+      "unverified_commands": 0,
+      "first_step": "克隆仓库",
+      "acquisition_before_install": true,
+      "source_runtime_before_installs": true,
+      "identical_successful_stage_prompts": true,
+      "new_model_requests": 0
+    },
+    {
+      "repo": "codingsjx/ai-software",
+      "repeat": 2,
+      "original_live_code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "postprocess_code_sha256": "bc57a579ac271f32d4f6e24ae9d1d0da63d49f9bd886938b9714676442a04b4c",
+      "generation_mode": "mixed",
+      "ai_steps": 7,
+      "unverified_commands": 0,
+      "first_step": "取得本地副本，核对仓库获取方式",
+      "acquisition_before_install": true,
+      "source_runtime_before_installs": true,
+      "identical_successful_stage_prompts": true,
+      "new_model_requests": 0
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 2,
+      "original_live_code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "postprocess_code_sha256": "bc57a579ac271f32d4f6e24ae9d1d0da63d49f9bd886938b9714676442a04b4c",
+      "generation_mode": "mixed",
+      "ai_steps": 9,
+      "unverified_commands": 0,
+      "first_step": "克隆仓库",
+      "acquisition_before_install": true,
+      "source_runtime_before_installs": true,
+      "identical_successful_stage_prompts": true,
+      "new_model_requests": 0
+    }
+  ],
+  "new_model_requests": 0,
+  "all_ordering_checks_passed": true,
+  "limitations": [
+    "Real network results/timings belong to the earlier live run; this is deterministic postprocessing verification.",
+    "No generated commands were executed and no human participant outcomes were measured."
+  ]
+}

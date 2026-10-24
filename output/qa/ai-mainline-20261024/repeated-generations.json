@@ -1,0 +1,197 @@
+{
+  "kind": "product-mainline-repeat-check",
+  "code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+  "expected_cases": 6,
+  "completed_cases": 6,
+  "records": [
+    {
+      "repo": "codingsjx/ai-software",
+      "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+      "input_sha256": "2a9b471372f905719b35c40df3d5a484d1df5abcd0e141aefa52b8a7e4d9f059",
+      "code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "elapsed_s": 22.04,
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "mixed",
+        "B": "llm",
+        "C": "heuristic",
+        "D": "heuristic"
+      },
+      "stage_fallbacks": {
+        "C": "no_stage_evidence",
+        "D": "no_stage_evidence",
+        "A": "incomplete_workflow"
+      },
+      "attempts": 4,
+      "disconnect_retries": 2,
+      "response_count": 2,
+      "reported_total_tokens": 12754,
+      "ai_steps": 7,
+      "rule_steps": 5,
+      "commands": 6,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "unsuitable": false,
+      "repeat": 0,
+      "input_mode": "live capture then fixed snapshot"
+    },
+    {
+      "repo": "psf/requests",
+      "source_revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "input_sha256": "2fd26ca6757fca3768071a0160a9275241dce786b0444c567c741dc1e0183821",
+      "code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "elapsed_s": 24.191,
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "heuristic",
+        "B": "llm",
+        "C": "heuristic",
+        "D": "llm"
+      },
+      "stage_fallbacks": {
+        "A": "model_error",
+        "C": "no_stage_evidence"
+      },
+      "attempts": 5,
+      "disconnect_retries": 2,
+      "response_count": 2,
+      "reported_total_tokens": 12171,
+      "ai_steps": 5,
+      "rule_steps": 7,
+      "commands": 3,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "unsuitable": false,
+      "repeat": 0,
+      "input_mode": "live capture then fixed snapshot"
+    },
+    {
+      "repo": "codingsjx/ai-software",
+      "repeat": 1,
+      "input_mode": "same captured fixed snapshot",
+      "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+      "input_sha256": "2a9b471372f905719b35c40df3d5a484d1df5abcd0e141aefa52b8a7e4d9f059",
+      "code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "elapsed_s": 21.109,
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "mixed",
+        "B": "heuristic",
+        "C": "heuristic",
+        "D": "heuristic"
+      },
+      "stage_fallbacks": {
+        "B": "model_error",
+        "C": "no_stage_evidence",
+        "D": "no_stage_evidence",
+        "A": "incomplete_workflow"
+      },
+      "attempts": 4,
+      "disconnect_retries": 2,
+      "response_count": 1,
+      "reported_total_tokens": 6721,
+      "ai_steps": 5,
+      "rule_steps": 7,
+      "commands": 6,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "unsuitable": false
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 1,
+      "input_mode": "same captured fixed snapshot",
+      "source_revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "input_sha256": "2fd26ca6757fca3768071a0160a9275241dce786b0444c567c741dc1e0183821",
+      "code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "elapsed_s": 29.753,
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "llm",
+        "B": "llm",
+        "C": "heuristic",
+        "D": "llm"
+      },
+      "stage_fallbacks": {
+        "C": "no_stage_evidence"
+      },
+      "attempts": 6,
+      "disconnect_retries": 3,
+      "response_count": 3,
+      "reported_total_tokens": 18350,
+      "ai_steps": 8,
+      "rule_steps": 1,
+      "commands": 3,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "unsuitable": false
+    },
+    {
+      "repo": "codingsjx/ai-software",
+      "repeat": 2,
+      "input_mode": "same captured fixed snapshot",
+      "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+      "input_sha256": "2a9b471372f905719b35c40df3d5a484d1df5abcd0e141aefa52b8a7e4d9f059",
+      "code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "elapsed_s": 16.724,
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "mixed",
+        "B": "llm",
+        "C": "heuristic",
+        "D": "heuristic"
+      },
+      "stage_fallbacks": {
+        "C": "no_stage_evidence",
+        "D": "no_stage_evidence",
+        "A": "incomplete_workflow"
+      },
+      "attempts": 4,
+      "disconnect_retries": 2,
+      "response_count": 2,
+      "reported_total_tokens": 12349,
+      "ai_steps": 7,
+      "rule_steps": 5,
+      "commands": 6,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "unsuitable": false
+    },
+    {
+      "repo": "psf/requests",
+      "repeat": 2,
+      "input_mode": "same captured fixed snapshot",
+      "source_revision": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "input_sha256": "2fd26ca6757fca3768071a0160a9275241dce786b0444c567c741dc1e0183821",
+      "code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+      "elapsed_s": 28.902,
+      "generation_mode": "mixed",
+      "stage_modes": {
+        "A": "llm",
+        "B": "llm",
+        "C": "heuristic",
+        "D": "llm"
+      },
+      "stage_fallbacks": {
+        "C": "no_stage_evidence"
+      },
+      "attempts": 6,
+      "disconnect_retries": 3,
+      "response_count": 3,
+      "reported_total_tokens": 18092,
+      "ai_steps": 9,
+      "rule_steps": 1,
+      "commands": 3,
+      "unverified_commands": 0,
+      "unknown_directories": 0,
+      "unsuitable": false
+    }
+  ],
+  "limitations": [
+    "Two repositories, three repeated generations each; not a general quality estimate or user study.",
+    "Inputs are fixed captured GitHub snapshots; repeats do not measure repeated collection reliability.",
+    "Provider identity and token usage are reported, not independently verified.",
+    "Earlier strict experiment uses a different protocol and must not be pooled with these product checks.",
+    "Source matching does not independently verify meaning or execute commands."
+  ]
+}

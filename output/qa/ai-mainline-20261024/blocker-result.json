@@ -1,0 +1,38 @@
+{
+  "source_revision": "22baa0dd1873db9f96d1c4017aa55689f03ae336",
+  "scenario": "Agent reproduced a runtime-only installation followed by direct pytest. This is a deliberate verification scenario, not a human trial or an error caused by a generated uv run command.",
+  "initial_setup": [
+    "uv",
+    "sync",
+    "--frozen",
+    "--no-dev"
+  ],
+  "actual_test": [
+    ".venv/Scripts/python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/test_workflow_context.py",
+    "-q"
+  ],
+  "working_directory": "backend",
+  "before_exit_code": 1,
+  "before_missing_pytest": true,
+  "credential_environment_inherited": false,
+  "fresh_environment": true,
+  "download_cache_may_be_reused": true,
+  "help_mode": "rules",
+  "diagnostic_category": "python_environment",
+  "api_revision": "22baa0dd1873db9f96d1c4017aa55689f03ae336",
+  "help_and_recovery_elapsed_s": 20.153,
+  "recovery_command": "uv sync",
+  "recovery_source": "backend/README.md",
+  "recovery_line": 11,
+  "recovery_install_exit_code": 0,
+  "after_exit_code": 0,
+  "after_test_summary": "8 passed in 0.70s",
+  "source_code_modified": false,
+  "solved_in_this_verification_copy": true,
+  "actor": "AI agent verification, not a human trial",
+  "review": "agent checked the source command before execution; no arbitrary model command executed",
+  "archive_files_modified": []
+}

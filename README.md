@@ -3,7 +3,9 @@
 [![CI](https://github.com/codingsjx/openguide/actions/workflows/ci.yml/badge.svg)](https://github.com/codingsjx/openguide/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> 2026-10-24 收尾入口：[当前评测](docs/evaluation_report.md)、[收尾清单](docs/release_closure_20261024.md)、[更新的隐私与部署边界](docs/privacy_and_license.md)。核心回归 336 项、前端 58 项；CI 容器验证见对应提交记录。真人与独立人工复核仍待完成。
+> 晚间 AI 主线更新（核心 203707d）：保留通过核验的 AI 步骤、按基础顺序补齐原文、提供同组件排错入口；当前 354 项后端/评测和 59 项前端检查通过。真实生成、阶段失败与同仓库实跑见 [AI 主线验收](docs/ai_mainline_20261024.md)。
+
+> 2026-10-24 14 时材料候选入口（b4dfc86 快照）：[当前评测](docs/evaluation_report.md)、[收尾清单](docs/release_closure_20261024.md)、[更新的隐私与部署边界](docs/privacy_and_license.md)。核心回归 336 项、前端 58 项；CI 容器验证见对应提交记录。真人与独立人工复核仍待完成。
 
 输入一个 GitHub 仓库 URL，OpenGuide 从实际取得的资料生成**带原文证据、可逐步核对**的新手贡献路线图：环境怎么搭、测试怎么跑、issue 如何筛选、PR 如何准备。资料缺失时明确待确认，不保证自动完成贡献。
 

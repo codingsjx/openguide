@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-24 evening",
+  "current_core_commit": "203707d7ff99dc691fc8d634c85768d5263edfb9",
+  "backend_and_benchmark_tests_passed": 354,
+  "frontend_tests_passed": 59,
+  "build_and_lint_passed": true,
+  "default_streaming": false,
+  "non_streaming_live_batch": {
+    "cases": 6,
+    "cases_with_verified_ai": 6,
+    "cases_with_unknown_directories": 0,
+    "unverified_commands": 0,
+    "attempts": 29,
+    "disconnect_retries": 14,
+    "cases_with_model_failures": 2,
+    "source_code_sha256": "24d2d6ff4187b5df8c11ceb7b26e8bf476f6ac3131d26c0fcc9fdfd84a38934c",
+    "core_commit": "34907cf",
+    "note": "Before final ordering correction; timings and network attempts are not replayed samples."
+  },
+  "streaming_candidate_batch": {
+    "cases": 6,
+    "cases_with_verified_ai": 6,
+    "cases_with_unknown_directories": 0,
+    "unverified_commands": 0,
+    "attempts": 20,
+    "disconnect_retries": 5,
+    "cases_with_model_failures": 4,
+    "source_code_sha256": "0482803d541145a4e5079df3904b6b2b6ca8f1bd476180fb3a667fee4e27e35c",
+    "note": "Experimental opt-in candidate; not the current default and not a controlled quality comparison."
+  },
+  "current_ordering_replay": {
+    "cases": 6,
+    "all_passed": true,
+    "new_model_requests": 0,
+    "source_sha256": "bc57a579ac271f32d4f6e24ae9d1d0da63d49f9bd886938b9714676442a04b4c"
+  },
+  "continuous_same_repository": {
+    "source_revision": "203707d7ff99dc691fc8d634c85768d5263edfb9",
+    "guide_mode": "mixed",
+    "verified_ai_steps": 3,
+    "before_exit": 1,
+    "after_exit": 0,
+    "after_summary": "8 passed in 0.70s",
+    "source_modified": false,
+    "completed": true
+  },
+  "human_trials": "pending",
+  "independent_human_review": "pending",
+  "not_a_general_quality_or_award_claim": true
+}

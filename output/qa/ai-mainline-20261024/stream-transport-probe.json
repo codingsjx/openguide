@@ -1,0 +1,75 @@
+{
+  "scope": "One identical full stage input; no quality/latency generalization",
+  "checks": [
+    {
+      "trial": 0,
+      "stream": true,
+      "same_messages": true,
+      "status": 200,
+      "first_event_s": 5.895,
+      "saw_done": true,
+      "event_count": 413,
+      "usage": {
+        "prompt_tokens": 6000,
+        "completion_tokens": 654,
+        "total_tokens": 6654,
+        "prompt_tokens_details": {
+          "cached_tokens": 4158
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 235
+        }
+      },
+      "valid_steps": true,
+      "steps": 6,
+      "normalization": "none",
+      "elapsed_s": 9.215
+    },
+    {
+      "trial": 1,
+      "stream": false,
+      "same_messages": true,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 6000,
+        "completion_tokens": 326,
+        "total_tokens": 6326,
+        "prompt_tokens_details": {
+          "cached_tokens": 3312
+        }
+      },
+      "valid_steps": true,
+      "steps": 5,
+      "normalization": "none",
+      "elapsed_s": 5.329
+    },
+    {
+      "trial": 2,
+      "stream": false,
+      "same_messages": true,
+      "error_type": "RemoteProtocolError",
+      "elapsed_s": 3.721
+    },
+    {
+      "trial": 3,
+      "stream": true,
+      "same_messages": true,
+      "status": 200,
+      "first_event_s": 2.774,
+      "saw_done": true,
+      "event_count": 381,
+      "usage": {
+        "prompt_tokens": 6000,
+        "completion_tokens": 385,
+        "total_tokens": 6385,
+        "prompt_tokens_details": {
+          "cached_tokens": 3174
+        }
+      },
+      "valid_steps": true,
+      "steps": 6,
+      "normalization": "none",
+      "elapsed_s": 6.006
+    }
+  ]
+}

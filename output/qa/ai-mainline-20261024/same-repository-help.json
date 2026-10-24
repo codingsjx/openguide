@@ -1,0 +1,74 @@
+{
+  "intent": "diagnose",
+  "text": "待验证的排查方向（未执行命令、未确认根因）：\n可能缺少依赖或使用了错误环境。核对当前解释器与仓库开发依赖说明，不要直接安装报错中看起来同名的包。",
+  "sub_steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "原文依赖准备入口（先核对解释器与适用范围）",
+      "generation_source": "rules",
+      "command": "uv sync",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "backend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文完成依赖准备后，在同一环境重跑失败命令；本工具没有执行或确认修复。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "backend/README.md",
+        "quote": "uv sync                        # 按 uv.lock 安装依赖",
+        "verification": "command_verified",
+        "line_start": 11,
+        "line_end": 11,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    }
+  ],
+  "sources": [
+    "backend/README.md"
+  ],
+  "evidence": [
+    {
+      "kind": "file",
+      "source": "backend/README.md",
+      "quote": "uv sync                        # 按 uv.lock 安装依赖\nuv run pytest tests/ -q        # 默认离线测试",
+      "verification": "quote_verified",
+      "line_start": 11,
+      "line_end": 12,
+      "reason": "原文匹配不等于命令已运行或建议语义正确"
+    }
+  ],
+  "revision": "203707d7ff99dc691fc8d634c85768d5263edfb9",
+  "mode": "llm_evidence_selection",
+  "diagnostic_category": "python_environment",
+  "local_checks": [
+    {
+      "label": "确认 Python 与 pip 属于同一环境",
+      "command": "python -c \"import sys; print(sys.executable); print(sys.prefix); print(sys.base_prefix)\"",
+      "expected": "venv 中 prefix 与 base_prefix 应不同；继续用此解释器的 python -m pip 核对安装。"
+    }
+  ],
+  "preparation_checks": [
+    "先核对实际执行的解释器、目录和安装方式；以下是同组件的原文依赖入口，选择与你的环境工具对应的一项，不要混用全部命令。"
+  ],
+  "completion_checks": [
+    "在同一开发环境重跑刚才失败的确切命令，记录实际退出码和结果；没有重跑时不记为已解决。"
+  ],
+  "explanations": [],
+  "warnings": [
+    "文件证据固定于提交 203707d7ff99dc691fc8d634c85768d5263edfb9；issue 信息是独立采集的快照，操作前需核对最新状态。"
+  ]
+}

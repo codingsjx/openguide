@@ -1,0 +1,35 @@
+{
+  "scope": "One same-repository chronological agent verification; no human participant. Runtime-only installation and direct subset invocation are deliberately constructed, not errors caused by the guide.",
+  "source_revision": "203707d7ff99dc691fc8d634c85768d5263edfb9",
+  "guide_generated_first": true,
+  "guide_mode": "mixed",
+  "guide_stage_modes": {
+    "A": "heuristic",
+    "B": "llm",
+    "C": "heuristic",
+    "D": "heuristic"
+  },
+  "guide_stage_fallbacks": {
+    "A": "model_timeout",
+    "C": "no_stage_evidence",
+    "D": "no_stage_evidence"
+  },
+  "verified_ai_steps": 3,
+  "guide_attempts": 4,
+  "guide_disconnect_retries": 2,
+  "before_exit_code": 1,
+  "before_error": "No module named pytest",
+  "help_category": "python_environment",
+  "help_mode": "llm_evidence_selection",
+  "help_revision": "203707d7ff99dc691fc8d634c85768d5263edfb9",
+  "recovery": "uv sync",
+  "recovery_source": "backend/README.md",
+  "recovery_install_exit_code": 0,
+  "after_exit_code": 0,
+  "after_summary": "8 passed in 0.70s",
+  "test_scope": "tests/unit/test_workflow_context.py only, not full suite",
+  "archive_files_modified": [],
+  "credentials_in_subprocess_environment": false,
+  "elapsed_s": 94.676,
+  "complete_in_this_verification": true
+}

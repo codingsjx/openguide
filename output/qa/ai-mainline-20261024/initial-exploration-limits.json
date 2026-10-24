@@ -1,0 +1,10 @@
+{
+  "repo": "pallets/itsdangerous",
+  "source_revision": "672971d66a2ef9f85151e53283113f33d642dabd",
+  "earlier_code_sha256": "3ae4553b7690db768d7379f97ce2ed17ab0d306e95f50371fc7e7b809db009a5",
+  "product_mode": "heuristic",
+  "ai_steps_retained": 0,
+  "commands_found": 0,
+  "scope": "Initial exploration before evidence-support/type-normalization changes; not pooled with the six planned cases",
+  "note": "This capture had no verified test command; source typing and quote formatting also rejected AI steps. It is not a successful onboarding case."
+}
