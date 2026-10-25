@@ -53,6 +53,7 @@ def build_guide(
     verify_evidence: bool = True,
     llm_client: LLMClient | None = None,
     check_suitability: bool = True,
+    explain_steps: bool = False,
 ) -> Guide:
     profile = build_profile(sig)
     suitability, reasons = decide(profile)
@@ -78,14 +79,21 @@ def build_guide(
     index = index or _build_index(sig)
     steps: list[GuideStep] = []
     step_id = 1
+    explanation_client = None
 
     if use_llm:
         try:
             client = llm_client or LLMClient()
             if client.available():
-                steps = _generate_with_llm(sig, index, client, start_id=step_id,
-                    allow_fallback=not strict_llm, stage_modes=guide.stage_modes, warnings=guide.warnings,
-                    fallback_reasons=guide.stage_fallbacks)
+                if explain_steps and not strict_llm:
+                    steps = _generate_heuristic(sig, index, start_id=step_id)
+                    guide.generation_strategy = 'source_then_explain'
+                    guide.stage_modes = {stage: 'heuristic' for stage in _STAGE_QUERIES}
+                    explanation_client = client
+                else:
+                    steps = _generate_with_llm(sig, index, client, start_id=step_id,
+                        allow_fallback=not strict_llm, stage_modes=guide.stage_modes, warnings=guide.warnings,
+                        fallback_reasons=guide.stage_fallbacks)
                 model_stages = sum(mode in {'llm', 'mixed'} for mode in guide.stage_modes.values())
                 guide.generation_mode = 'llm' if model_stages == 4 else 'mixed' if model_stages else 'heuristic'
                 guide.model_request_attempts = getattr(client, 'attempt_count', None)
@@ -191,6 +199,9 @@ def build_guide(
         if completed:
             guide.steps = audit_steps(sig, index, guide.steps)
             guide.generation_mode = 'mixed' if any(mode in {'llm', 'mixed'} for mode in guide.stage_modes.values()) else 'heuristic'
+    if explanation_client is not None:
+        from backend.core.generate.explanations import explain_guide
+        explain_guide(guide, explanation_client, sig)
     if guide.generation_mode == "llm" and any(s.command_derivation for s in guide.steps):
         guide.generation_mode = "mixed"
         guide.warnings.append("部分 make 命令已按仓库原文展开，展开过程可查看；尚未执行")
@@ -336,6 +347,10 @@ def _fallback_reason(exc: LLMUnavailable) -> str:
             return 'model_auth_failed'
         if cause.response.status_code == 429:
             return 'model_rate_limited'
+        if cause.response.status_code in {502, 503, 504}:
+            return 'model_service_unavailable'
+    if isinstance(cause, httpx.TransportError):
+        return 'model_transport_error'
     if str(exc).startswith(('LLM 返回', 'LLM 响应', 'LLM 必须')) or '未输出有效步骤' in str(exc):
         return 'invalid_output'
     return 'model_error'

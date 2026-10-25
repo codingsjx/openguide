@@ -78,7 +78,7 @@ def llm_configured() -> bool:
 
 
 class LLMClient:
-    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2, allow_literal_linebreaks: bool = False, disconnect_retry_limit: int = 0, stream_json: bool = False) -> None:
+    def __init__(self, *, timeout_s: float = 300.0, retry_limit: int = 2, allow_literal_linebreaks: bool = False, disconnect_retry_limit: int = 0, service_retry_limit: int = 0, stream_json: bool = False) -> None:
         s = get_settings()
         config = session_settings()
         key, base, model = config if config is not None else (_OVERRIDE_KEY, _OVERRIDE_BASE, _OVERRIDE_MODEL)
@@ -88,11 +88,13 @@ class LLMClient:
         self.trace: list[dict] = []
         self.attempt_count = 0
         self.disconnect_retry_count = 0
+        self.service_retry_count = 0
         self.request_events: list[dict] = []
         self._timeout_s = timeout_s
         self._retry_limit = retry_limit
         self._allow_literal_linebreaks = allow_literal_linebreaks
         self._disconnect_retry_limit = min(1, max(0, disconnect_retry_limit))
+        self._service_retry_limit = min(1, max(0, service_retry_limit))
         self._stream_json = stream_json
         self._stream_had_content = False
         self._last_response_streamed = False
@@ -207,8 +209,9 @@ class LLMClient:
         # Product-only recovery for a peer closing before a response. Allocate
         # the remaining network wait to the second attempt; never retry auth,
         # rate limits, timeouts or invalid JSON through this recovery path.
-        deadline = time.perf_counter() + self._timeout_s if self._disconnect_retry_limit else None
-        normal_retries, disconnect_retries, attempt = 0, 0, 0
+        recovery_limit = max(self._disconnect_retry_limit, self._service_retry_limit)
+        deadline = time.perf_counter() + self._timeout_s if recovery_limit else None
+        normal_retries, disconnect_retries, service_retries, attempt = 0, 0, 0, 0
         while True:
             self.attempt_count += 1
             started = time.perf_counter()
@@ -233,10 +236,20 @@ class LLMClient:
                 self._request_event(time.perf_counter() - started, exc)
                 last_exc = exc
                 if (isinstance(exc, httpx.RemoteProtocolError) and not self._stream_had_content and disconnect_retries < self._disconnect_retry_limit
+                        and disconnect_retries + service_retries < recovery_limit
                         and deadline is not None and deadline - time.perf_counter() > 1):
                     disconnect_retries += 1
                     self.disconnect_retry_count += 1
                     attempt += 1
+                    continue
+                if (isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code in {502, 503, 504}
+                        and not self._stream_had_content and service_retries < self._service_retry_limit
+                        and disconnect_retries + service_retries < recovery_limit
+                        and deadline is not None and deadline - time.perf_counter() > 1):
+                    service_retries += 1
+                    self.service_retry_count += 1
+                    attempt += 1
+                    time.sleep(0.25)
                     continue
                 if normal_retries < retries:
                     normal_retries += 1
@@ -254,7 +267,11 @@ class LLMClient:
             self.trace.append({"messages": messages, "content": content,
                                "usage": data.get("usage") if isinstance(data.get("usage"), dict) else {}, "model": data.get("model", self._model),
                                "response_id": data.get("id"), "attempt": attempt + 1,
-                               "disconnect_retries": disconnect_retries, "response_streamed": self._last_response_streamed})
+                               "disconnect_retries": disconnect_retries, "service_retries": service_retries,
+                               "finish_reason": data['choices'][0].get('finish_reason'),
+                               "response_streamed": self._last_response_streamed})
+            if data['choices'][0].get('finish_reason') == 'length':
+                raise LLMUnavailable('LLM 返回达到输出上限，未确认完整')
             parsed, normalization = parse_json_object(content, allow_literal_linebreaks=self._allow_literal_linebreaks)
             self.trace[-1]['format_normalization'] = normalization
             return parsed

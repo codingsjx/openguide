@@ -50,22 +50,24 @@ def run(args):
         snapshot=json.dumps(sig.model_dump(),ensure_ascii=False,sort_keys=True)
         (raw/f'{tag}-signals.json').write_text(snapshot,encoding='utf-8')
         for repeat in range(args.repeats):
-            client=LLMClient(timeout_s=args.timeout,retry_limit=0,disconnect_retry_limit=1,allow_literal_linebreaks=True,stream_json=get_settings().llm_streaming)
+            client=LLMClient(timeout_s=args.timeout,retry_limit=0,disconnect_retry_limit=1,service_retry_limit=1 if args.source_then_explain else 0,allow_literal_linebreaks=True,stream_json=get_settings().llm_streaming)
             start=time.perf_counter()
             row={'repo':repo,'repeat':repeat,'source_revision':sig.meta.default_branch,'input_sha256':hashlib.sha256(snapshot.encode()).hexdigest(),'code_sha256':code}
             try:
-                guide=build_guide(sig,llm_client=client)
+                guide=build_guide(sig,llm_client=client,explain_steps=args.source_then_explain)
                 (raw/f'{tag}-{repeat}-guide.json').write_text(guide.model_dump_json(indent=2),encoding='utf-8')
                 row.update(status='returned',generation_mode=guide.generation_mode,stage_modes=guide.stage_modes,stage_fallbacks=guide.stage_fallbacks,
+                    generation_strategy=guide.generation_strategy,steps=len(guide.steps),explained_steps=sum(bool(s.ai_explanation) for s in guide.steps),
                     ai_steps=sum(s.generation_source=='llm' and s.evidence.verification in {'quote_verified','command_verified'} for s in guide.steps),
                     rule_steps=sum(s.generation_source=='rules' for s in guide.steps),commands=sum(s.command is not None for s in guide.steps),
                     unverified_commands=sum(s.command is not None and s.evidence.verification!='command_verified' for s in guide.steps),
                     unknown_directories=sum(s.command is not None and s.working_directory is None and s.directory_basis!='clone_destination' for s in guide.steps))
             except Exception as exc:row.update(status='failed',error_type=type(exc).__name__)
-            row['ready_for_manual_review']=bool(row.get('ai_steps',0)>0 and row.get('commands',0)>0 and
+            row['ready_for_manual_review']=bool((row.get('explained_steps',0)>0 if args.source_then_explain else row.get('ai_steps',0)>0) and row.get('commands',0)>0 and
                 row.get('unverified_commands',1)==0 and row.get('unknown_directories',1)==0)
             usage_complete=bool(client.trace) and all(isinstance(t.get('usage',{}).get('total_tokens'),int) for t in client.trace)
             row.update(elapsed_s=round(time.perf_counter()-start,3),attempts=client.attempt_count,disconnect_retries=client.disconnect_retry_count,
+                service_retries=client.service_retry_count,
                 response_count=len(client.trace),reported_total_tokens=sum(t['usage']['total_tokens'] for t in client.trace) if usage_complete else None,
                 token_usage_complete=usage_complete,streaming_requested=get_settings().llm_streaming,
                 streamed_responses=sum(bool(t.get('response_streamed')) for t in client.trace))
@@ -92,6 +94,7 @@ if __name__=='__main__':
     p.add_argument('--capture-live',action='store_true')
     p.add_argument('--repeats',type=int,default=3)
     p.add_argument('--timeout',type=int,default=45)
+    p.add_argument('--source-then-explain',action='store_true',help='Use the current web product protocol: audited operations followed by per-step AI tutoring. Omit to reproduce the older stage protocol.')
     p.add_argument('--output',type=Path,required=True)
     a=p.parse_args()
     if not a.snapshot_dir and not a.capture_live:p.error('Choose --snapshot-dir or explicitly --capture-live')

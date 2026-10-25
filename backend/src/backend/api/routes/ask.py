@@ -56,4 +56,4 @@ def ask_repo(req: AskRequest) -> AnswerResult:
     index = RepoIndex(owner, repo)
     index.index(sig)
     return answer_question(sig,index,question,req.history,
-        LLMClient(timeout_s=float(req.model_timeout_s),retry_limit=0,allow_literal_linebreaks=True,disconnect_retry_limit=1,stream_json=get_settings().llm_streaming) if req.use_llm else None)
+        LLMClient(timeout_s=float(req.model_timeout_s),retry_limit=0,allow_literal_linebreaks=True,disconnect_retry_limit=1,service_retry_limit=1,stream_json=get_settings().llm_streaming) if req.use_llm else None)

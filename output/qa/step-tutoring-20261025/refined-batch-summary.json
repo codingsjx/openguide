@@ -1,0 +1,19 @@
+{
+  "model_requested": "deepseek-v3.2",
+  "source_code_sha256": "21ee6858041255474aad171b043684ac75bd94416b2bacb3ed381c2aee320a3a",
+  "input": "previously captured fixed GitHub snapshot",
+  "revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "steps": 11,
+  "explained_steps": 9,
+  "general_explanations": 3,
+  "operations_unchanged": true,
+  "stage_fallbacks": {
+    "A": "explanation_unverified",
+    "B": "explanation_unverified"
+  },
+  "requests": 4,
+  "disconnect_retries": 1,
+  "service_retries": 0,
+  "complete_responses": 3,
+  "elapsed_s": 7.797
+}

@@ -453,6 +453,9 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
             <Title level={5} style={{ marginTop: 0 }}>
               第 {current + 1}/{steps.length} 步 · {step.title}
             </Title>
+            {step.ai_explanation && <Alert showIcon type="info" style={{ marginBottom: 12 }}
+              message={step.ai_explanation_basis === 'general' ? 'AI 讲解 · 通用准备，仍需核对仓库要求' : 'AI 逐步讲解 · 操作与出处由原文固定'}
+              description={step.ai_explanation} />}
             {step.generation_source && step.generation_source !== 'unknown' && <Tag color={step.generation_source === 'llm' ? 'blue' : 'default'}>
               {step.generation_source === 'llm' ? '本步由 AI 生成，操作与引用另经原文核对' : '本步为原文规则整理'}
             </Tag>}

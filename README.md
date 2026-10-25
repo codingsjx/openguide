@@ -3,7 +3,9 @@
 [![CI](https://github.com/codingsjx/openguide/actions/workflows/ci.yml/badge.svg)](https://github.com/codingsjx/openguide/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> 晚间 AI 主线更新（核心 203707d）：保留通过核验的 AI 步骤、按基础顺序补齐原文、提供同组件排错入口；当前 354 项后端/评测和 59 项前端检查通过。真实生成、阶段失败与同仓库实跑见 [AI 主线验收](docs/ai_mainline_20261024.md)。
+> 2026-10-25：网页先固定原文操作，再生成每步 AI 讲解；最终代码实跑取得 11/11 步讲解，命令、目录及前置关系保持不变。370 项后端/评测和 62 项前端检查通过。失败记录、配置修复和验证边界见 [逐步 AI 辅导验收](docs/ai_step_tutoring_20261025.md)。
+
+> 2026-10-24 晚间 AI 主线（核心 203707d）：真实生成、阶段失败与同仓库缺包恢复见 [历史主线验收](docs/ai_mainline_20261024.md)。
 
 > 2026-10-24 14 时材料候选入口（b4dfc86 快照）：[当前评测](docs/evaluation_report.md)、[收尾清单](docs/release_closure_20261024.md)、[更新的隐私与部署边界](docs/privacy_and_license.md)。核心回归 336 项、前端 58 项；CI 容器验证见对应提交记录。真人与独立人工复核仍待完成。
 
@@ -11,7 +13,7 @@
 
 > 证据分级：分别显示来源存在、引用原文匹配、命令原文匹配；未通过原文核验的命令隐藏。原文匹配不代表命令已执行或建议语义正确。当前验收与待补证据见 [国赛完善记录](docs/competition_readiness.md)。
 
-在线生成按阶段回退：某一阶段失败时保留其他阶段的 AI 输出，并标明各阶段来源；规则模式同样保留四阶段入口，资料不足时待确认。严格模型实验禁止回退。[实现与验证范围](docs/stage_fallback_20261021.md)。
+在线 AI 生成先核验原文步骤，再按小批次为每一步提供讲解；讲解未完成时保留操作和已成功的解释，并显示覆盖数与原因。资料不足时仅提供明确标注的通用准备。规则模式不调用模型；严格实验仍沿用其原定协议，禁止回退。[当前实现与验证](docs/ai_step_tutoring_20261025.md)。
 
 任务选择与贡献准备：标签候选不足时，额外采样最多 30 个开放 issue；普通 issue 仅供浏览，不计为新手标签任务。页面分别说明无结果、采集失败及候选受阻，并提供 GitHub 检索入口。贡献工作台将选定任务、用户记录的实际改动/可选 diff、测试状态整理为本机 Markdown PR 草稿，保留失败和未运行项；不会自动提交到上游，用户记录与 diff 来源未经独立核验。
 

@@ -56,17 +56,17 @@ export default function GuideStatus({ guide, step, onRegenerateAi, onRegenerate 
       </>} />
     {step && mode && <Space wrap size={4} style={{ marginBottom: 8 }}>
       <Text type="secondary">当前 · {labels[step.stage]}</Text>
-      <Tag color={mode !== 'heuristic' ? 'blue' : 'default'}>{mode === 'llm' ? 'AI 生成' : mode === 'mixed' ? 'AI + 原文补齐' : '规则整理'}</Tag>
+      <Tag color={mode !== 'heuristic' ? 'blue' : 'default'}>{guide.generation_strategy === 'source_then_explain' ? mode === 'mixed' ? 'AI 讲解 + 原文步骤' : '原文步骤 · 讲解待补充' : mode === 'llm' ? 'AI 生成' : mode === 'mixed' ? 'AI + 原文补齐' : '规则整理'}</Tag>
       {reason && <Text type="secondary">{fallbackLabels[reason]}</Text>}
     </Space>}
     <GuideNotices guide={guide} warnings={guide.warnings} onRegenerate={onRegenerate}
       generationDetails={Object.keys(guide.stage_modes ?? {}).length > 0 || guide.model_request_attempts != null ? <>
-      {guide.model_request_attempts != null && <Paragraph>模型实际请求 {guide.model_request_attempts} 次；连接提前关闭后重试 {guide.model_disconnect_retries ?? 0} 次。仅记录请求，不等于生成全部成功。</Paragraph>}
+      {guide.model_request_attempts != null && <Paragraph>模型实际请求 {guide.model_request_attempts} 次；连接提前关闭后重试 {guide.model_disconnect_retries ?? 0} 次；临时服务错误后重试 {guide.model_service_retries ?? 0} 次。仅记录请求，不等于生成全部成功。</Paragraph>}
       {Object.keys(guide.stage_modes ?? {}).length > 0 ? Object.entries(labels).map(([stage, label]) => {
         const stageKey = stage as 'A' | 'B' | 'C' | 'D'
         const stageMode = guide.stage_modes?.[stageKey]
         const fallback = guide.stage_fallbacks?.[stageKey]
-        return <Paragraph key={stage} style={{ marginBottom: 6 }}><Text strong>{label}：</Text>{stageMode === 'llm' ? 'AI 生成' : stageMode === 'mixed' ? 'AI + 原文规则补齐' : stageMode === 'heuristic' ? '规则整理' : '来源未记录'}{fallback ? `；${fallbackLabels[fallback]}` : ''}</Paragraph>
+        return <Paragraph key={stage} style={{ marginBottom: 6 }}><Text strong>{label}：</Text>{guide.generation_strategy === 'source_then_explain' ? `${guide.steps.filter(s => s.stage === stage && s.ai_explanation).length}/${guide.steps.filter(s => s.stage === stage).length} 步含 AI 讲解；操作按原文整理` : stageMode === 'llm' ? 'AI 生成' : stageMode === 'mixed' ? 'AI + 原文规则补齐' : stageMode === 'heuristic' ? '规则整理' : '来源未记录'}{fallback ? `；${fallbackLabels[fallback]}` : ''}</Paragraph>
       }) : undefined}</> : undefined} />
   </>
 }

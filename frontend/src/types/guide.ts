@@ -16,6 +16,8 @@ export interface GuideStep {
   stage_label: string
   title: string
   generation_source?: 'llm' | 'rules' | 'unknown'
+  ai_explanation?: string
+  ai_explanation_basis?: 'repository' | 'general' | null
   command: string | null
   original_command?: string | null
   command_derivation?: string
@@ -50,12 +52,14 @@ export interface Guide {
   reasons: string[]
   steps: GuideStep[]
   generation_mode?: 'heuristic' | 'llm' | 'mixed'
+  generation_strategy?: 'stage_generation' | 'source_then_explain'
   stage_modes?: Partial<Record<'A' | 'B' | 'C' | 'D', 'heuristic' | 'llm' | 'mixed'>>
   requested_mode?: 'ai' | 'rules' | 'unknown'
   model_timeout_s?: number | null
   model_request_attempts?: number | null
   model_disconnect_retries?: number
-  stage_fallbacks?: Partial<Record<'A' | 'B' | 'C' | 'D', 'not_configured' | 'model_timeout' | 'model_auth_failed' | 'model_rate_limited' | 'model_error' | 'invalid_output' | 'evidence_unverified' | 'incomplete_workflow' | 'no_stage_evidence'>>
+  model_service_retries?: number
+  stage_fallbacks?: Partial<Record<'A' | 'B' | 'C' | 'D', 'not_configured' | 'model_timeout' | 'model_auth_failed' | 'model_rate_limited' | 'model_error' | 'model_transport_error' | 'model_service_unavailable' | 'explanation_unverified' | 'invalid_output' | 'evidence_unverified' | 'incomplete_workflow' | 'no_stage_evidence'>>
   warnings?: string[]
   is_demo?: boolean
   is_saved?: boolean

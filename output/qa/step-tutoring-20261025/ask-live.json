@@ -1,0 +1,68 @@
+{
+  "repo_url": "https://github.com/codingsjx/ai-software",
+  "question": "后端测试应该在哪个目录运行？请用中文解释前置条件和如何检查结果。",
+  "resolved_question": "后端测试应该在哪个目录运行？请用中文解释前置条件和如何检查结果。",
+  "context_used": false,
+  "revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "intents": [
+    "test"
+  ],
+  "status": "insufficient_evidence",
+  "mode": "extractive",
+  "fallback_reason": "",
+  "verification_issue": "",
+  "rejected_points_count": 0,
+  "points": [],
+  "commands": [],
+  "sources": [
+    {
+      "id": "S1",
+      "kind": "file",
+      "source": "backend/requirements.txt",
+      "quote": "fastapi==0.116.1\nuvicorn[standard]==0.35.0\npython-multipart==0.0.20\npydantic==2.11.7\nopenai==1.99.9\nPillow==11.3.0\nreportlab==4.4.3\nmatplotlib==3.10.5\nnumpy==2.3.2\nhttpx==0.28.1\npytest==8.4.1\npytest-asyncio==1.1.0",
+      "url": "https://github.com/codingsjx/ai-software/blob/5748df628098830b6c228f936ae5484e9a0de7a1/backend/requirements.txt#L1-L12",
+      "line_start": 1,
+      "line_end": 12,
+      "verification": "literal_quote",
+      "intents": [
+        "test"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S2",
+      "kind": "file",
+      "source": "README.md",
+      "quote": "```powershell\nuv venv --python 3.12 .venv\nuv pip install --python .venv -r backend\\requirements.txt\nGet-Content .env | Where-Object { $_ -match '^[A-Z_]+=' } | ForEach-Object {\n  $name, $value = $_ -split '=', 2\n  Set-Item -Path \"Env:$name\" -Value $value\n}\n.\\.venv\\Scripts\\uvicorn.exe backend.app.main:app --reload --port 8000\n```",
+      "url": "https://github.com/codingsjx/ai-software/blob/5748df628098830b6c228f936ae5484e9a0de7a1/README.md#L47-L55",
+      "line_start": 47,
+      "line_end": 55,
+      "verification": "literal_quote",
+      "intents": [
+        "test"
+      ],
+      "note": ""
+    }
+  ],
+  "missing": [
+    "当前原文片段不足以直接回答这个具体问题，请补充相关文件名、命令或任务范围。"
+  ],
+  "next_actions": [
+    "打开下方原文，核对完整前置条件及当前开发环境。",
+    "若仍不明确，补充操作系统、具体任务或脱敏异常，并继续追问。",
+    "记录实际退出码、失败与跳过数量，区分局部测试和完整测试。"
+  ],
+  "warnings": [
+    "文件证据固定于提交 5748df628098830b6c228f936ae5484e9a0de7a1；issue 信息是独立采集的快照，操作前需核对最新状态。"
+  ],
+  "links": [
+    {
+      "label": "仓库说明",
+      "url": "https://github.com/codingsjx/ai-software#readme"
+    },
+    {
+      "label": "开放任务",
+      "url": "https://github.com/codingsjx/ai-software/issues?q=is%3Aissue+is%3Aopen"
+    }
+  ]
+}

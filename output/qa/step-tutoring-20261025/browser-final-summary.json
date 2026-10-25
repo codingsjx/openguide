@@ -1,0 +1,12 @@
+{
+  "steps": 11,
+  "explained_steps": 11,
+  "operations_unchanged": true,
+  "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "model_wait_per_batch": 90,
+  "attempts": 3,
+  "disconnect_retries": 0,
+  "service_retries": 0,
+  "stage_fallbacks": {},
+  "note": "Actual UI generation. Manual progress is not exported or counted as command execution."
+}

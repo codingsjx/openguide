@@ -136,7 +136,7 @@ export default function GuideGenerator({ initialUrl, initialUseLlm = true }: { i
         </Space>
         <div><label htmlFor="guide-model-timeout">自定义秒数：</label><InputNumber id="guide-model-timeout" aria-label="模型请求超时秒数"
           min={MIN_GUIDE_TIMEOUT} max={MAX_GUIDE_TIMEOUT} precision={0} value={timeoutDraft} onChange={setTimeoutDraft} /></div>
-        {isGuideTimeout(timeoutDraft) && <Paragraph style={{ marginTop: 12 }}>四个阶段依次执行；页面整次等待上限约 {Math.ceil(guideRequestTimeoutMs(timeoutDraft) / 1000)} 秒，包含仓库资料采集预留时间。</Paragraph>}
+        {isGuideTimeout(timeoutDraft) && <Paragraph style={{ marginTop: 12 }}>AI 讲解按小批次处理，模型等待总预算最多为所选值的四倍；页面整次等待上限约 {Math.ceil(guideRequestTimeoutMs(timeoutDraft) / 1000)} 秒，包含资料采集预留时间。网络等待设置不等于整个流程的硬截止。</Paragraph>}
         <Paragraph type="secondary">保存后用于下一次 AI 生成，正在进行的请求保持原设置。延长等待时间不保证模型成功返回；仍可取消等待。设置保存在当前浏览器。</Paragraph>
         <Button type="link" onClick={() => setTimeoutDraft(DEFAULT_GUIDE_TIMEOUT)}>恢复默认 25 秒</Button>
       </Modal>
@@ -146,7 +146,7 @@ export default function GuideGenerator({ initialUrl, initialUseLlm = true }: { i
           showIcon
           type="info"
           message="正在生成贡献路线图"
-          description={`已等待 ${elapsed} 秒。${requestSettings?.ai ? `本次每阶段模型等待设置为 ${requestSettings.seconds} 秒，页面整次等待上限约 ${guideRequestTimeoutMs(requestSettings.seconds) / 1000} 秒。` : ''}正在处理仓库资料与指南。取消仅停止本页等待，后台处理可能继续。`}
+          description={`已等待 ${elapsed} 秒。${requestSettings?.ai ? `本次每批模型等待设置为 ${requestSettings.seconds} 秒，页面整次等待上限约 ${guideRequestTimeoutMs(requestSettings.seconds) / 1000} 秒。` : ''}正在处理仓库资料与指南。取消仅停止本页等待，后台处理可能继续。`}
           action={<Button size="small" onClick={() => activeRequest.current?.abort()}>取消等待</Button>}
           style={{ marginTop: 12 }}
         />
@@ -174,7 +174,7 @@ export default function GuideGenerator({ initialUrl, initialUseLlm = true }: { i
           <div className="guide-metadata">
             {guide.unsuitable && <Tag color="red">暂不建议贡献</Tag>}
             <Tag>{guide.steps.length} 步</Tag>
-            {guide.model_timeout_s != null && <Tag>本次模型等待：{guide.model_timeout_s} 秒/阶段</Tag>}
+            {guide.model_timeout_s != null && <Tag>本次模型等待：{guide.model_timeout_s} 秒/{guide.generation_strategy === 'source_then_explain' ? '批次' : '阶段'}</Tag>}
             <Button size="small" onClick={() => downloadGuide(guide)}>保存指南 JSON</Button>
           </div>
           <GuideWizard guide={guide} url={guide.repo_url}

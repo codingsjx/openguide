@@ -1,0 +1,19 @@
+{
+  "requested_model": "deepseek-v3.2",
+  "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "strategy": "source_then_explain",
+  "steps": 11,
+  "explained_steps": 0,
+  "general_explanations": 0,
+  "operations_identical_to_rules_baseline": true,
+  "elapsed_s": 9.05,
+  "attempts": 2,
+  "disconnect_retries": 1,
+  "service_retries": 0,
+  "stage_fallbacks": {
+    "A": "invalid_output",
+    "B": "invalid_output",
+    "C": "invalid_output",
+    "D": "invalid_output"
+  }
+}

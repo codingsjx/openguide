@@ -4,6 +4,9 @@ export const fallbackLabels: Record<string, string> = {
   not_configured: '生成时未配置模型', model_timeout: '模型请求超时',
   model_auth_failed: '模型服务拒绝认证或权限', model_rate_limited: '模型服务限流',
   model_error: '模型请求未完成', invalid_output: '模型输出格式或步骤无效',
+  model_transport_error: '模型连接中断或网络不可达',
+  model_service_unavailable: '模型服务暂不可用（502/503/504）',
+  explanation_unverified: '本步 AI 讲解未完成或未通过检查',
   evidence_unverified: 'AI 步骤未保留可核验出处',
   incomplete_workflow: 'AI 步骤缺少原文操作入口，已补齐',
   no_stage_evidence: '本阶段无可引用资料，未调用模型',
@@ -16,6 +19,12 @@ export function guideStatus(guide: Guide): { title: string; description: string;
   if (guide.is_demo) return { title: '静态交互示例', description: '尚未分析当前仓库；正式生成后再核对原文和操作。', type: 'info' }
   if (guide.requested_mode === 'rules') {
     result = { title: '规则模式 · 由你选择', description: '你选择了“快速（本地规则）”，这次生成没有调用模型。' + suffix, type: 'info' }
+  } else if (guide.generation_strategy === 'source_then_explain') {
+    const count = guide.steps.filter((step) => Boolean(step.ai_explanation)).length
+    const complete = count === guide.steps.length && count > 0
+    result = { title: complete ? '每一步的 AI 讲解已生成' : '部分 AI 讲解未完成，原文步骤仍可查看',
+      description: `${count}/${guide.steps.length} 步含 AI 讲解。命令、目录和出处按原文固定；缺少仓库依据时仅提供通用准备说明。` + suffix,
+      type: complete ? 'info' : 'warning' }
   } else if (guide.requested_mode === 'ai' && reasons.includes('not_configured')) {
     result = { title: '生成时未配置模型，已使用规则整理', description: '你请求了 AI 生成，但生成时没有可用的模型配置。请检查模型设置后重试。' + suffix, type: 'warning' }
   } else if (guide.requested_mode === 'ai' && reasons.some((r) => !['evidence_unverified', 'incomplete_workflow', 'no_stage_evidence'].includes(r))) {

@@ -11,14 +11,15 @@ export function parseSavedGuide(text: string): Guide {
   if (data.model_timeout_s != null && (!Number.isInteger(data.model_timeout_s) || data.model_timeout_s < 10 || data.model_timeout_s > 120)) throw new Error('模型超时设置无效')
   if (data.stage_fallbacks != null && (typeof data.stage_fallbacks !== 'object' || Array.isArray(data.stage_fallbacks) ||
       Object.entries(data.stage_fallbacks).some(([stage, reason]) => !['A', 'B', 'C', 'D'].includes(stage) ||
-        !['not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited', 'model_error', 'invalid_output', 'evidence_unverified', 'incomplete_workflow', 'no_stage_evidence'].includes(reason as string)))) {
+        !['not_configured', 'model_timeout', 'model_auth_failed', 'model_rate_limited', 'model_error', 'model_transport_error', 'model_service_unavailable', 'explanation_unverified', 'invalid_output', 'evidence_unverified', 'incomplete_workflow', 'no_stage_evidence'].includes(reason as string)))) {
     throw new Error('阶段回退原因格式无效')
   }
   if (data.stage_modes != null && (typeof data.stage_modes !== 'object' || Array.isArray(data.stage_modes) ||
       Object.entries(data.stage_modes).some(([stage, mode]) => !['A', 'B', 'C', 'D'].includes(stage) || !['heuristic', 'llm', 'mixed'].includes(mode as string)))) {
     throw new Error('阶段生成来源格式无效')
   }
-  for (const field of ['model_request_attempts', 'model_disconnect_retries']) {
+  if (data.generation_strategy != null && !['stage_generation', 'source_then_explain'].includes(data.generation_strategy)) throw new Error('指南生成策略格式无效')
+  for (const field of ['model_request_attempts', 'model_disconnect_retries', 'model_service_retries']) {
     if (data[field] != null && (!Number.isInteger(data[field]) || data[field] < 0 || data[field] > 128)) throw new Error('模型请求统计格式无效')
   }
   if (data.steps.some((s: Guide['steps'][number]) => s?.generation_source != null && !['llm', 'rules', 'unknown'].includes(s.generation_source))) throw new Error('步骤生成来源格式无效')
@@ -43,6 +44,8 @@ export function parseSavedGuide(text: string): Guide {
     }
   }
   for (const step of data.steps) {
+    if ((step.ai_explanation != null && (typeof step.ai_explanation !== 'string' || step.ai_explanation.length > 500)) ||
+        (step.ai_explanation_basis != null && !['repository', 'general'].includes(step.ai_explanation_basis))) throw new Error('AI 讲解格式无效')
     if (!step || !Number.isInteger(step.step_id) || ids.has(step.step_id) ||
         !['A', 'B', 'C', 'D'].includes(step.stage) || typeof step.title !== 'string' ||
         (step.expected != null && typeof step.expected !== 'string') ||

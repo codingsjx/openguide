@@ -7,6 +7,15 @@ const source = await readFile(new URL('../src/types/guideStatus.ts', import.meta
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
 const { guideStatus, groupGuideWarnings } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
 
+test('full AI tutoring coverage is distinct from source operations and partial failure', () => {
+  const g = { requested_mode: 'ai', generation_strategy: 'source_then_explain', steps: [{ ai_explanation: 'ready' }, { ai_explanation: 'ready' }] }
+  assert.equal(guideStatus(g).type, 'info')
+  assert.match(guideStatus(g).description, /2\/2/)
+  g.steps[1].ai_explanation = ''
+  assert.equal(guideStatus(g).type, 'warning')
+  assert.match(guideStatus(g).description, /1\/2/)
+})
+
 test('explicit rule choice is distinguished from missing model configuration', () => {
   const manual = guideStatus({ requested_mode: 'rules', generation_mode: 'heuristic' })
   assert.match(manual.title, /由你选择/)

@@ -8,6 +8,15 @@ const { outputText } = ts.transpileModule(source, { compilerOptions: { module: t
 const { parseSavedGuide } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
 const fixture = () => ({ repo_url: 'https://github.com/o/r', unsuitable: false, steps: [{ step_id: 1, stage: 'A', title: 'Install', command: null, evidence: { kind: 'missing', source: '', quote: '' } }] })
 
+test('AI tutoring extensions survive import and invalid types cannot enter the renderer', () => {
+  const f = fixture()
+  f.generation_strategy = 'source_then_explain'; f.model_service_retries = 1
+  f.steps[0].ai_explanation = '通用准备，请核对仓库原文。'; f.steps[0].ai_explanation_basis = 'general'
+  assert.equal(parseSavedGuide(JSON.stringify(f)).steps[0].ai_explanation_basis, 'general')
+  f.steps[0].ai_explanation = { not: 'text' }
+  assert.throws(() => parseSavedGuide(JSON.stringify(f)))
+})
+
 test('import marks saved content and provides safe display defaults', () => {
   const result = parseSavedGuide(JSON.stringify(fixture()))
   assert.equal(result.is_saved, true)

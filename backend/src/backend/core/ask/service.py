@@ -73,6 +73,7 @@ class AnswerResult(BaseModel):
     mode: Literal['ai', 'extractive', 'no_evidence'] = 'no_evidence'
     fallback_reason: str = ''
     verification_issue: str = ''
+    rejected_points_count: int = 0
     points: list[AnswerPoint] = Field(default_factory=list)
     commands: list[AnswerCommand] = Field(default_factory=list)
     sources: list[AnswerSource] = Field(default_factory=list)
@@ -231,10 +232,10 @@ _SYSTEM = (
     '目录、运行条件和结果数量也只能按原文说明，不可猜测。资料不足时不要填补，返回空points。text不要写来源编号或链接，使用source_id字段标注。每点中文解释尽量不超过120字，引用保留相关短句。只返回JSON对象：'
     '{"points":[{"text":"中文解释","source_id":"S1","quote":"该来源中的逐字原文"}]}，最多4点。'
 )
-_COMMAND_OR_CLAIM = re.compile(r'`|(?<![A-Za-z0-9_])(?:python\d?\s+-|pip\d?\s+install|pytest\s+\S|git\s+(?:clone|push|config|checkout)|curl\s+|npm\s+(?:install|test)|make\s+\S|(?:pnpm|yarn|npx|tox|nox)\s+\S|rm\s+-|del\s+|remove-item(?![A-Za-z0-9_])|invoke-expression(?![A-Za-z0-9_])|wget\s+|bash\s+-|powershell\s+-)|已执行|已修复|已经通过|测试已通过|已提交|已合并', re.I)
+_COMMAND_OR_CLAIM = re.compile(r'`|(?<![A-Za-z0-9_])(?:python\d?\s+-|pip\d?\s+install|pytest\s+(?=[-/A-Za-z0-9_.])\S|git\s+(?:clone|push|config|checkout)|curl\s+|npm\s+(?:install|test)|make\s+\S|(?:pnpm|yarn|npx|tox|nox)\s+(?=[-/A-Za-z0-9_.])\S|rm\s+-|del\s+|remove-item(?![A-Za-z0-9_])|invoke-expression(?![A-Za-z0-9_])|wget\s+|bash\s+-|powershell\s+-)|已执行|已修复|已经通过|测试已通过|已提交|已合并', re.I)
 
 
-def _model_points(reply: dict, sources: list[AnswerSource]) -> list[AnswerPoint]:
+def _strict_model_points(reply: dict, sources: list[AnswerSource]) -> list[AnswerPoint]:
     items = reply.get('points')
     if not isinstance(items, list): raise LLMUnavailable('问答模型未提供有效回答')
     points = []
@@ -265,6 +266,20 @@ def _model_points(reply: dict, sources: list[AnswerSource]) -> list[AnswerPoint]
             raise LLMUnavailable('问答包含未核验文件路径')
         points.append(AnswerPoint(text=text.strip(),citations=[source.id]))
     return points
+
+
+def _model_points(reply: dict, sources: list[AnswerSource], *, rejected: list[str] | None = None) -> list[AnswerPoint]:
+    if rejected is None or not isinstance(reply.get('points'), list):
+        return _strict_model_points(reply, sources)
+    accepted = []
+    for item in reply['points'][:4]:
+        try:
+            accepted.extend(_strict_model_points({'points': [item]}, sources))
+        except LLMUnavailable as exc:
+            rejected.append(str(exc))
+    if not accepted and rejected:
+        raise LLMUnavailable(rejected[0])
+    return accepted
 
 
 def answer_question(sig: RawSignals, index: RepoIndex, question: str, history: list[str], client: LLMClient | None = None) -> AnswerResult:
@@ -311,9 +326,13 @@ def answer_question(sig: RawSignals, index: RepoIndex, question: str, history: l
                 {'role':'user','content':json.dumps(example,ensure_ascii=False)},
                 {'role':'assistant','content':json.dumps(example_reply,ensure_ascii=False)},
                 {'role':'user','content':json.dumps(payload,ensure_ascii=False)}],max_tokens=1400)
-            result.points=_model_points(reply,result.sources)
+            rejected = []
+            result.points=_model_points(reply,result.sources,rejected=rejected)
+            result.rejected_points_count = len(rejected)
             if result.points:
                 result.mode='ai'
+                if rejected:
+                    result.warnings.append(f'已保留通过原文核验的 AI 要点，另有 {len(rejected)} 个要点未通过检查并已移除；当前回答可能不完整。')
             else:
                 result.commands=[]
                 result.missing.append('当前原文片段不足以直接回答这个具体问题，请补充相关文件名、命令或任务范围。')

@@ -102,10 +102,12 @@ export function rememberLearningGuide(guide: Guide, storage: ProgressStorage): b
     // Store the guide only. Follow-up logs, question history and settings are
     // separate component state and never enter this snapshot.
     const { repo_url, owner, repo, default_branch, unsuitable, reasons, steps, generation_mode,
-      stage_modes, requested_mode, model_timeout_s, stage_fallbacks, issue_discovery, model_request_attempts, model_disconnect_retries } = guide
+      stage_modes, requested_mode, model_timeout_s, stage_fallbacks, issue_discovery, model_request_attempts, model_disconnect_retries,
+      generation_strategy, model_service_retries } = guide
     const warnings = (guide.warnings ?? []).filter((w) => !w.startsWith('已保存指南仅在本机展示'))
     const raw = JSON.stringify({ repo_url, owner, repo, default_branch, unsuitable, reasons, steps,
-      generation_mode, stage_modes, requested_mode, model_timeout_s, stage_fallbacks, issue_discovery, model_request_attempts, model_disconnect_retries, warnings })
+      generation_mode, stage_modes, requested_mode, model_timeout_s, stage_fallbacks, issue_discovery, model_request_attempts, model_disconnect_retries,
+      generation_strategy, model_service_retries, warnings })
     if (raw.length > 2_000_000) return false
     if (storage.getItem(LAST_GUIDE_KEY) !== raw) storage.setItem(LAST_GUIDE_KEY, raw)
     return true

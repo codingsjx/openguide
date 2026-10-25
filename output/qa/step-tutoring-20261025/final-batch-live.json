@@ -1,0 +1,446 @@
+{
+  "repo_url": "https://github.com/codingsjx/ai-software",
+  "owner": "codingsjx",
+  "repo": "ai-software",
+  "default_branch": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "unsuitable": false,
+  "reasons": [
+    "星标 2 较少；社区规模不能单独判断贡献价值",
+    "采集到近 30 天 0 次提交；仅凭提交数量无法判断是否有人维护，请核对 issue 回复与发布记录",
+    "有 README，入门信息基础具备",
+    "本次未发现候选新手任务，需进一步查看社区贡献入口",
+    "缺少可识别的开源许可证"
+  ],
+  "steps": [
+    {
+      "step_id": 1,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "取得本地副本，核对仓库获取方式",
+      "generation_source": "rules",
+      "ai_explanation": "本步骤的目的在于取得本地仓库副本并核对其获取方式。通用 Git 起步是工具提供的标准提示，仓库原文未提供已核验的克隆说明，因此仍需核对仓库要求以确保获取方式正确。",
+      "ai_explanation_basis": "general",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "仓库原文未提供已核验的克隆说明，可查看下方“通用 Git 起步”。那是工具提供的标准操作提示，仓库特殊获取要求仍需核对。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "未取得可核验的对应操作说明"
+      }
+    },
+    {
+      "step_id": 2,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "核对 README.md 中的运行时与工具要求",
+      "generation_source": "rules",
+      "ai_explanation": "核对 README.md 中的运行时与工具要求。先按原文检查是否指定 Python 3.12 及 backend/requirements.txt 依赖，再判断环境满足这些条件后可进行依赖安装。已有环境需核对版本符合要求才能继续。",
+      "ai_explanation_basis": "repository",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "先按原文核对运行时版本及所需工具，再进行该组件的依赖安装。安装方法未在本步骤执行；已有环境也要核对版本。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "uv run --python 3.12 --with-requirements backend/requirements.txt pytest backend\\tests -q",
+        "verification": "quote_verified",
+        "line_start": 108,
+        "line_end": 108,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 3,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文准备本地环境配置",
+      "generation_source": "rules",
+      "ai_explanation": "本步骤的目的在于按原文准备本地环境配置。先检查本地是否存在 .env 文件，再核对原文复制 .env.example 到 .env 的要求，确保未覆盖已有配置并填写必要内容后才能继续。",
+      "ai_explanation_basis": "repository",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "先检查本地配置是否已存在，再按原文复制模板并填写所需配置；不要覆盖已有配置或在聊天、日志中发送密钥。此步骤尚未执行。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "Copy-Item .env.example .env",
+        "verification": "quote_verified",
+        "line_start": 37,
+        "line_end": 37,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 4,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文创建开发环境",
+      "generation_source": "rules",
+      "ai_explanation": "本步骤的目的在于创建开发环境。按原文操作 uv venv --python 3.12 .venv 后，核对退出码与输出是否正常，再判断是否可以继续后续步骤。",
+      "ai_explanation_basis": "repository",
+      "command": "uv venv --python 3.12 .venv",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "由同一代码块中的相对输入路径与已取得文件树匹配推导；仍需核对平台及前置配置。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "uv venv --python 3.12 .venv",
+        "verification": "command_verified",
+        "line_start": 48,
+        "line_end": 48,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 5,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文安装依赖（请核对组件及开发用途）",
+      "generation_source": "rules",
+      "ai_explanation": "本步骤的目的在于安装依赖。按原文在 .venv 中执行 uv pip install --python .venv -r backend\\requirements.txt，核对退出码与输出是否正常，再判断是否可以继续启用前端包管理工具。",
+      "ai_explanation_basis": "repository",
+      "command": "uv pip install --python .venv -r backend\\requirements.txt",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "document_context",
+      "required_paths": [
+        "backend/requirements.txt"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        4
+      ],
+      "context_notes": [
+        "由同一代码块中的相对输入路径与已取得文件树匹配推导；仍需核对平台及前置配置。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "uv pip install --python .venv -r backend\\requirements.txt",
+        "verification": "command_verified",
+        "line_start": 49,
+        "line_end": 49,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 6,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文启用前端包管理工具",
+      "generation_source": "rules",
+      "ai_explanation": "本步骤的目的在于启用前端包管理工具。按原文在 frontend 目录执行 corepack enable 后，核对命令是否成功并输出结果，再判断是否可以继续整个开发环境准备流程。",
+      "ai_explanation_basis": "repository",
+      "command": "corepack enable",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "frontend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "corepack enable",
+        "verification": "command_verified",
+        "line_start": 61,
+        "line_end": 61,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 7,
+      "stage": "A",
+      "stage_label": "环境搭建",
+      "title": "按原文安装依赖（请核对组件及开发用途）",
+      "generation_source": "rules",
+      "ai_explanation": "本步目的：按原文核对前置条件和执行目录后操作。需核对组件及开发用途。判断可以继续：确认当前目录为frontend，且已安装pnpm，依赖文件齐全。",
+      "ai_explanation_basis": "repository",
+      "command": "pnpm install --frozen-lockfile",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "frontend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "pnpm install --frozen-lockfile",
+        "verification": "command_verified",
+        "line_start": 62,
+        "line_end": 62,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 8,
+      "stage": "B",
+      "stage_label": "测试基线",
+      "title": "按原文运行测试（先核对组件与范围）",
+      "generation_source": "rules",
+      "ai_explanation": "本步目的：按原文核对前置条件和执行目录后操作。需核对组件与范围。判断可以继续：确认当前目录为根目录，且uv环境已准备好，requirements.txt存在。",
+      "ai_explanation_basis": "repository",
+      "command": "uv run --python 3.12 --with-requirements backend/requirements.txt pytest backend\\tests -q",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": ".",
+      "directory_basis": "document_context",
+      "required_paths": [
+        "backend/requirements.txt",
+        "backend/tests"
+      ],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        4,
+        5
+      ],
+      "context_notes": [
+        "由同一代码块中的相对输入路径与已取得文件树匹配推导；仍需核对平台及前置配置。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。",
+        "核对测试输出中的失败、跳过与未选中项，并确认实际运行了预期用例。"
+      ],
+      "expected": "按原文核对前置条件和执行目录后操作；记录实际退出码与输出，本指南没有执行该命令。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "uv run --python 3.12 --with-requirements backend/requirements.txt pytest backend\\tests -q",
+        "verification": "command_verified",
+        "line_start": 108,
+        "line_end": 108,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 9,
+      "stage": "B",
+      "stage_label": "测试基线",
+      "title": "按原文进行构建检查（不等同测试）",
+      "generation_source": "rules",
+      "ai_explanation": "本步目的：核对组件目录与依赖后进行构建。需核对组件目录与依赖后操作。判断可以继续：确认当前目录为frontend，且依赖已安装完成。",
+      "ai_explanation_basis": "repository",
+      "command": "pnpm build",
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": "frontend",
+      "directory_basis": "document_context",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [
+        7
+      ],
+      "context_notes": [
+        "依据同一代码块中位于该命令之前的目录切换语句；请在新的终端按原文切换目录。"
+      ],
+      "success_checks": [
+        "命令正常结束且退出码为 0；这只是基础执行检查，不代表功能效果已经验证。"
+      ],
+      "expected": "核对组件目录与依赖后进行构建，记录退出码和构建输出；构建成功不等同测试通过，本指南未执行。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "file",
+        "source": "README.md",
+        "quote": "pnpm build",
+        "verification": "command_verified",
+        "line_start": 110,
+        "line_end": 110,
+        "reason": "原文匹配不等于命令已运行或建议语义正确"
+      }
+    },
+    {
+      "step_id": 10,
+      "stage": "C",
+      "stage_label": "挑选 issue",
+      "title": "查看任务检索入口，记录待核对的小范围任务",
+      "generation_source": "rules",
+      "ai_explanation": "本步目的：查看任务候选与 GitHub 检索入口。通用准备，仍需核对仓库要求。判断可以继续：无候选时可人工选题，记录问题、范围和原始来源，再核对维护者规则。",
+      "ai_explanation_basis": "general",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "查看任务候选与 GitHub 检索入口；没有候选时可人工选题，记录问题、范围和原始来源，再核对维护者规则。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "未取得可核验的对应操作说明"
+      }
+    },
+    {
+      "step_id": 11,
+      "stage": "D",
+      "stage_label": "首次 PR 路径",
+      "title": "待确认仓库 PR 规范与提交要求",
+      "generation_source": "rules",
+      "ai_explanation": "本步目的：待确认仓库 PR 规范与提交要求。通用准备，仍需核对仓库要求。判断可以继续：先按通用准备清单整理任务、实际改动和测试记录，提交前仍需核对维护者要求。",
+      "ai_explanation_basis": "general",
+      "command": null,
+      "original_command": null,
+      "command_derivation": "",
+      "execution_record": null,
+      "original_stage": null,
+      "working_directory": null,
+      "directory_basis": "unknown",
+      "required_paths": [],
+      "missing_inputs": [],
+      "prerequisite_step_ids": [],
+      "context_notes": [],
+      "success_checks": [],
+      "expected": "未取得可核验的仓库专属 PR 规范。可先按下方通用准备清单整理任务、实际改动和测试记录；提交前仍需核对维护者要求。",
+      "fail_hints": [],
+      "evidence": {
+        "kind": "missing",
+        "source": "",
+        "quote": "",
+        "verification": "missing",
+        "line_start": null,
+        "line_end": null,
+        "reason": "未取得可核验的对应操作说明"
+      }
+    }
+  ],
+  "generation_mode": "mixed",
+  "generation_strategy": "source_then_explain",
+  "stage_modes": {
+    "A": "mixed",
+    "B": "mixed",
+    "C": "mixed",
+    "D": "mixed"
+  },
+  "requested_mode": "ai",
+  "model_timeout_s": null,
+  "model_request_attempts": 5,
+  "model_disconnect_retries": 2,
+  "model_service_retries": 0,
+  "stage_fallbacks": {},
+  "warnings": [
+    "文件证据固定于提交 5748df628098830b6c228f936ae5484e9a0de7a1；issue 信息是独立采集的快照，操作前需核对最新状态。",
+    "挑选 issue阶段未保留可核验依据，已补充仓库原文规则入口或待确认项。",
+    "已取得 11/11 步 AI 讲解。操作、目录、出处和前置关系由原文规则固定；AI 讲解不等于执行验证。"
+  ],
+  "issue_discovery": {
+    "status": "empty",
+    "reason": "本次标签检索和有限开放 issue 采样没有取得可用候选，不代表仓库没有任务。可查看最新检索结果，或从贡献规范中选择并说明一个小范围任务。",
+    "sampled_at": "2026-10-24T11:45:07.997048+00:00",
+    "sampled_count": 0,
+    "blocked_count": 0,
+    "candidates": [],
+    "search_links": [
+      {
+        "label": "good first issue",
+        "url": "https://github.com/codingsjx/ai-software/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
+      },
+      {
+        "label": "help wanted",
+        "url": "https://github.com/codingsjx/ai-software/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22"
+      },
+      {
+        "label": "全部开放 issue",
+        "url": "https://github.com/codingsjx/ai-software/issues?q=is%3Aissue+is%3Aopen"
+      }
+    ]
+  }
+}

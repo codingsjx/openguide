@@ -13,6 +13,19 @@ const guide = () => ({ repo_url: 'https://github.com/o/r', default_branch: 'a'.r
 ] })
 const memory = () => { const values = new Map(); return { values, getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) } }
 
+test('new AI explanations preserve exact workflow progress and survive saved snapshots', () => {
+  const g = guide(), store = memory(), p = emptyLearningProgress(g)
+  p.records['1'] = { status: 'done', note: 'my original result' }
+  saveLearningProgress(p, store)
+  const enriched = { ...g, generation_strategy: 'source_then_explain', model_service_retries: 1,
+    steps: g.steps.map(s => ({ ...s, ai_explanation: 'Explanation', ai_explanation_basis: 'repository' })) }
+  assert.equal(learningIdentity(enriched), learningIdentity(g))
+  assert.deepEqual(loadLearningProgress(enriched, store).records, p.records)
+  rememberLearningGuide(enriched, store)
+  assert.equal(JSON.parse(lastLearningGuide(store)).generation_strategy, 'source_then_explain')
+  assert.equal(JSON.parse(lastLearningGuide(store)).steps[0].ai_explanation, 'Explanation')
+})
+
 test('returning to the same guide restores the current step and manual notes', () => {
   const g = guide(), store = memory(), p = emptyLearningProgress(g)
   p.currentStepId = 2; p.records['1'] = { status: 'done', note: 'Dependencies prepared in backend' }

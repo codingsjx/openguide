@@ -4,11 +4,6 @@ import { ApiOutlined } from '@ant-design/icons'
 
 import { api } from '../../api/client'
 
-const DEFAULTS = {
-  base: 'https://api.openai.com/v1',
-  model: 'gpt-5.5',
-}
-
 export default function LlmSettings() {
   const [open, setOpen] = useState(false)
   const [configured, setConfigured] = useState(false)
@@ -34,8 +29,8 @@ export default function LlmSettings() {
     try {
       const r = await api.setLlmConfig({
         api_key: v.api_key ?? '',
-        base_url: v.base_url || DEFAULTS.base,
-        model: v.model || DEFAULTS.model,
+        base_url: v.base_url?.trim() || '',
+        model: v.model?.trim() || '',
       })
       setConfigured(r.configured)
       form.resetFields(['api_key'])
@@ -53,7 +48,7 @@ export default function LlmSettings() {
         onClick={() => setOpen(true)}
         icon={<ApiOutlined />}
       >
-        <span className={`llm-status-dot${configured ? '' : ' unconfigured'}`} />{configured ? '模型已配置' : '配置模型'}
+        <span className={`llm-status-dot${configured ? '' : ' unconfigured'}`} />{configured ? '模型配置（已填写）' : '配置模型'}
       </Button>
       <Modal
         title="设置 LLM（你自己的中转/官方 API）"
@@ -66,19 +61,20 @@ export default function LlmSettings() {
         <p style={{ color: '#888' }}>
           Key 会发送到当前后端，只在本页面会话对应的服务器内存中保留，不写入文件。刷新页面、后端重启或闲置 30 分钟后需重新填写；其他页面不会继承此配置。公网部署还需访问控制与用量限制。
         </p>
+        <p>留空的设置沿用本页或后端配置，不会自动替换接口。已填写配置不代表模型服务当前可用。</p>
         <Form form={form} layout="vertical">
           <Form.Item
             name="api_key"
             label="API Key"
-            rules={[{ required: true, message: '请输入 API Key' }]}
+            rules={[{ required: !configured, message: '请输入 API Key' }]}
           >
             <Input.Password placeholder="sk-..." />
           </Form.Item>
-          <Form.Item name="base_url" label="Base URL" initialValue={DEFAULTS.base}>
-            <Input placeholder="https://api.openai.com/v1" />
+          <Form.Item name="base_url" label="Base URL">
+            <Input placeholder="留空沿用现有接口" />
           </Form.Item>
-          <Form.Item name="model" label="模型" initialValue={DEFAULTS.model}>
-            <Input placeholder="gpt-5.5" />
+          <Form.Item name="model" label="模型">
+            <Input placeholder="留空沿用现有模型" />
           </Form.Item>
         </Form>
         <Space direction="vertical" size={4}>
