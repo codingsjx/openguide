@@ -6,15 +6,18 @@ export default function LearningOverview({ guide, step, progress, onGo, onDownlo
   guide: Guide; step: GuideStep; progress: LearningProgress; onGo: (id: number) => void; onDownload: () => void; onDownloadGuide: () => void; storageFailed: boolean
 }) {
   const counts = { done: 0, blocked: 0, skipped: 0 }
+  let executionRecords = 0
   for (const item of guide.steps) {
     const status = progress.records[String(item.step_id)]?.status
     if (status && status !== 'pending') counts[status]++
+    const execution = progress.records[String(item.step_id)]?.execution
+    if (execution && execution.status !== 'unrecorded') executionRecords++
   }
   return <Card size="small" style={{ marginBottom: 12, background: '#f4faf8' }}>
     <Typography.Text strong>本阶段要达到什么</Typography.Text>
     <Typography.Paragraph style={{ marginTop: 6, marginBottom: 8 }}>{phaseGoals[step.stage]}</Typography.Paragraph>
     <Space wrap><Tag color={counts.done ? 'green' : undefined}>自行核对 {counts.done}/{guide.steps.length}</Tag><Tag color={counts.blocked ? 'orange' : undefined}>卡住 {counts.blocked}</Tag><Tag>暂缓 {counts.skipped}</Tag><Button size="small" onClick={onDownload}>导出学习记录</Button>{guide.is_saved && <Button size="small" onClick={onDownloadGuide}>保存当前指南 JSON</Button>}</Space>
-    <Typography.Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 6 }}>手动记录，不代表工具执行验证。</Typography.Paragraph>
+    <Typography.Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 6 }}>已填写执行情况 {executionRecords} 项（含未运行、失败和超时），与阅读核对进度独立；均为用户记录，不代表工具执行验证。</Typography.Paragraph>
     {storageFailed && <Typography.Paragraph type="warning">当前无法保存部分本机数据，请离开前导出记录和指南。</Typography.Paragraph>}
     <details style={{ marginBottom: 6 }}>
       <summary style={{ cursor: 'pointer' }}>本机保存与恢复说明</summary>

@@ -55,7 +55,8 @@ export default function GuideGenerator({ initialUrl, initialUseLlm = true }: { i
     activeRequest.current = controller
     setElapsed(0)
     setLoading(true)
-    setGuide(null)
+    // Keep the current guide and its contribution work visible until the new
+    // result succeeds. Session memory also survives a changed workflow key.
     setError(null)
     setCancelled(false)
     const seconds = timeoutRef.current
@@ -130,7 +131,7 @@ export default function GuideGenerator({ initialUrl, initialUseLlm = true }: { i
 
       <Modal title="AI 请求超时设置" open={timeoutOpen} onCancel={() => setTimeoutOpen(false)} onOk={applyTimeout}
         okText="保存设置" cancelText="取消" okButtonProps={{ disabled: !isGuideTimeout(timeoutDraft) }}>
-        <Paragraph>设置贡献指南每个阶段的模型网络等待时间，支持 {MIN_GUIDE_TIMEOUT}–{MAX_GUIDE_TIMEOUT} 秒。</Paragraph>
+        <Paragraph>设置贡献指南每批讲解的模型网络等待时间，支持 {MIN_GUIDE_TIMEOUT}–{MAX_GUIDE_TIMEOUT} 秒。</Paragraph>
         <Space wrap style={{ marginBottom: 16 }}>
           {[25, 45, 60, 90, 120].map((seconds) => <Button key={seconds} type={timeoutDraft === seconds ? 'primary' : 'default'} onClick={() => setTimeoutDraft(seconds)}>{seconds} 秒</Button>)}
         </Space>
@@ -171,6 +172,8 @@ export default function GuideGenerator({ initialUrl, initialUseLlm = true }: { i
 
       {guide && (
         <div style={{ marginTop: 8 }}>
+          {loading && <Alert showIcon type="info" style={{ marginBottom: 12 }} message="正在更新，下方保留上一份指南与本页准备记录"
+            description={`当前显示 ${guide.owner}/${guide.repo} · ${guide.default_branch.slice(0, 12)}；新结果返回前不会用它代替新仓库资料。`} />}
           <div className="guide-metadata">
             {guide.unsuitable && <Tag color="red">暂不建议贡献</Tag>}
             <Tag>{guide.steps.length} 步</Tag>
@@ -178,8 +181,8 @@ export default function GuideGenerator({ initialUrl, initialUseLlm = true }: { i
             <Button size="small" onClick={() => downloadGuide(guide)}>保存指南 JSON</Button>
           </div>
           <GuideWizard guide={guide} url={guide.repo_url}
-            onRegenerateAi={() => generate(guide.repo_url, true)}
-            onRegenerate={() => generate(guide.repo_url, guide.requested_mode !== 'rules')} />
+            onRegenerateAi={loading ? undefined : () => generate(guide.repo_url, true)}
+            onRegenerate={loading ? undefined : () => generate(guide.repo_url, guide.requested_mode !== 'rules')} />
         </div>
       )}
     </div>

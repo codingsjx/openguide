@@ -4,6 +4,7 @@ export const fallbackLabels: Record<string, string> = {
   not_configured: '生成时未配置模型', model_timeout: '模型请求超时',
   model_auth_failed: '模型服务拒绝认证或权限', model_rate_limited: '模型服务限流',
   model_error: '模型请求未完成', invalid_output: '模型输出格式或步骤无效',
+  model_abstained: '模型未提供解释，已保留原文操作',
   model_transport_error: '模型连接中断或网络不可达',
   model_service_unavailable: '模型服务暂不可用（502/503/504）',
   explanation_unverified: '本步 AI 讲解未完成或未通过检查',

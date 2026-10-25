@@ -163,6 +163,7 @@ def collect_sources(sig: RawSignals, index: RepoIndex, intents: list[str], query
         hits = index.search(query + '\n' + QUERIES[intent] + ('\n'+component if component else ''), kind=intent, top_k=12).hits
         # Dev installation and test entry points outrank release workflows.
         hits.sort(key=lambda h: (
+            _asks_for_operation(query) and intent in {'setup','test'} and any(re.match(_STAGE_CMD_PATTERNS['A' if intent=='setup' else 'B'],line.strip()) for line in h.text.splitlines()),
             component is not None and path_component(str((h.meta or {}).get('source',''))) == component,
             not str((h.meta or {}).get('source','')).startswith('.github/workflows/'),
             bool(re.search(r'requirements-dev|python -m pytest|pytest tests|npm test', h.text)), h.score), reverse=True)
@@ -173,7 +174,7 @@ def collect_sources(sig: RawSignals, index: RepoIndex, intents: list[str], query
             bounds, text = None, hit.text
             doc = next((d for d in sig.doc_files if d.path == path.split('#',1)[0]),None)
             if doc and intent in {'setup','test'}:
-                scoped = component_excerpt(doc.text.replace('\r\n','\n').replace('\r','\n'),path,text,component)
+                scoped = component_excerpt(doc.text.replace('\r\n','\n').replace('\r','\n'),path,text,component,intent if _asks_for_operation(query) else None)
                 if scoped is None: continue
                 text,bounds = scoped
             item = _source(sig, path, text, intent, bounds)
@@ -217,11 +218,17 @@ def literal_commands(sig: RawSignals, index: RepoIndex, sources: list[AnswerSour
             if not step.command or step.evidence.verification != 'command_verified': continue
             actual_component=path_component(step.working_directory or '')
             if component and actual_component and actual_component != component: continue
+            command_components=component_mentions(step.command)
+            if component and command_components and component not in command_components: continue
             source = next((s for s in sources if s.source == step.evidence.source.split('#',1)[0] and step.command in s.quote), None)
             if source and not any(c.command == step.command for c in result):
                 result.append(AnswerCommand(command=step.command,citation=source.id,
                     working_directory=step.working_directory,directory_basis=step.directory_basis))
     return result[:4]
+
+
+def _asks_for_operation(question: str) -> bool:
+    return bool(re.search(r'怎么(?:安装|运行|执行|测试)|如何(?:安装|运行|执行|测试)|运行|执行|安装|命令|目录|哪里|\b(?:run|install|command|directory|where)\b',question,re.I))
 
 
 _SYSTEM = (
@@ -315,6 +322,7 @@ def answer_question(sig: RawSignals, index: RepoIndex, question: str, history: l
         citations=list(dict.fromkeys(c.citation for c in result.commands if c.working_directory==directory))
         result.points.append(AnswerPoint(text=f'原文操作的建议执行位置：{"仓库根目录" if directory=="." else directory}。这是按原文上下文推导的位置，命令尚未执行。',citations=citations))
     result.mode='extractive'
+    extractive_points=list(result.points)
     if client and client.available() and any(s.verification == 'literal_quote' for s in result.sources):
         try:
             payload={'question':question,'resolved_question':resolved,'sources':[s.model_dump(include={'id','source','quote','verification','note'}) for s in result.sources]}
@@ -334,8 +342,13 @@ def answer_question(sig: RawSignals, index: RepoIndex, question: str, history: l
                 if rejected:
                     result.warnings.append(f'已保留通过原文核验的 AI 要点，另有 {len(rejected)} 个要点未通过检查并已移除；当前回答可能不完整。')
             else:
-                result.commands=[]
-                result.missing.append('当前原文片段不足以直接回答这个具体问题，请补充相关文件名、命令或任务范围。')
+                if result.commands and _asks_for_operation(resolved):
+                    result.points=extractive_points
+                    result.fallback_reason='model_abstained'
+                    result.warnings.append('模型未提供可核验解释；已保留独立匹配的原文操作及目录，尚未执行。')
+                else:
+                    result.commands=[]
+                    result.missing.append('当前原文片段不足以直接回答这个具体问题，请补充相关文件名、命令或任务范围。')
         except LLMUnavailable as exc:
             result.fallback_reason = 'answer_unverified' if str(exc).startswith('问答') else _fallback_reason(exc)
             result.verification_issue = {

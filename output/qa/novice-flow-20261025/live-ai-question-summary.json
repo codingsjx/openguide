@@ -1,0 +1,18 @@
+{
+  "http_status": 200,
+  "mode": "extractive",
+  "fallback_reason": "model_transport_error",
+  "verification_issue": "",
+  "retained_points": 2,
+  "rejected_points": 0,
+  "commands": [
+    {
+      "command": "uv run --python 3.12 --with-requirements backend/requirements.txt pytest backend\\tests -q",
+      "citation": "S1",
+      "working_directory": ".",
+      "directory_basis": "document_context"
+    }
+  ],
+  "elapsed_s": 7.391,
+  "human_participants": 0
+}

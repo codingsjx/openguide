@@ -1,0 +1,10 @@
+{
+  "repo": "codingsjx/ai-software",
+  "revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "scenario": "Enter the same test task, move C to D, regenerate in rule mode",
+  "before_code": "58958ba",
+  "before_task_retained": false,
+  "after_task_retained": true,
+  "external_model_calls": 0,
+  "human_participants": 0
+}

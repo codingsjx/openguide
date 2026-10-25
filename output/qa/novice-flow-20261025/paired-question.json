@@ -1,0 +1,18 @@
+{
+  "source_revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "before_code": "58958ba",
+  "after_source_digest": "00832e76cde6e14952540b9fe9f4e2a2d1937744a579c79bb7292f1bff4581fe",
+  "case": "same fixed snapshot, same question, local retrieval; no external model calls",
+  "before_commands": [],
+  "after_commands": [
+    {
+      "command": "uv run --python 3.12 --with-requirements backend/requirements.txt pytest backend\\tests -q",
+      "citation": "S1",
+      "working_directory": ".",
+      "directory_basis": "document_context"
+    }
+  ],
+  "empty_ai_keeps_after_commands": true,
+  "empty_ai_mode": "extractive",
+  "empty_ai_reason": "model_abstained"
+}

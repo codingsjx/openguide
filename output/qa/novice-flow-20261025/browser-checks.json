@@ -1,0 +1,21 @@
+{
+  "same_guide_regeneration_keeps_all_fields": true,
+  "other_repository_isolated": true,
+  "returning_repository_restores_task": true,
+  "returning_repository_restores_draft": true,
+  "failed_update_keeps_task": true,
+  "failed_update_keeps_draft": true,
+  "final_preparation_unchanged": true,
+  "actual_patch_included": true,
+  "agent_verification_only": true,
+  "human_participants": 0,
+  "upstream_pr_submitted": false,
+  "export_import_draft_exact_match": true,
+  "narrow_viewport_check": {
+    "client_width": 304,
+    "scroll_width": 304
+  },
+  "exploration_opens_real_step": true,
+  "exploration_return_keeps_task": true,
+  "exploration_return_keeps_draft": true
+}

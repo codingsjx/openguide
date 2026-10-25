@@ -537,7 +537,8 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
           </Card>
         )}
 
-        {!guide.is_demo && <ContributionWorkbench guide={guide} stage={step?.stage ?? ''} />}
+        {!guide.is_demo && <ContributionWorkbench guide={guide} stage={step?.stage ?? ''} records={progress.records}
+          onExploreStep={(id) => goToIndex(steps.findIndex(s => s.step_id === id))} />}
 
         {allDone && (
           <Alert
@@ -565,7 +566,7 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
           {current < steps.length - 1 && <Button onClick={() => goToIndex(current + 1)}>仅查看下一步</Button>}
           {current < steps.length - 1 ? (
             <Button type="primary" onClick={markDone}>
-              记录完成并继续 <RightOutlined />
+              记为已核对并继续 <RightOutlined />
             </Button>
           ) : (
             <Button type="primary" icon={<CheckCircleOutlined />} disabled={allDone} onClick={markDone}>

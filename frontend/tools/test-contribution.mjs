@@ -5,9 +5,78 @@ import ts from 'typescript'
 
 const source = await readFile(new URL('../src/types/contribution.ts', import.meta.url), 'utf8')
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
-const { emptyContribution, contributionProblems, buildContributionDraft, changedFiles, contributionPreparationJson, parseContributionPreparation } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
+const { emptyContribution, contributionProblems, buildContributionDraft, changedFiles, contributionPreparationJson, parseContributionPreparation, referencedExecutions, taskExplorationEntries } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
 const guide = { repo_url: 'https://github.com/o/r', default_branch: 'a'.repeat(40), steps: [] }
-const input = () => ({ ...emptyContribution(), task: 'Document prerequisites', issueUrl: guide.repo_url + '/issues/3', problem: 'Instructions omit a prerequisite', changeSummary: 'Added the prerequisite', files: 'CONTRIBUTING.md' })
+const input = () => ({ ...emptyContribution(), task: 'Document prerequisites', issueUrl: guide.repo_url + '/issues/3', problem: 'Instructions omit a prerequisite', acceptance: 'The documented prerequisite matches the actual setup requirement', changeSummary: 'Added the prerequisite', files: 'CONTRIBUTING.md', testDirectory: 'backend', testScope: 'related tests only' })
+
+test('a direction or plan never substitutes for actual change and verification', () => {
+  const f = { ...emptyContribution(), kind: 'bug', task: 'Investigate a failure', problem: 'Reproduction is still pending', acceptance: 'The same reproducer succeeds after the fix' }
+  assert.throws(() => buildContributionDraft(guide, f), /尚未修改/)
+  assert.throws(() => buildContributionDraft(guide, { ...input(), acceptance: '' }), /验收标准/)
+})
+
+test('pre-change observations and later verification remain separate in a draft', () => {
+  const f = { ...input(), baselineNotes: 'Original version failed at step 2', verificationNotes: 'Earlier environment check passed; subset only' }
+  const draft = buildContributionDraft(guide, f)
+  assert.match(draft, /本次改动未运行测试/)
+  assert.match(draft, /不能代替本次改动后的验证/)
+  assert.match(draft, /Original version failed/)
+  assert.match(draft, /验收标准（计划/)
+})
+
+test('manual completion creates no execution reference; failures retain exact details', () => {
+  const g = { ...guide, steps: [{ step_id: 1, title: 'Test backend' }] }
+  assert.equal(referencedExecutions(g, { 1: { status: 'done', note: 'read' } }), '')
+  const failed = { status: 'failed', command: 'pytest tests/unit -q', directory: 'backend', scope: 'one subset', exitCode: '1', summary: '2 failed; full suite not run' }
+  const text = referencedExecutions(g, { 1: { status: 'done', note: '', execution: failed } })
+  assert.match(text, /用户记录失败/)
+  assert.match(text, /2 failed; full suite not run/)
+  assert.ok(text.includes(guide.default_branch))
+  assert.doesNotMatch(text, /用户记录通过/)
+})
+
+test('legacy preparations import without inventing acceptance criteria or execution scope', () => {
+  const raw = JSON.parse(contributionPreparationJson(guide, input()))
+  delete raw.input.acceptance; delete raw.input.testScope; delete raw.input.kind
+  const restored = parseContributionPreparation(JSON.stringify(raw), guide).input
+  assert.equal(restored.kind, 'unspecified')
+  assert.equal(restored.acceptance, '')
+  assert.equal(restored.testScope, '')
+  assert.ok(contributionProblems(guide, restored).some(p => p.includes('验收标准')))
+})
+
+test('successful post-change records require the actual directory and tested scope', () => {
+  const f = { ...input(), testStatus: 'passed', testCommand: 'pytest tests -q', testExitCode: '0', testOutput: '8 passed' }
+  assert.throws(() => buildContributionDraft(guide, { ...f, testDirectory: '' }), /目录、范围/)
+  assert.throws(() => buildContributionDraft(guide, { ...f, testScope: '' }), /目录、范围/)
+  assert.match(buildContributionDraft(guide, f), /验证范围：related tests only/)
+})
+
+test('task-card observations round-trip but invalid task kinds are rejected', () => {
+  const f = { ...input(), kind: 'tests', outOfScope: 'No unrelated components', baselineNotes: 'Existing behavior reproduced' }
+  const raw = contributionPreparationJson(guide, f)
+  assert.deepEqual(parseContributionPreparation(raw, guide).input, f)
+  const changed = JSON.parse(raw); changed.input.kind = 'already_merged'
+  assert.throws(() => parseContributionPreparation(JSON.stringify(changed), guide), /任务方向/)
+})
+
+test('exploration reuses exact verified test operations and source lines', () => {
+  const g = { ...guide, steps: [{ step_id: 2, stage: 'B', title: 'Backend', command: 'uv run pytest tests/ -q', working_directory: 'backend', evidence: { kind: 'file', source: 'backend/README.md', verification: 'command_verified', line_start: 12 } }] }
+  const entries = taskExplorationEntries(g, 'tests')
+  assert.equal(entries.length, 1)
+  assert.equal(entries[0].command, g.steps[0].command)
+  assert.equal(entries[0].directory, 'backend')
+  assert.equal(entries[0].href, guide.repo_url+'/blob/'+guide.default_branch+'/backend/README.md#L12')
+})
+
+test('exploration never invents tests from file existence, guessed paths or mutable refs', () => {
+  const g = { ...guide, steps: [{ step_id: 1, stage: 'B', command: 'pytest fabricated', evidence: { kind: 'file', source: 'README.md', verification: 'source_exists' } }] }
+  assert.deepEqual(taskExplorationEntries(g, 'bug'), [])
+  g.steps[0].evidence.verification = 'command_verified'; g.steps[0].evidence.source = '../../other.md'
+  assert.deepEqual(taskExplorationEntries(g, 'bug'), [])
+  g.steps[0].evidence.source = 'README.md'; g.default_branch = 'main'
+  assert.deepEqual(taskExplorationEntries(g, 'bug'), [])
+})
 
 test('a task without actual change records cannot become a draft', () => {
   assert.ok(contributionProblems(guide, emptyContribution()).length >= 3)

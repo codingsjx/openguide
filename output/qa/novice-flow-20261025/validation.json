@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "58958ba2631d9d60ca7f19e40d30a23d64b3de24",
+  "backend_source_digest": "00832e76cde6e14952540b9fe9f4e2a2d1937744a579c79bb7292f1bff4581fe",
+  "frontend_source_digest": "5cb3b9af7f0461814790b608d3f9e7ba24be296c43c1b78ed8b1206d3b14e877",
+  "checks": {
+    "backend_tests_passed": 340,
+    "benchmark_tests_passed": 36,
+    "frontend_tests_passed": 70,
+    "production_build_passed": true,
+    "lint_passed": true
+  },
+  "browser_checks": {
+    "same_guide_regeneration_keeps_all_fields": true,
+    "other_repository_isolated": true,
+    "returning_repository_restores_task": true,
+    "returning_repository_restores_draft": true,
+    "failed_update_keeps_task": true,
+    "failed_update_keeps_draft": true,
+    "final_preparation_unchanged": true,
+    "actual_patch_included": true,
+    "agent_verification_only": true,
+    "human_participants": 0,
+    "upstream_pr_submitted": false,
+    "export_import_draft_exact_match": true,
+    "narrow_viewport_check": {
+      "client_width": 304,
+      "scroll_width": 304
+    },
+    "exploration_opens_real_step": true,
+    "exploration_return_keeps_task": true,
+    "exploration_return_keeps_draft": true
+  },
+  "literature_status": "design references, not user outcomes",
+  "human_participants": 0,
+  "independent_semantic_review": "pending",
+  "upstream_pr_submitted": false,
+  "limitations": [
+    "The actual repair was implemented by the coding agent; the app recorded the task and prepared its local draft.",
+    "No timing or contribution-success improvement is inferred.",
+    "One live model request failed; verified source operations were retained.",
+    "An initial development-server module-cache problem was resolved; no credentials were exposed."
+  ],
+  "artifacts": [
+    {
+      "path": "agent-pr-draft.md",
+      "sha256": "ab7c1c29caaed46c0aad413bfe9fe9edbc9626f089a891a5327fbd043fe73fec"
+    },
+    {
+      "path": "agent-preparation-after.json",
+      "sha256": "e31fa7a05cdc0a0b21bad86b3f76f77ed9e69845ac71090e990a28ec533100c3"
+    },
+    {
+      "path": "agent-preparation-before.json",
+      "sha256": "e31fa7a05cdc0a0b21bad86b3f76f77ed9e69845ac71090e990a28ec533100c3"
+    },
+    {
+      "path": "agent-preparation-final.json",
+      "sha256": "e31fa7a05cdc0a0b21bad86b3f76f77ed9e69845ac71090e990a28ec533100c3"
+    },
+    {
+      "path": "browser-checks.json",
+      "sha256": "22f96f8ac9c0b101547b5232fc965eda952fdf639c031b8285e71603ff87e50d"
+    },
+    {
+      "path": "draft-preview.png",
+      "sha256": "271503af7153401aa5b7a47b0fe7e990559ed742612641f5cc8fac60ee19283b"
+    },
+    {
+      "path": "http-question-after.json",
+      "sha256": "61cb5c8cff320d18c0c43097dab4818d41aed10c40db2992bc6cb871aac0a5df"
+    },
+    {
+      "path": "live-ai-question-after.json",
+      "sha256": "b0ac2790b18b91870c014d4f63db3a2d91e1b66002a088240c49641649e0e108"
+    },
+    {
+      "path": "live-ai-question-summary.json",
+      "sha256": "9f85cbc69596b733a8071737ba5bd4f4b843d4448377cb19ed79fe307dbe123d"
+    },
+    {
+      "path": "paired-form-retention.json",
+      "sha256": "d84f05c20ab88ca0895ce2e5be0caf4e471ba1b337cfda847ec15d693ec73a25"
+    },
+    {
+      "path": "paired-question.json",
+      "sha256": "0980958064d3c2415f79dc5b5c0308849562441e63708d5dd3ce04e3c841d703"
+    },
+    {
+      "path": "question-after.json",
+      "sha256": "bb7a65ba4a2d55b9781938cb2438db168b882a94d8e31ae9fa4dc49cd99c7de1"
+    },
+    {
+      "path": "README.md",
+      "sha256": "6cc6456982261c75a7c8561aedd7908a2587efd4cf7efc9392399e6e4cf6f366"
+    },
+    {
+      "path": "task-card.png",
+      "sha256": "c9d98d41c06043f4b3a7063f084adc834e0b6237f89dacdab875f0917171e63f"
+    }
+  ]
+}

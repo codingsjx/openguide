@@ -1,0 +1,101 @@
+{
+  "repo_url": "https://github.com/codingsjx/ai-software",
+  "question": "后端测试应该在哪个目录运行？请用中文解释前置条件和如何检查结果。",
+  "resolved_question": "后端测试应该在哪个目录运行？请用中文解释前置条件和如何检查结果。",
+  "context_used": false,
+  "revision": "5748df628098830b6c228f936ae5484e9a0de7a1",
+  "intents": [
+    "test"
+  ],
+  "status": "answered",
+  "mode": "extractive",
+  "fallback_reason": "",
+  "verification_issue": "",
+  "rejected_points_count": 0,
+  "points": [
+    {
+      "text": "已找到可核对的测试入口：README.md。",
+      "citations": [
+        "S1"
+      ]
+    },
+    {
+      "text": "原文操作的建议执行位置：仓库根目录。这是按原文上下文推导的位置，命令尚未执行。",
+      "citations": [
+        "S1"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "command": "uv run --python 3.12 --with-requirements backend/requirements.txt pytest backend\\tests -q",
+      "citation": "S1",
+      "working_directory": ".",
+      "directory_basis": "document_context"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "kind": "file",
+      "source": "README.md",
+      "quote": "## Docker Compose\n\n先创建并填写 `.env`，然后：\n\n```powershell\ndocker compose up --build\n```\n\n前端为 `http://localhost:5173`，后端为 `http://localhost:8000`。Docker 镜像安装 Noto CJK 字体，保证 PDF 中文正常。\n\n## API 契约\n\n- `GET /api/v1/health`：服务、规则库版本、模型是否配置；永不返回密钥。\n- `POST /api/v1/assessments`：multipart 字段 `photos`、JSON 字符串 `room_labels`、JSON 字符串 `profile`、整数 `budget`。\n- `POST /api/v1/assessments/{id}/answers`：`{\"answers\":{\"fact_key\":true}}`。\n- `GET /api/v1/assessments/{id}`：获取状态、轨迹、追问和结果。\n- `GET /api/v1/assessments/{id}/report.pdf`：下载完成后的 PDF。\n\n## 测试和证据边界\n\n```powershell\nuv run --python 3.12 --with-requirements backend/requirements.txt pytest backend\\tests -q\nSet-Location frontend\npnpm build\n```\n\n评测汇总器读取人工标注 JSONL：",
+      "url": "https://github.com/codingsjx/ai-software/blob/5748df628098830b6c228f936ae5484e9a0de7a1/README.md#L87-L113",
+      "line_start": 87,
+      "line_end": 113,
+      "verification": "literal_quote",
+      "intents": [
+        "test"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S2",
+      "kind": "file",
+      "source": "README.md",
+      "quote": "```powershell\nuv run --python 3.12 --with-requirements backend/requirements.txt pytest backend\\tests -q\nSet-Location frontend\npnpm build\n```\n\n评测汇总器读取人工标注 JSONL：\n\n```powershell\nuv run --python 3.12 --with-requirements backend/requirements.txt python -m backend.evaluation backend\\tests\\fixtures\\evaluation-sample.jsonl\n```\n\n消融实验：同一批照片对比“单模型直出报告”与“分层四节点”。`fake` 用固定假实现只验证流程与指标口径，不反映模型质量：\n\n```powershell\nuv run --python 3.12 --with-requirements backend/requirements.txt python -m backend.ablation --provider fake --fixtures backend\\tests\\fixtures\\ablation-sample.jsonl\n# 真实模型对比（配置好 .env 后）：\nuv run --python 3.12 --with-requirements backend/requirements.txt python -m backend.ablation --provider auto\n```\n\n生成不调用模型的固定烟测报告（只验证流程与排版）：\n\n```powershell\nuv run --python 3.12 --with-requirements backend/requirements.txt python -m backend.generate_smoke_report\n```",
+      "url": "https://github.com/codingsjx/ai-software/blob/5748df628098830b6c228f936ae5484e9a0de7a1/README.md#L107-L131",
+      "line_start": 107,
+      "line_end": 131,
+      "verification": "literal_quote",
+      "intents": [
+        "test"
+      ],
+      "note": ""
+    },
+    {
+      "id": "S3",
+      "kind": "file",
+      "source": "backend/requirements.txt",
+      "quote": "fastapi==0.116.1\nuvicorn[standard]==0.35.0\npython-multipart==0.0.20\npydantic==2.11.7\nopenai==1.99.9\nPillow==11.3.0\nreportlab==4.4.3\nmatplotlib==3.10.5\nnumpy==2.3.2\nhttpx==0.28.1\npytest==8.4.1\npytest-asyncio==1.1.0",
+      "url": "https://github.com/codingsjx/ai-software/blob/5748df628098830b6c228f936ae5484e9a0de7a1/backend/requirements.txt#L1-L12",
+      "line_start": 1,
+      "line_end": 12,
+      "verification": "literal_quote",
+      "intents": [
+        "test"
+      ],
+      "note": ""
+    }
+  ],
+  "missing": [],
+  "next_actions": [
+    "打开下方原文，核对完整前置条件及当前开发环境。",
+    "若仍不明确，补充操作系统、具体任务或脱敏异常，并继续追问。",
+    "记录实际退出码、失败与跳过数量，区分局部测试和完整测试。"
+  ],
+  "warnings": [
+    "文件证据固定于提交 5748df628098830b6c228f936ae5484e9a0de7a1；issue 信息是独立采集的快照，操作前需核对最新状态。",
+    "本次使用原文整理，没有调用问答生成模型。"
+  ],
+  "links": [
+    {
+      "label": "仓库说明",
+      "url": "https://github.com/codingsjx/ai-software#readme"
+    },
+    {
+      "label": "开放任务",
+      "url": "https://github.com/codingsjx/ai-software/issues?q=is%3Aissue+is%3Aopen"
+    }
+  ]
+}

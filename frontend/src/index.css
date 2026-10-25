@@ -11,7 +11,7 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 100px; }
-body { margin: 0; min-width: 320px; background: #f3f6f8; }
+body { margin: 0; min-width: 280px; background: #f3f6f8; }
 #root, .app-shell { min-height: 100vh; }
 button, input, textarea { font: inherit; }
 a { text-decoration: none; }
@@ -316,6 +316,13 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
   .profile-languages .ant-progress { min-width: 0 !important; }
   .site-footer { margin-left: 18px; margin-right: 18px; padding: 21px 0; flex-direction: column; align-items: stretch; gap: 15px; }
   .site-footer > div { justify-content: space-between; font-size: 9px; }
+}
+@media (max-width: 380px) {
+  html { scroll-padding-top: 110px; }
+  .topbar-inner { height: auto; min-height: 66px; padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+  .topbar-actions { flex: 1 0 100%; min-width: 0; margin-left: 0; justify-content: flex-end; gap: 8px; }
+  .generation-controls .ant-input { min-width: 0 !important; }
+  .generation-controls .ant-space-compact { max-width: 100%; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

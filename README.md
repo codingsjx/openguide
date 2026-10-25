@@ -3,7 +3,9 @@
 [![CI](https://github.com/codingsjx/openguide/actions/workflows/ci.yml/badge.svg)](https://github.com/codingsjx/openguide/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> 2026-10-25：网页先固定原文操作，再生成每步 AI 讲解；最终代码实跑取得 11/11 步讲解，命令、目录及前置关系保持不变。370 项后端/评测和 62 项前端检查通过。失败记录、配置修复和验证边界见 [逐步 AI 辅导验收](docs/ai_step_tutoring_20261025.md)。
+> 2026-10-25 流程补齐：修复重新生成丢表单及问答取错测试片段；增加任务卡、验收标准、基线引用与实际验证范围。376 项后端/评测、70 项前端检查通过。[新手指南研究、真实案例与验证边界](docs/novice_flow_research_20261025.md)。
+
+> 此前版本 58958ba：先固定原文操作，再生成每步 AI 讲解；实跑取得 11/11 步讲解。[历史逐步 AI 辅导验收](docs/ai_step_tutoring_20261025.md)，不将讲解覆盖等同于任务成功。
 
 > 2026-10-24 晚间 AI 主线（核心 203707d）：真实生成、阶段失败与同仓库缺包恢复见 [历史主线验收](docs/ai_mainline_20261024.md)。
 
