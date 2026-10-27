@@ -6,12 +6,42 @@ import ts from 'typescript'
 const source = await readFile(new URL('../src/types/learningProgress.ts', import.meta.url), 'utf8')
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
 const { emptyExecution, executionProblems, updateLearningRecord, emptyLearningProgress, learningIdentity, progressKey, loadLearningProgress, saveLearningProgress, pendingPrerequisites, nextLearningAction, learningMarkdown, rememberLearningGuide, lastLearningGuide } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
+const savedSource = await readFile(new URL('../src/types/savedGuide.ts', import.meta.url), 'utf8')
+const savedModule = ts.transpileModule(savedSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
+const { parseSavedGuide } = await import(`data:text/javascript;base64,${Buffer.from(savedModule.outputText).toString('base64')}`)
 
 const guide = () => ({ repo_url: 'https://github.com/o/r', default_branch: 'a'.repeat(40), steps: [
   { step_id: 1, stage: 'A', title: 'Install dependencies', command: 'uv sync', working_directory: 'backend', evidence: { kind: 'file', source: 'backend/README.md', quote: 'uv sync' }, expected: 'Check installation' },
   { step_id: 2, stage: 'B', title: 'Run tests', command: 'uv run pytest tests/ -q', working_directory: 'backend', evidence: { kind: 'file', source: 'backend/README.md', quote: 'uv run pytest tests/ -q' }, expected: 'Record output', prerequisite_step_ids: [1] },
 ] })
 const memory = () => { const values = new Map(); return { values, getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) } }
+
+test('an untouched roadmap restores offline after two hours and a day without expiring', (t) => {
+  const g = { ...guide(), unsuitable: false }, store = memory()
+  const start = Date.UTC(2026, 9, 27)
+  let now = start
+  t.mock.method(Date, 'now', () => now)
+  assert.equal(rememberLearningGuide(g, store), true)
+  // No progress navigation, note update or model request is needed to restore.
+  for (const elapsed of [2 * 60 * 60_000, 24 * 60 * 60_000]) {
+    now = start + elapsed
+    const restored = parseSavedGuide(lastLearningGuide(store))
+    assert.equal(restored.is_saved, true)
+    assert.deepEqual(restored.steps.map(s => s.command), g.steps.map(s => s.command))
+    assert.equal(learningIdentity(restored), learningIdentity(g))
+    assert.deepEqual(loadLearningProgress(restored, store).records, {})
+  }
+})
+
+test('only the most recent roadmap is restored and failed saves preserve the previous snapshot', () => {
+  const store = memory(), first = { ...guide(), unsuitable: false }
+  const second = { ...first, repo_url: 'https://github.com/another/repo' }
+  rememberLearningGuide(first, store)
+  rememberLearningGuide(second, store)
+  assert.equal(parseSavedGuide(lastLearningGuide(store)).repo_url, second.repo_url)
+  assert.equal(rememberLearningGuide(first, { ...store, setItem() { throw Error('quota') } }), false)
+  assert.equal(parseSavedGuide(lastLearningGuide(store)).repo_url, second.repo_url)
+})
 
 test('new AI explanations preserve exact workflow progress and survive saved snapshots', () => {
   const g = guide(), store = memory(), p = emptyLearningProgress(g)

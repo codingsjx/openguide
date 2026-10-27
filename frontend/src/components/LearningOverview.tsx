@@ -21,7 +21,7 @@ export default function LearningOverview({ guide, step, progress, onGo, onDownlo
     {storageFailed && <Typography.Paragraph type="warning">当前无法保存部分本机数据，请离开前导出记录和指南。</Typography.Paragraph>}
     <details style={{ marginBottom: 6 }}>
       <summary style={{ cursor: 'pointer' }}>本机保存与恢复说明</summary>
-      <Typography.Paragraph type="secondary" style={{ marginTop: 6, marginBottom: 6 }}>进度和摘要仅保存在当前浏览器；刷新后可从首页“继续上次指南”恢复同一版本与步骤，新版本不混用。请勿填写密钥或原始日志。问答历史及贡献工作台表单不在此记录中；贡献表单可单独导出准备记录。</Typography.Paragraph>
+      <Typography.Paragraph type="secondary" style={{ marginTop: 6, marginBottom: 6 }}>路线图生成后自动保存在当前浏览器，刷新后自动恢复上次指南及已记录的学习进度，新版本不混用。请勿填写密钥或原始日志。问答历史及贡献工作台表单不在此记录中；贡献表单可单独导出准备记录。</Typography.Paragraph>
     </details>
     <details>
       <summary style={{ cursor: 'pointer' }}>步骤目录 · 返回未完成项和卡点</summary>

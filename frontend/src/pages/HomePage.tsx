@@ -64,23 +64,22 @@ const demoGuide: Guide = {
 }
 
 export default function HomePage() {
-  const [url, setUrl] = useState('')
-  const [tab, setTab] = useState<string>('guide')
-  const [loading, setLoading] = useState(false)
-  const [profileError, setProfileError] = useState<string | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [submittedUrl, setSubmittedUrl] = useState('')
-  const [demoMode, setDemoMode] = useState(false)
-  const [savedGuide, setSavedGuide] = useState<Guide | null>(null)
-  const [guideVersion, setGuideVersion] = useState(0)
-  const [useAiGuide, setUseAiGuide] = useState(true)
-  const [submittedUseLlm, setSubmittedUseLlm] = useState(true)
-  const [resumeGuide] = useState<Guide | null>(() => {
+  const [savedGuide, setSavedGuide] = useState<Guide | null>(() => {
     try {
       const raw = lastLearningGuide(window.localStorage)
       return raw ? parseSavedGuide(raw) : null
     } catch { return null }
   })
+  const [url, setUrl] = useState(savedGuide?.repo_url ?? '')
+  const [tab, setTab] = useState<string>('guide')
+  const [loading, setLoading] = useState(false)
+  const [profileError, setProfileError] = useState<string | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [submittedUrl, setSubmittedUrl] = useState(savedGuide?.repo_url ?? '')
+  const [demoMode, setDemoMode] = useState(false)
+  const [guideVersion, setGuideVersion] = useState(0)
+  const [useAiGuide, setUseAiGuide] = useState(true)
+  const [submittedUseLlm, setSubmittedUseLlm] = useState(true)
 
   async function readRepository(target: string, withAi: boolean, keepSnapshot = false) {
     const trimmed = target.trim()
@@ -163,13 +162,6 @@ export default function HomePage() {
             </select>
           </label>
           {profileError && <Alert showIcon type="error" message="仓库读取失败" description={profileError} style={{ marginTop: 12 }} />}
-          {!showGuide && !loading && resumeGuide && <Alert type="info" showIcon style={{ marginTop: 12 }}
-            message={`继续上次指南：${resumeGuide.owner}/${resumeGuide.repo}`}
-            description="从本机快照和学习记录继续，不重新请求模型或核验仓库；贡献工作台表单和问答历史不在此快照中。"
-            action={<Button onClick={() => {
-              setProfile(null); setProfileError(null); setSavedGuide(resumeGuide); setGuideVersion((version) => version + 1)
-              setSubmittedUrl(resumeGuide.repo_url); setUrl(resumeGuide.repo_url); setDemoMode(false); setTab('guide')
-            }}>继续上次指南</Button>} />}
           <div className="search-foot"><div className="search-example"><span>先看看怎么用</span><button onClick={startDemo} disabled={loading}>体验 requests 示例 <ArrowRightOutlined /></button></div><span className="search-separator" /><Upload accept=".json" showUploadList={false} beforeUpload={async (file) => {
             try {
               if (file.size > 2_000_000) throw new Error('指南文件不能超过 2 MB')

@@ -324,6 +324,15 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
   const execution = record?.execution ?? emptyExecution()
   const resultProblems = executionProblems(record?.execution)
   const canAsk = !guide.is_demo && !guide.is_saved
+  // Save on arrival, even if the user never navigates or records progress.
+  // An idle tab may be discarded by the browser and later mounted again.
+  // This effect reports an external storage write result, not derived UI state.
+  /* oxlint-disable react/set-state-in-effect */
+  useEffect(() => {
+    try { setStorageFailed(!rememberLearningGuide(guide, window.localStorage)) }
+    catch { setStorageFailed(true) }
+  }, [guide])
+  /* oxlint-enable react/set-state-in-effect */
   useEffect(() => {
     if (!navigationRequested.current) return
     stepAnchor.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -409,6 +418,9 @@ function GuideSession({ guide, url, onRegenerateAi, onRegenerate }: {
       {/* Main column: steps + current card */}
       <div className="guide-main">
         <GuideStatus guide={guide} step={step} onRegenerateAi={onRegenerateAi} onRegenerate={onRegenerate} />
+        {!guide.is_demo && <Alert showIcon type={storageFailed ? 'warning' : 'info'} style={{ marginBottom: 12 }}
+          message={storageFailed ? '本机自动保存失败，请下载指南 JSON 备份' : '路线图已自动保存在此浏览器，没有定时过期'}
+          description="刷新或重新打开同一网址会恢复上次路线图，不重新调用模型。仅保留最近一份；清除站点数据、更换浏览器或网址后无法恢复。贡献表单、PR 草稿和问答历史不在此快照中，请单独导出。" />}
         {step && <LearningOverview guide={guide} step={step} progress={progress} onGo={(id) => goToIndex(steps.findIndex((s) => s.step_id === id))}
           onDownload={downloadLearning} onDownloadGuide={() => downloadGuide(guide)} storageFailed={storageFailed} />}
         {step?.stage === 'A' && steps.some((s) => /^(?:python(?:3)?\b|pip(?:3)?\b)/.test(s.command || '')) && <details style={{ marginBottom: 12 }}>
